@@ -1,4 +1,4 @@
-﻿package com.pokerlanka.mixora.ui.screens.wrapped.pages
+package com.pokerlanka.mixora.ui.screens.wrapped.pages
 
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -54,11 +54,7 @@ fun PlaylistPage() {
     val playlistCreationState = state.playlistCreationState
 
     val (playlistImageRes, playlistImageName) = remember {
-        if (Random.nextBoolean()) {
-            Pair(R.drawable.wrapped_playlistv1, "wrapped_playlistv1")
-        } else {
-            Pair(R.drawable.wrapped_playlistv2, "wrapped_playlistv2")
-        }
+        Pair(R.drawable.app_logo, "app_logo")
     }
 
     var startAnimation by remember { mutableStateOf(false) }
