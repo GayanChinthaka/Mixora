@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Mixora Project (C) 2026
  * Licensed under GPL-3.0 | See git history for contributors
  */
@@ -164,9 +164,10 @@ fun WrappedIntro(onNext: () -> Unit) {
                 enter = fadeIn(animationSpec = tween(FADE_IN_DURATION, delayMillis = ICON_DELAY)) + slideInVertically(animationSpec = tween(SLIDE_IN_DURATION, delayMillis = ICON_DELAY))
             ) {
                 Icon(
-                    painter = painterResource(id = R.drawable.app_logo),
+                    painter = painterResource(id = R.mipmap.ic_launcher_adaptive_fore),
                     contentDescription = stringResource(id = R.string.wrapped_logo_content_description),
-                    modifier = Modifier.size(100.dp)
+                    modifier = Modifier.size(100.dp),
+                    tint = Color.Unspecified
                 )
             }
 

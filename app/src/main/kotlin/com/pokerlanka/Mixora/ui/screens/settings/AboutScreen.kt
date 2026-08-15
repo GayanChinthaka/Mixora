@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Mixora Project (C) 2026
  * Licensed under GPL-3.0 | See git history for contributors
  */
@@ -202,18 +202,11 @@ fun AboutScreen(
                     .fillMaxWidth()
                     .padding(24.dp)
             ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Image(
-                        painter = painterResource(R.drawable.ic_logo_oval),
-                        contentDescription = null,
-                        modifier = Modifier.size(84.dp)
-                    )
-                    Image(
-                        painter = painterResource(R.drawable.about_icon),
-                        contentDescription = stringResource(R.string.Mixora),
-                        modifier = Modifier.size(64.dp)
-                    )
-                }
+                Image(
+                    painter = painterResource(R.mipmap.ic_launcher_adaptive_fore),
+                    contentDescription = stringResource(R.string.Mixora),
+                    modifier = Modifier.size(84.dp)
+                )
         
                 Spacer(Modifier.width(20.dp))
         

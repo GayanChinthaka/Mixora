@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Monochrome icon used for:
+    - Notification bar small icon (must be single-color alpha-only)
+    - Thumbnail / Player fallback logo
+  Shape matches the new app icon (MX-Player style play triangle with slanted stripes).
+  Uses stroke and separated paths so the gaps are transparent, allowing the stripes
+  to render correctly on the Android notification bar.
+  Thinned lines and gaps for better visual clarity at small sizes.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="100"
+    android:viewportHeight="100">
+
+    <!-- Outer play triangle outline (thinned to 5dp stroke) -->
+    <path
+        android:strokeColor="#FFFFFFFF"
+        android:strokeWidth="5"
+        android:strokeLineJoin="round"
+        android:strokeLineCap="round"
+        android:fillColor="#00000000"
+        android:pathData="M 25,20 L 78,50 L 25,80 Z" />
+
+    <!-- Slanted stripes (thinned to ~4dp with balanced spacing for notification bar) -->
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M 36,43 L 43,36 L 46,39 L 39,46 Z" />
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M 36,54 L 53,37 L 56,40 L 39,57 Z" />
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M 36,65 L 60,41 L 63,44 L 39,68 Z" />
+
+</vector>
