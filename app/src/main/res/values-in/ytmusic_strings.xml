@@ -32,9 +32,6 @@
     <string name="remove_from_cache">Hapus dari cache</string>
     <string name="select">Pilih semua</string>
     <string name="cancel">Batal</string>
-    <string name="advanced_login">Masuk dengan token</string>
-    <string name="token_hidden">Ketuk untuk menampilkan token</string>
-    <string name="token_shown">Ketuk lagi untuk menyalin atau mengubah</string>
     <string name="general">Umum</string>
     <string name="app_language">Bahasa aplikasi</string>
     <string name="not_logged_in_youtube">Belum login ke YouTube</string>
@@ -53,7 +50,6 @@
     <string name="likes">Suka</string>
     <string name="dislikes">Tidak Suka</string>
     <string name="clear_downloads_dialog">Apakah Anda yakin ingin menghapus semua unduhan?</string>
-    <string name="token_adv_login_description">Ini adalah metode masuk TINGKAT LANJUT. Alih-alih menggunakan portal web, Anda dapat memasukkan atau memperbarui token masuk Anda secara langsung. Ini berguna untuk masuk di beberapa perangkat dengan cepat. Token dengan format yang tidak dikenali akan ditolak</string>
     <string name="local_history">Lokal</string>
     <string name="sort_by_last_updated">Tanggal diperbarui</string>
     <string name="link_copied">Link disalin ke papan klip</string>

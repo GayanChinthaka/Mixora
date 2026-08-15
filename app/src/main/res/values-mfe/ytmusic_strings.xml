@@ -76,10 +76,6 @@
     <string name="show_top_playlist">Afis playlist \"Top\"</string>
     <string name="show_cached_playlist">Afis playlist \"Inn cache\"</string>
     <string name="show_uploaded_playlist">Afis playlist \"Inn Upload\"</string>
-    <string name="advanced_login">Login ar token</string>
-    <string name="token_hidden">Click pu afis token</string>
-    <string name="token_shown">Click ankor pu kopié ou edit</string>
-    <string name="token_adv_login_description">Sa method la enn method login AVANCÉ. Antan ki enn alternaif a portail web, ou pu bizin met ou update ou login token direkteman. Par examp, li kapav fer login pli rapid lor plizir aparey. Noté ki app la pa pu aksepté okenn format token ki invalid ek ki li pa resi analizé</string>
     <string name="yt_sync">Senkroniz ar compte automikman</string>
     <string name="more_content">Plis konteni</string>
     <string name="edit_playlist_cover">Edit cover playlist</string>

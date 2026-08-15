@@ -43,9 +43,6 @@
     <string name="follow_theme">Volg thema</string>
     <string name="gradient">Gradient</string>
     <string name="default_style">Standaard</string>
-    <string name="advanced_login">Login met token</string>
-    <string name="token_hidden">Klik om token te tonen</string>
-    <string name="token_shown">Klik opnieuw om te kopiëren of te wijzigen</string>
     <string name="general">Algemeen</string>
     <string name="proxy">Proxy</string>
     <plurals name="seconds">

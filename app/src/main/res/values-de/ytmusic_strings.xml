@@ -16,10 +16,6 @@
     <string name="lyrics_click_change">Mit Tippen im Songtext springen</string>
     <string name="slim">Schmal</string>
     <string name="slim_navbar">Dünne untere Navigationsleiste</string>
-    <string name="advanced_login">Mit Token anmelden</string>
-    <string name="token_hidden">Tippen, um Token anzuzeigen</string>
-    <string name="token_shown">Tippen, um zu kopieren oder zu bearbeiten</string>
-    <string name="token_adv_login_description">Dies ist eine FORTGESCHRITTENE Anmeldemethode. Statt das Webportal zu nutzen, können Sie hier Ihr Anmeldetoken direkt eingeben oder aktualisieren. Das kann nützlich für eine schnelle Anmeldung auf mehreren Geräten sein. Tokens in einem unbekannten Format werden abgelehnt</string>
     <string name="general">Allgemein</string>
     <string name="proxy">Proxy</string>
     <string name="default_lib_chips">Standard-Mediatheksauswahl ändern</string>

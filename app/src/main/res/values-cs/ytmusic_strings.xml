@@ -22,7 +22,6 @@
     <string name="generating_image">Generování obrázku…</string>
     <string name="max_selection_limit">Dosaženo maximálního limitu výběru</string>
     <string name="share_as_text">Sdílet jako text</string>
-    <string name="token_adv_login_description">Toto je POKROČILÝ způsob přihlášení. Namísto použití webového portálu můžete zadat nebo aktualizovat váš přihlašovací token ručně. Toto může být užitečné pro rychlé přihlašování napříč více zařízeními. Token v nerozpoznaném formátu nebude přijat</string>
     <string name="share_selected">Sdílet vybrané</string>
     <string name="customize_colors">Přizpůsobit barvy</string>
     <string name="text_color">Barva textu</string>
@@ -51,9 +50,6 @@
     <string name="show_downloaded_playlist">Zobrazit playlist Stažené</string>
     <string name="show_top_playlist">Zobrazit playlist Nejlepší</string>
     <string name="show_cached_playlist">Zobrazit playlist V mezipaměti</string>
-    <string name="advanced_login">Přihlásit se pomocí tokenu</string>
-    <string name="token_hidden">Klepněte pro zobrazení tokenu</string>
-    <string name="token_shown">Klepněte znovu pro kopírování nebo úpravu</string>
     <string name="lyrics">Texty</string>
     <string name="local_history">Lokální</string>
     <string name="remote_history">Vzdálená</string>

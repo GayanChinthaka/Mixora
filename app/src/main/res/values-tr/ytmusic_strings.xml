@@ -48,10 +48,6 @@
     <string name="show_downloaded_playlist">İndirilenler listesini göster</string>
     <string name="show_top_playlist">En Çok Dinlediklerim listesini göster</string>
     <string name="show_cached_playlist">Önbelleğe Alınanlar listesini göster</string>
-    <string name="advanced_login">Token ile giriş yap</string>
-    <string name="token_hidden">Tokeni görmek için dokunun</string>
-    <string name="token_shown">Kopyalamak veya düzenlemek için tekrar dokunun</string>
-    <string name="token_adv_login_description">Bu GELİŞMİŞ bir giriş yöntemidir. Giriş tokeninizi doğrudan girebilirsiniz. Birden fazla cihazda hızlı giriş için kullanışlıdır. Geçersiz formatlı tokenler reddedilir</string>
     <string name="general">Genel</string>
     <string name="proxy">Proxy</string>
     <string name="default_lib_chips">Varsayılan kitaplık çipini değiştir</string>

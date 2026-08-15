@@ -48,10 +48,6 @@
     <string name="show_downloaded_playlist">Εμφάνιση Κατεβασμένων Λιστών</string>
     <string name="show_top_playlist">Εμφάνιση Κορυφαίων Λιστών</string>
     <string name="show_cached_playlist">Εμφάνιση Λιστών στην Κρυφή Μνήμη</string>
-    <string name="advanced_login">Σύνθετη σύνδεση (token)</string>
-    <string name="token_hidden">Πατήστε για να εμφανιστεί το token</string>
-    <string name="token_shown">Πατήστε ξανά για αντιγραφή ή επεξεργασία</string>
-    <string name="token_adv_login_description">Αυτή είναι μια ΣΥΝΘΕΤΗ μέθοδος σύνδεσης. Ως εναλλακτική της πύλης Ιστού, μπορείτε να εισαγάγετε ή να ενημερώσετε απευθείας το token σύνδεσής σας εδώ. Για παράδειγμα, αυτό μπορεί να επιταχύνει τη σύνδεση σε πολλές συσκευές. Λάβετε υπόψη ότι τυχόν μη έγκυρες μορφές διακριτικών που η εφαρμογή αποτυγχάνει να αναλύσει δεν θα γίνουν αποδεκτές</string>
     <string name="general">Γενικά</string>
     <string name="proxy">Διακομιστής μεσολάβησης</string>
     <string name="default_lib_chips">Αλλαγή προεπιλεγμένου τσιπ βιβλιοθήκης</string>

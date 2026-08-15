@@ -90,13 +90,9 @@
     <string name="show_top_playlist">Mostrar llista \"Top\"</string>
     <string name="show_cached_playlist">Mostrar llista \"En memòria cau\"</string>
     <string name="show_uploaded_playlist">Mostrar llista \"Pujades\"</string>
-    <string name="advanced_login">Inicia sessió amb un token</string>
     <string name="show_wrapped_card">Mostrar targeta Recopilació</string>
     <string name="shuffle_playlist_first">Mescla llista/àlbum primer</string>
     <string name="shuffle_playlist_first_desc">Quan mescles, reprodueix totes les cançons de la llista/àlbum primer, després contingut semblant</string>
-    <string name="token_hidden">Toca per mostrar el token</string>
-    <string name="token_shown">Toca de nou per a copiar o editar</string>
-    <string name="token_adv_login_description">Aquest és una forma d\'inici de sessió AVANÇADA. Com alternativa al portal web, vostè ha d\'introduir o actualitzat el seu token ací directament. Per exemple, aquesta acció pot accelerar l\'inici de sessió en múltiples dispositius. Tinga en compte que qualsevol format de token que la app no puga processar no serà acceptat</string>
     <string name="yt_sync">Sincronitza automàticament amb el compte</string>
     <string name="more_content">Més contingut</string>
     <string name="edit_playlist_cover">Edita la portada de la llista</string>

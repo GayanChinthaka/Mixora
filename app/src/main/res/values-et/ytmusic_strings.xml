@@ -65,9 +65,6 @@
     <string name="show_downloaded_playlist">Näita esitusloendit „Allalaaditud“</string>
     <string name="show_top_playlist">Näita esitusloendit „Populaarne“</string>
     <string name="show_cached_playlist">Näita esitusloendit „Puhverdatud“</string>
-    <string name="advanced_login">Logi sisse tunnusloaga</string>
-    <string name="token_hidden">Tunnusloaga vaatamiseks klõpsi</string>
-    <string name="token_shown">Klõpsi muutmiseks või kopeerimiseks</string>
     <string name="percentage_format">%d%%</string>
     <string name="import_online">Impordi M3U vormingus esitusloend</string>
     <string name="import_csv">Impordi CSV-vormingus esitusloend</string>

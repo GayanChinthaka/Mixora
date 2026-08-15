@@ -35,9 +35,6 @@
     <string name="show_top_playlist">Prikaži \"Najbolju\" plejlistu</string>
     <string name="local_history">Lokalno</string>
     <string name="months">Mjeseci</string>
-    <string name="advanced_login">Napredni login(token)</string>
-    <string name="token_hidden">Pritisni da pokažeš token</string>
-    <string name="token_shown">Pritisni opet da kopiraš ili urediš</string>
     <string name="general">Generalno</string>
     <string name="proxy">Proxy</string>
     <string name="default_lib_chips">Promijenite zadani bibliotečki čip</string>
@@ -102,5 +99,4 @@
         <item quantity="few">%dsekunde</item>
         <item quantity="other">%dsekundi</item>
     </plurals>
-    <string name="token_adv_login_description">Ovo je NAPREDNA metoda prijave. Kao alternativa web portalu, ovdje možete direktno unijeti ili ažurirati svoj token za prijavu. Na primjer, ovo može ubrzati prijavu na više uređaja. Imajte na umu da neće biti prihvaćeni nevažeći formati tokena koje aplikacija ne uspije analizirati</string>
 </resources>

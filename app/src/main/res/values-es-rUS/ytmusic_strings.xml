@@ -1,9 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="lyrics_auto_scroll">Desplazamiento automático de letras</string>
-    <string name="advanced_login">Iniciar sesión con token</string>
-    <string name="token_hidden">Presiona para mostrar el token</string>
-    <string name="token_shown">Presiona de nuevo para copiar o editar</string>
     <string name="general">General</string>
     <string name="proxy">Proxy</string>
     <string name="default_lib_chips">Cambiar pestaña predeterminada de la biblioteca</string>
@@ -98,7 +95,6 @@
     </plurals>
     <string name="trending">Tendencia</string>
     <string name="link_copied">Link copiado al portapapeles</string>
-    <string name="token_adv_login_description">Este es un método de inicio de sesión AVANZADO. En lugar de usar el portal web, puedes ingresar o actualizar tu token de inicio de sesión directamente. Esto puede ser útil para iniciar sesión rápidamente en varios dispositivos. Los tokens en un formato no reconocido serán rechazados</string>
     <string name="months">Meses</string>
     <string name="past_year">Año pasado</string>
     <string name="slim">Delgado</string>

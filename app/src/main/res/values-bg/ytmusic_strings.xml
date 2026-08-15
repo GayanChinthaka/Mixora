@@ -54,10 +54,6 @@
     <string name="show_downloaded_playlist">Покажи плейлист \"Изтеглени\"</string>
     <string name="show_top_playlist">Покажи плейлист \"Топ\"</string>
     <string name="show_cached_playlist">Показване на кеширания плейлист</string>
-    <string name="advanced_login">Вход с токен</string>
-    <string name="token_hidden">Натисни за показване на токен</string>
-    <string name="token_shown">Натисни отново за копиране или редакция</string>
-    <string name="token_adv_login_description">Това е метод за влизане за ОПИТНИ потребители. Вместо уеб портала можете директно да въведете или актуализирате своя идентификационен код директно. Така например може да се ускори влизането в системата от няколко устройства. Токени в неразпознаваем формат няма да бъдат приети</string>
     <string name="yt_sync">Автоматично синхронизиране с акаунт</string>
     <string name="more_content">Повече съдържание</string>
     <string name="general">Общи</string>

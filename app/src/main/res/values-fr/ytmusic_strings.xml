@@ -29,7 +29,6 @@
     <string name="swipe_song_to_add">Balayez vers la gauche pour ajouter le titre à la file d\'attente, ou vers la droite pour le lire ensuite</string>
     <string name="show_top_playlist">Afficher la playlist « Top »</string>
     <string name="show_cached_playlist">Afficher la playlist « Mise en Cache »</string>
-    <string name="token_adv_login_description">Il s\'agit d\'une méthode de connexion AVANCÉE. Au lieu d\'utiliser le portail Web, vous pouvez saisir ou mettre à jour votre jeton de connexion directement. Cela peut s\'avérer utile pour vous connecter rapidement sur plusieurs appareils. Les jetons dont le format n\'est pas reconnu seront rejetés</string>
     <plurals name="seconds">
         <item quantity="one">%d seconde</item>
         <item quantity="many">%d secondes</item>
@@ -66,9 +65,6 @@
     <string name="auto_playlists">Playlists Automatiques</string>
     <string name="show_liked_playlist">Afficher la playlist « Favoris »</string>
     <string name="show_downloaded_playlist">Afficher la playlist « Hors-Ligne »</string>
-    <string name="advanced_login">Se connecter avec un jeton</string>
-    <string name="token_hidden">Cliquer pour afficher le jeton</string>
-    <string name="token_shown">Cliquer encore pour copier ou éditer</string>
     <string name="general">Général</string>
     <string name="app_language">Langue de l\'application</string>
     <string name="enable_similar_content">Activer le contenu similaire</string>

@@ -58,7 +58,6 @@
     <string name="lyrics_text_size">가사 글씨 크기</string>
     <string name="lyrics_line_spacing">가사 줄간격</string>
     <string name="karaoke">노래방</string>
-    <string name="token_adv_login_description">고급 로그인 방식입니다. 토큰을 직접 입력해 여러 기기에 빠르게 로그인할 수 있습니다. 올바르지 않은 형식의 토큰은 거부됩니다</string>
     <string name="youtube_music_lyrics_note">참고: 다른 출처가 없으면 YouTube Music 가사가 자동으로 표시되며, 보통 싱크가 지원되지 않습니다</string>
     <string name="swipe_song_to_add">왼쪽으로 스와이프해 재생목록에 추가, 혹은 오른쪽으로 스와이프해 다음에 재생</string>
     <string name="density_restart_message">앱을 재시작해야 변경 사항이 적용됩니다. 지금 재시작하시겠습니까?</string>
@@ -152,9 +151,6 @@
     <string name="skip_silence_desc">무음 구간을 빨리 감기</string>
     <string name="skip_silence_instant">무음 구간 건너뛰기</string>
     <string name="skip_silence_instant_desc">무음 구간을 빨리 감기 하는대신 바로 건너 뜁니다</string>
-    <string name="advanced_login">토큰으로 로그인</string>
-    <string name="token_hidden">탭하여 토큰 표시</string>
-    <string name="token_shown">다시 탭하여 복사 또는 수정</string>
     <string name="yt_sync">계정 자동 동기화</string>
     <string name="sort_ascending">오름차순</string>
     <string name="sort_descending">내림차순</string>

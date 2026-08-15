@@ -14,6 +14,14 @@
         <exclude
             domain="database"
             path="exoplayer_internal.db" />
+        <!--
+            The Preferences DataStore holds the InnerTube session cookie (SAPISID et al.),
+            visitorData and dataSyncId in plaintext protobuf. Never upload it to Drive.
+            Settings still migrate via the in-app backup/restore.
+        -->
+        <exclude
+            domain="file"
+            path="./datastore" />
     </cloud-backup>
     <device-transfer>
         <exclude
@@ -25,5 +33,12 @@
         <exclude
             domain="database"
             path="exoplayer_internal.db" />
+        <!--
+            Deliberately asymmetric with <cloud-backup>: the datastore IS transferred here.
+            Device transfer is a local, user-initiated migration between two phones the user
+            owns, so carrying the session across keeps settings and login intact. Cloud backup
+            is different — it puts a live Google session on Drive, which is why it is excluded
+            there. Android 12 split these two domains precisely to allow this distinction.
+        -->
     </device-transfer>
 </data-extraction-rules>

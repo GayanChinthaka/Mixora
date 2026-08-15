@@ -49,10 +49,6 @@
     <string name="show_downloaded_playlist">Mostrar lista de reproducción «Descargado»</string>
     <string name="show_top_playlist">Mostrar lista de reproducción «Top»</string>
     <string name="show_cached_playlist">Mostrar lista de reproducción «En caché»</string>
-    <string name="advanced_login">Iniciar sesión con token</string>
-    <string name="token_hidden">Toca para mostrar el token</string>
-    <string name="token_shown">Toca de nuevo para copiar o editar</string>
-    <string name="token_adv_login_description">Este es un método de inicio de sesión AVANZADO. En lugar de usar el portal web, puedes introducir o actualizar directamente tu token de inicio de sesión. Esto puede ser útil para iniciar sesión rápidamente en varios dispositivos. Los tokens con un formato no reconocido serán rechazados</string>
     <string name="general">General</string>
     <string name="proxy">Proxy</string>
     <string name="default_lib_chips">Cambiar chip de biblioteca predeterminado</string>

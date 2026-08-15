@@ -206,10 +206,6 @@
     <string name="edit_playlist_cover_note_wait">Pasi të zgjidhni një imazh, ju lutemi prisni një moment që kopertina e re të shfaqet në listën tuaj të këngëve</string>
     <string name="choose_from_library">Zgjidhni nga biblioteka</string>
     <string name="skip_silence_instant_desc">Kalo përpara gjatë momenteve të heshtura në vend që të përshpejtosh luajtjen</string>
-    <string name="advanced_login">Hyr me token</string>
-    <string name="token_hidden">Trokit për të shfaqur tokenin</string>
-    <string name="token_shown">Trokit përsëri për të kopjuar ose modifikuar</string>
-    <string name="token_adv_login_description">Kjo është një metodë e AVANCUAR hyrjeje. Në vend që të përdorni portalin në internet, mund të futni ose përditësoni direkt tokenin tuaj të hyrjes. Kjo mund të jetë e dobishme për t\'u identifikuar shpejt në shumë pajisje. Tokenët në një format të panjohur do të refuzohen</string>
     <string name="yt_sync">Sinkronizim automatik me llogarinë</string>
     <string name="more_content">Më shumë përmbajtje</string>
     <string name="integrations">Integrimet</string>

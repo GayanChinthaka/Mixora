@@ -63,10 +63,6 @@
     <string name="show_downloaded_playlist">Arată playlistul Descărcate</string>
     <string name="show_top_playlist">Arată playlistul Top</string>
     <string name="show_cached_playlist">Arată playlistul În cache</string>
-    <string name="advanced_login">Autentifică-te cu token</string>
-    <string name="token_hidden">Atinge pentru a afișa tokenul</string>
-    <string name="token_shown">Atinge din nou pentru a-l copia sau edita</string>
-    <string name="token_adv_login_description">Aceasta este o metodă AVANSATĂ de autentificare. În loc să folosești portalul web, poți să-ți introduci sau să-ți actualizezi direct tokenul de autentificare. Acest lucru poate fi util pentru autentificarea rapidă pe mai multe dispozitive. Token-urile care sunt într-un format nerecunoscut vor fi respinse</string>
     <string name="yt_sync">Sincronizează automat cu contul</string>
     <string name="more_content">Mai mult conținut</string>
     <string name="general">General</string>

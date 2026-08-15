@@ -6,19 +6,10 @@
 package com.pokerlanka.ytmusic.viewmodels
 
 import android.content.Context
-import android.content.Intent
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.pokerlanka.ytmusic.App
-import com.pokerlanka.ytmusic.constants.AccountChannelHandleKey
-import com.pokerlanka.ytmusic.constants.AccountEmailKey
-import com.pokerlanka.ytmusic.constants.AccountNameKey
-import com.pokerlanka.ytmusic.constants.DataSyncIdKey
-import com.pokerlanka.ytmusic.constants.InnerTubeCookieKey
-import com.pokerlanka.ytmusic.constants.VisitorDataKey
 import com.pokerlanka.ytmusic.utils.SyncUtils
-import com.pokerlanka.ytmusic.utils.dataStore
-import com.pokerlanka.ytmusic.utils.safeDataStoreEdit
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -61,12 +52,15 @@ class AccountSettingsViewModel @Inject constructor(
      * THEN clear all library data. This prevents sync operations that are
      * triggered by the database becoming empty from re-adding songs.
      */
-    suspend fun logoutAndClearLibraryData(context: Context) {
+    suspend fun logoutAndClearLibraryData(
+        context: Context,
+        signOutOfGoogle: Boolean = false,
+    ) {
         Timber.d("[LOGOUT_CLEAR] ViewModel: logoutAndClearLibraryData called")
         withContext(Dispatchers.IO) {
             // Forget account first — clears cookie/auth from DataStore.
             // Once isLoggedIn() returns false, ALL sync operations will skip.
-            App.forgetAccount(context)
+            App.forgetAccount(context, signOutOfGoogle)
 
             // Now clear the local database. Any sync coroutines that observe
             // the empty state will check isLoggedIn() and skip silently.
@@ -78,49 +72,17 @@ class AccountSettingsViewModel @Inject constructor(
     /**
      * Just logout without clearing library data
      */
-    suspend fun logoutKeepData(context: Context, onCookieChange: (String) -> Unit) {
+    suspend fun logoutKeepData(
+        context: Context,
+        onCookieChange: (String) -> Unit,
+        signOutOfGoogle: Boolean = false,
+    ) {
         Timber.d("[LOGOUT_KEEP] ViewModel: logoutKeepData called")
         withContext(Dispatchers.IO) {
-            App.forgetAccount(context)
+            App.forgetAccount(context, signOutOfGoogle)
         }
         Timber.d("[LOGOUT_KEEP] ViewModel: Account forgotten, clearing cookie in UI")
         onCookieChange("")
     }
 
-    /**
-     * Save token credentials atomically to DataStore, then restart the app.
-     * This ensures all writes complete before the process is killed,
-     * preventing the race condition where Runtime.exit(0) kills the process
-     * before async DataStore coroutines finish writing.
-     */
-    fun saveTokenAndRestart(
-        context: Context,
-        cookie: String,
-        visitorData: String,
-        dataSyncId: String,
-        accountName: String,
-        accountEmail: String,
-        accountChannelHandle: String,
-    ) {
-        viewModelScope.launch(Dispatchers.IO) {
-            val saved = context.safeDataStoreEdit { settings ->
-                settings[InnerTubeCookieKey] = cookie
-                settings[VisitorDataKey] = visitorData
-                settings[DataSyncIdKey] = dataSyncId
-                settings[AccountNameKey] = accountName
-                settings[AccountEmailKey] = accountEmail
-                settings[AccountChannelHandleKey] = accountChannelHandle
-            }
-            if (!saved) {
-                Timber.e("saveTokenAndRestart: DataStore write failed — skipping restart to avoid losing credentials")
-                return@launch
-            }
-            withContext(Dispatchers.Main) {
-                val intent = context.packageManager.getLaunchIntentForPackage(context.packageName)
-                intent?.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
-                context.startActivity(intent)
-                Runtime.getRuntime().exit(0)
-            }
-        }
-    }
 }

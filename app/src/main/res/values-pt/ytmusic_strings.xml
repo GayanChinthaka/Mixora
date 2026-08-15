@@ -66,10 +66,6 @@
     <string name="show_downloaded_playlist">Mostrar lista de reprodução descarregada</string>
     <string name="show_top_playlist">Mostrar lista de reprodução principal</string>
     <string name="show_cached_playlist">Mostrar lista de reprodução em cache</string>
-    <string name="advanced_login">Iniciar sessão com um \"Token\"</string>
-    <string name="token_hidden">Toque para mostrar o token</string>
-    <string name="token_shown">Toque novamente para copiar ou editar</string>
-    <string name="token_adv_login_description">Este é um método avançado de login. Como uma alternativa ao portal web, pode digitar ou atualizar o seu token diretamente por aqui. Como exemplo, isto pode fazer com que fazer login em vários dispositivos rapidamente. \nAVISO: Qualquer formato inválido do token ou que a app não consiga interpretar não será aceitado!</string>
     <string name="yt_sync">Sincronização automática com a conta</string>
     <string name="more_content">Mais conteúdo</string>
     <string name="general">Geral</string>

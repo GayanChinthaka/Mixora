@@ -64,10 +64,6 @@
     <string name="show_downloaded_playlist">Letöltött lejátszási lista megjelenítése</string>
     <string name="show_top_playlist">Top lejátszási lista megjelenítése</string>
     <string name="show_cached_playlist">Gyorsítótárazott lejátszási lista megjelenítése</string>
-    <string name="advanced_login">Bejelentkezés token-nel</string>
-    <string name="token_hidden">Koppintson a token megjelenítéséhez</string>
-    <string name="token_shown">Koppintson újra a másoláshoz vagy szerkesztéshez</string>
-    <string name="token_adv_login_description">Ez egy ÖSSZETETTEBB belépési módszer. A webes portálhoz képest itt közvetlen adhatja meg vagy frissítheti a belépési tokenjét. Hasznos lehet ha egyszerre több eszközön akar belépni. Azonban minden azonosíthatatlan formátumú token visszautasításra fog kerülni</string>
     <string name="yt_sync">Automata szinkronizálás a fiókkal</string>
     <string name="more_content">Több tartalom</string>
     <string name="general">Általános</string>

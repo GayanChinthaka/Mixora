@@ -104,9 +104,6 @@
     <string name="skip_silence_desc">Avanzar rapidamente nas partes silenciosas das cancións</string>
     <string name="skip_silence_instant">Saltar o silencio instantaneamente</string>
     <string name="skip_silence_instant_desc">Saltar as partes silenciosas en vez de aumentar a velocidade de reprodución</string>
-    <string name="advanced_login">Iniciar sesión cun token</string>
-    <string name="token_hidden">Toca para amosar o token</string>
-    <string name="token_shown">Toca de novo para copiar ou editar</string>
     <string name="choose_from_library">Escoller da biblioteca</string>
     <string name="remove_custom_image">Eliminar imaxe personalizada</string>
     <string name="general">Xeral</string>
@@ -699,7 +696,6 @@
     <string name="youtube_music_lyrics_note">NOTA: as letras de YouTube Music amosaranse automaticamente cando non haxa outra fonte dispoñible. Polo xeral, non están sincronizadas</string>
     <string name="enable_lrclib_desc">Base de datos de letras sincronizadas impulsada pola comunidade</string>
     <string name="enable_kugou_desc">Obtén letras de KuGou, unha popular plataforma de música chinesa</string>
-    <string name="token_adv_login_description">Este é un método de inicio de sesión AVANZADO. En lugar de usar o portal web, podes introducir ou actualizar o teu token de inicio de sesión directamente. Isto pode ser útil para iniciar sesión en varios dispositivos rapidamente. Rexeitaranse os tokens que teñan un formato non recoñecido</string>
     <string name="yt_sync">Sincronización automática coa conta</string>
     <string name="more_content">Máis contido</string>
     <string name="set_quick_picks">Configurar escollas rápidas</string>

@@ -66,10 +66,6 @@
     <string name="show_downloaded_playlist">Prikaži \"Preuzeto\" listu pjesama</string>
     <string name="show_top_playlist">Prikaži \"Top\" listu</string>
     <string name="show_cached_playlist">Prikaži \"Prije spremljeni\" popis</string>
-    <string name="advanced_login">Prijavite se sa žetonom</string>
-    <string name="token_hidden">Ako pritisnite, prikazat će se žeton</string>
-    <string name="token_shown">Pritisni opet da kopiras ili uredi</string>
-    <string name="token_adv_login_description">Ovo je napredan način PRISTUPA LOGINu. Umjesto web portala, možete direktno unijeti ili ažurirati svoj token prijave ovdje. Na primjer, to može ubrzati prijavu na više uređaja. Molimo primijetite da će se bilo koji nevažeći formati tokena koje aplikacija ne može analizirati odbijati</string>
     <string name="yt_sync">Sinkronizacija automatski sa nalogom</string>
     <string name="more_content">Više sadržaja</string>
     <string name="general">Općenito</string>

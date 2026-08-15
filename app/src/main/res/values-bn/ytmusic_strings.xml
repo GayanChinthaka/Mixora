@@ -123,10 +123,6 @@
     <string name="skip_silence_desc">গানের নীরব অংশগুলোতে দ্রুত এগিয়ে যান</string>
     <string name="skip_silence_instant">তাৎক্ষণিকভাবে নীরবতা এড়িয়ে যান</string>
     <string name="skip_silence_instant_desc">প্লেব্যাকের গতি না বাড়িয়ে নীরব মুহূর্তগুলোতে এগিয়ে যান</string>
-    <string name="advanced_login">টোকেন দিয়ে লগইন করুন</string>
-    <string name="token_hidden">টোকেন দেখতে ট্যাপ করুন</string>
-    <string name="token_shown">কপি বা এডিট করতে আবার ট্যাপ করুন</string>
-    <string name="token_adv_login_description">এটি একটি উন্নত লগইন পদ্ধতি। ওয়েব পোর্টাল ব্যবহার করার পরিবর্তে, আপনি সরাসরি আপনার লগইন টোকেন প্রবেশ বা আপডেট করতে পারেন। একাধিক ডিভাইসে দ্রুত সাইন ইন করার জন্য এটি কার্যকর হতে পারে। অপরিচিত ফরম্যাটের টোকেন প্রত্যাখ্যান করা হবে</string>
     <string name="yt_sync">স্বয়ংক্রিয়ভাবে একাউন্টের সাথে সমন্বয় করুন</string>
     <string name="more_content">আরও কন্টেন্ট</string>
     <string name="sort_ascending">ঊর্ধক্রমে সাজান</string>

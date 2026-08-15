@@ -6,6 +6,7 @@
 package com.pokerlanka.ytmusic.ui.screens.settings
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -21,6 +22,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -48,7 +50,6 @@ import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.NavController
@@ -57,20 +58,13 @@ import com.pokerlanka.innertube.YouTube
 import com.pokerlanka.innertube.utils.parseCookieString
 import com.pokerlanka.ytmusic.BuildConfig
 import com.pokerlanka.ytmusic.R
-import com.pokerlanka.ytmusic.constants.AccountChannelHandleKey
-import com.pokerlanka.ytmusic.constants.AccountEmailKey
-import com.pokerlanka.ytmusic.constants.AccountNameKey
-import com.pokerlanka.ytmusic.constants.DataSyncIdKey
 import com.pokerlanka.ytmusic.constants.InnerTubeCookieKey
 import com.pokerlanka.ytmusic.constants.UseLoginForBrowse
-import com.pokerlanka.ytmusic.constants.VisitorDataKey
 import com.pokerlanka.ytmusic.constants.YtmSyncKey
 import com.pokerlanka.ytmusic.ui.component.DefaultDialog
-import com.pokerlanka.ytmusic.ui.component.InfoLabel
 import com.pokerlanka.ytmusic.ui.component.Material3SettingsGroup
 import com.pokerlanka.ytmusic.ui.component.Material3SettingsItem
 import com.pokerlanka.ytmusic.ui.component.PreferenceEntry
-import com.pokerlanka.ytmusic.ui.component.TextFieldDialog
 import com.pokerlanka.ytmusic.utils.rememberPreference
 import com.pokerlanka.ytmusic.viewmodels.AccountSettingsViewModel
 import com.pokerlanka.ytmusic.viewmodels.HomeViewModel
@@ -83,12 +77,7 @@ fun AccountSettings(
 ) {
     val context = LocalContext.current
 
-    val (accountNamePref, onAccountNameChange) = rememberPreference(AccountNameKey, "")
-    val (accountEmail, onAccountEmailChange) = rememberPreference(AccountEmailKey, "")
-    val (accountChannelHandle, onAccountChannelHandleChange) = rememberPreference(AccountChannelHandleKey, "")
     val (innerTubeCookie, onInnerTubeCookieChange) = rememberPreference(InnerTubeCookieKey, "")
-    val (visitorData, onVisitorDataChange) = rememberPreference(VisitorDataKey, "")
-    val (dataSyncId, onDataSyncIdChange) = rememberPreference(DataSyncIdKey, "")
 
     val isLoggedIn = remember(innerTubeCookie) {
         "SAPISID" in parseCookieString(innerTubeCookie)
@@ -101,9 +90,11 @@ fun AccountSettings(
     val accountName by homeViewModel.accountName.collectAsStateWithLifecycle()
     val accountImageUrl by homeViewModel.accountImageUrl.collectAsStateWithLifecycle()
 
-    var showToken by remember { mutableStateOf(false) }
-    var showTokenEditor by remember { mutableStateOf(false) }
     var showLogoutDialog by remember { mutableStateOf(false) }
+
+    // Off by default: keeping the Google session is what makes signing back in a single tap.
+    // Turning it on wipes every WebView cookie, so the next login starts from a blank form.
+    var signOutOfGoogle by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
 
     Column(
@@ -142,6 +133,33 @@ fun AccountSettings(
                         style = MaterialTheme.typography.bodyLarge,
                         modifier = Modifier.padding(horizontal = 18.dp)
                     )
+
+                    Spacer(Modifier.height(12.dp))
+
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { signOutOfGoogle = !signOutOfGoogle }
+                            .padding(horizontal = 18.dp, vertical = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Checkbox(
+                            checked = signOutOfGoogle,
+                            onCheckedChange = { signOutOfGoogle = it }
+                        )
+                        Spacer(Modifier.width(8.dp))
+                        Column {
+                            Text(
+                                text = stringResource(R.string.logout_google_too),
+                                style = MaterialTheme.typography.bodyLarge
+                            )
+                            Text(
+                                text = stringResource(R.string.logout_google_too_description),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
                 },
                 buttons = {
                     TextButton(
@@ -152,7 +170,7 @@ fun AccountSettings(
                                     Timber.d("[LOGOUT_CLEAR] Starting clear and logout process")
                                     // Forget account first (stops all sync), then clear data.
                                     // This prevents background syncs from re-adding songs.
-                                    accountSettingsViewModel.logoutAndClearLibraryData(context)
+                                    accountSettingsViewModel.logoutAndClearLibraryData(context, signOutOfGoogle)
                                     Timber.d("[LOGOUT_CLEAR] Library data cleared and account forgotten")
                                 } catch (e: Exception) {
                                     Timber.e(e, "[LOGOUT_CLEAR] Error clearing library data, proceeding with logout")
@@ -172,7 +190,11 @@ fun AccountSettings(
                             Timber.d("[LOGOUT_KEEP] User chose to keep data")
                             scope.launch {
                                 Timber.d("[LOGOUT_KEEP] Starting logout process (keeping data)")
-                                accountSettingsViewModel.logoutKeepData(context, onInnerTubeCookieChange)
+                                accountSettingsViewModel.logoutKeepData(
+                                    context,
+                                    onInnerTubeCookieChange,
+                                    signOutOfGoogle,
+                                )
                                 Timber.d("[LOGOUT_KEEP] Logout complete")
                                 showLogoutDialog = false
                                 onClose()
@@ -181,69 +203,6 @@ fun AccountSettings(
                     ) {
                         Text(stringResource(R.string.logout_keep))
                     }
-                }
-            )
-        }
-
-        if (showTokenEditor) {
-            val text = """
-                ***INNERTUBE COOKIE*** =$innerTubeCookie
-                ***VISITOR DATA*** =$visitorData
-                ***DATASYNC ID*** =$dataSyncId
-                ***ACCOUNT NAME*** =$accountNamePref
-                ***ACCOUNT EMAIL*** =$accountEmail
-                ***ACCOUNT CHANNEL HANDLE*** =$accountChannelHandle
-            """.trimIndent()
-
-            TextFieldDialog(
-                initialTextFieldValue = TextFieldValue(text),
-                onDone = { data ->
-                    var cookie = ""
-                    var visitorDataValue = ""
-                    var dataSyncIdValue = ""
-                    var accountNameValue = ""
-                    var accountEmailValue = ""
-                    var accountChannelHandleValue = ""
-
-                    data.split("\n").forEach {
-                        when {
-                            it.startsWith("***INNERTUBE COOKIE*** =") -> cookie = it.substringAfter("=")
-                            it.startsWith("***VISITOR DATA*** =") -> visitorDataValue = it.substringAfter("=")
-                            it.startsWith("***DATASYNC ID*** =") -> dataSyncIdValue = it.substringAfter("=")
-                            it.startsWith("***ACCOUNT NAME*** =") -> accountNameValue = it.substringAfter("=")
-                            it.startsWith("***ACCOUNT EMAIL*** =") -> accountEmailValue = it.substringAfter("=")
-                            it.startsWith("***ACCOUNT CHANNEL HANDLE*** =") -> accountChannelHandleValue = it.substringAfter("=")
-                        }
-                    }
-                    // Write all credentials atomically to DataStore and wait for completion
-                    // before restarting, preventing the race condition where the process
-                    // would be killed before async DataStore coroutines finished writing.
-                    accountSettingsViewModel.saveTokenAndRestart(
-                        context = context,
-                        cookie = cookie,
-                        visitorData = visitorDataValue,
-                        dataSyncId = dataSyncIdValue,
-                        accountName = accountNameValue,
-                        accountEmail = accountEmailValue,
-                        accountChannelHandle = accountChannelHandleValue,
-                    )
-                },
-                onDismiss = { showTokenEditor = false },
-                singleLine = false,
-                maxLines = 20,
-                isInputValid = { fullText ->
-                    // Extract the cookie value from the formatted template line,
-                    // then validate it separately — avoids the bug where parseCookieString
-                    // received the entire multi-line template and failed to find "SAPISID"
-                    // as a key because the "***INNERTUBE COOKIE*** =" prefix shadowed it.
-                    val cookieLine = fullText.lines()
-                        .find { it.startsWith("***INNERTUBE COOKIE*** =") }
-                    val cookieValue = cookieLine?.substringAfter("***INNERTUBE COOKIE*** =")?.trim() ?: ""
-                    cookieValue.isNotEmpty() && "SAPISID" in parseCookieString(cookieValue)
-                },
-                extraContent = {
-                    Spacer(Modifier.height(8.dp))
-                    InfoLabel(text = stringResource(R.string.token_adv_login_description))
                 }
             )
         }
@@ -305,23 +264,6 @@ fun AccountSettings(
 
         Material3SettingsGroup(
             items = listOf(
-                Material3SettingsItem(
-                    title = {
-                        Text(
-                            when {
-                                !isLoggedIn -> stringResource(R.string.advanced_login)
-                                showToken -> stringResource(R.string.token_shown)
-                                else -> stringResource(R.string.token_hidden)
-                            }
-                        )
-                    },
-                    icon = painterResource(R.drawable.token),
-                    onClick = {
-                        if (!isLoggedIn) showTokenEditor = true
-                        else if (!showToken) showToken = true
-                        else showTokenEditor = true
-                    }
-                ),
                 Material3SettingsItem(
                     title = { Text(stringResource(R.string.more_content)) },
                     icon = painterResource(R.drawable.cached),

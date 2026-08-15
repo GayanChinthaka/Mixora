@@ -33,10 +33,6 @@
     <string name="lyrics_click_change">點擊以切換歌詞</string>
     <string name="slim">細</string>
     <string name="slim_navbar">隱藏底部導覽列標籤</string>
-    <string name="advanced_login">透過 token 登入</string>
-    <string name="token_hidden">點擊以顯示 token</string>
-    <string name="token_shown">再次點擊以複製或編輯</string>
-    <string name="token_adv_login_description">這是作為網頁登錄的替代方案的進階登入模式一。你可以在此直接輸入或更新您的登入權杖。這可以用於加速在多台裝置上的登入流程。請注意，若權杖格式無效導致程式無法解析，權杖將不予採用</string>
     <string name="general">一般</string>
     <string name="proxy">Proxy</string>
     <string name="default_lib_chips">更改預設媒體庫標籤</string>

@@ -81,13 +81,10 @@
     <string name="sort_by_last_updated">تاریخ بروزرسانی شد</string>
     <string name="link_copied">پیوند کپی شد</string>
     <string name="allows_for_sync_witch_youtube">توجه: این مورد اجازه همگام‌سازی با یوتیوب موزیک را فراهم می کند. این مورد بعداً قابل تغییر نیست.</string>
-    <string name="token_shown">برای رونوشت یا ویرایش دوباره ضربه بزنید</string>
     <string name="general">عمومی</string>
     <string name="proxy">پروکسی</string>
     <string name="last_song_listened">بر اساس آخرین آهنگ شنیده شده</string>
     <string name="app_language">زبان برنامه</string>
-    <string name="advanced_login">ورود پیشرفته (توکن)</string>
-    <string name="token_hidden">ضربه برای نمایش توکن</string>
     <string name="set_quick_picks">تنظیم انتخاب سریع</string>
     <string name="views">بازدید‌ها</string>
     <string name="charts">چارت‌ها</string>

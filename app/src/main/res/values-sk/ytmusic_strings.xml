@@ -76,10 +76,6 @@
     <string name="show_downloaded_playlist">Zobraziť zoznam skladieb „Stiahnuté“</string>
     <string name="show_top_playlist">Zobraziť playlist „Najlepší“</string>
     <string name="show_cached_playlist">Zobraziť playlist „Uložený vo vyrovnávacej pamäti“</string>
-    <string name="advanced_login">Prihlásenie pomocou tokenu</string>
-    <string name="token_hidden">Klepnutím zobrazíte token</string>
-    <string name="token_shown">Klepnite znova pre kopírovanie alebo úpravu</string>
-    <string name="token_adv_login_description">Toto je POKROČILÁ metóda prihlásenia. Ako alternatívu k webovému portálu môžete priamo zadať alebo aktualizovať svoj prihlasovací token tu. Môže to napríklad zrýchliť prihlásenie na viacerých zariadeniach. Prosím, nepoužívajte</string>
     <string name="yt_sync">Automatická synchronizácia s účtom</string>
     <string name="more_content">Viac obsahu</string>
     <string name="general">Všeobecné</string>

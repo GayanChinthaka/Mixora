@@ -66,10 +66,6 @@
     <string name="show_downloaded_playlist">Prikaži seznam predvajanja \"Preneseno\"</string>
     <string name="show_top_playlist">Prikaži seznam predvajanja \"Top\"</string>
     <string name="show_cached_playlist">Prikaži seznam predvajanja \"Predpomnjeno\"</string>
-    <string name="advanced_login">Prijava s tokenom</string>
-    <string name="token_hidden">Tapnite za prikaz tokena</string>
-    <string name="token_shown">Ponovno tapnite za kopiranje ali urejanje</string>
-    <string name="token_adv_login_description">To je NAPREDEN način prijave. Namesto spletnega portala lahko tukaj neposredno vnesete ali posodobite svoj prijavni token. S tem lahko na primer pospešite prijavo v več napravah. Upoštevajte, da vsi neveljavni formati tokenov, ki jih aplikacija ne uspe razčleniti, ne bodo sprejeti</string>
     <string name="yt_sync">Samodejna sinhronizacija z računom</string>
     <string name="more_content">Več vsebine</string>
     <string name="general">Splošno</string>

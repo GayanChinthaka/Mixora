@@ -326,8 +326,46 @@ class App :
     }
 
     companion object {
-        suspend fun forgetAccount(context: Context) {
-            Timber.d("forgetAccount: Starting logout process")
+        /**
+         * Expire the YouTube session cookies while leaving the `.google.com` session intact.
+         *
+         * [android.webkit.CookieManager.removeAllCookies] is process-wide and destroys far more
+         * than a YouTube logout needs: the account-chooser memory, `__Host-GAPS`, and `SMSV` —
+         * Google's "don't ask for 2-step verification again on this device" cookie. Wiping those
+         * is why signing back in has always cost email + password + 2FA. Clearing only the
+         * `.youtube.com` cookies logs the user out of YouTube for real, while a subsequent
+         * sign-in can fall straight through the retained Google session.
+         */
+        private fun android.webkit.CookieManager.expireYouTubeCookies() {
+            val urls = listOf("https://music.youtube.com", "https://www.youtube.com")
+            val domains = listOf(".youtube.com", "music.youtube.com", "www.youtube.com")
+
+            urls.forEach { url ->
+                val names =
+                    getCookie(url)
+                        .orEmpty()
+                        .split("; ")
+                        .mapNotNull { part -> part.substringBefore('=').trim().takeIf(String::isNotEmpty) }
+
+                names.forEach { name ->
+                    domains.forEach { domain ->
+                        setCookie(url, "$name=; Max-Age=0; Domain=$domain; Path=/")
+                    }
+                }
+                Timber.d("forgetAccount: Expired ${names.size} cookie name(s) for $url")
+            }
+        }
+
+        /**
+         * @param signOutOfGoogle when true, wipe every WebView cookie including the Google
+         * session, so the next login starts from a blank email form. Defaults to false, which
+         * keeps the Google session for a one-tap re-login.
+         */
+        suspend fun forgetAccount(
+            context: Context,
+            signOutOfGoogle: Boolean = false,
+        ) {
+            Timber.d("forgetAccount: Starting logout process (signOutOfGoogle=$signOutOfGoogle)")
 
             // Clear DataStore preferences
             Timber.d("forgetAccount: Clearing DataStore preferences")
@@ -359,12 +397,17 @@ class App :
                 "forgetAccount: After - cookie=${YouTube.cookie}, visitorData=${YouTube.visitorData}, dataSyncId=${YouTube.dataSyncId}",
             )
 
-            // Clear WebView cookies to prevent auto-relogin
+            // Drop the YouTube session. The Google session is kept unless the user explicitly
+            // asked to sign out of Google, so that signing back in is a single tap.
             Timber.d("forgetAccount: Clearing WebView CookieManager")
             withContext(Dispatchers.Main) {
                 android.webkit.CookieManager.getInstance().apply {
-                    removeAllCookies { removed ->
-                        Timber.d("forgetAccount: CookieManager.removeAllCookies callback: removed=$removed")
+                    if (signOutOfGoogle) {
+                        removeAllCookies { removed ->
+                            Timber.d("forgetAccount: CookieManager.removeAllCookies callback: removed=$removed")
+                        }
+                    } else {
+                        expireYouTubeCookies()
                     }
                     flush()
                 }

@@ -105,10 +105,6 @@
     <string name="skip_silence_instant">ข้ามช่วงเงียบทันที</string>
     <string name="skip_silence_instant_desc">กระโดดข้ามช่วงเงียบแทนการเร่งความเร็วการเล่น</string>
     <string name="show_top_playlist">แสดงเพลย์ลิสต์ของเพลงที่คุณฟังบ่อยที่สุด</string>
-    <string name="advanced_login">เข้าสู่ระบบด้วยโทเค็น</string>
-    <string name="token_hidden">แตะเพื่อแสดงโทเค็น</string>
-    <string name="token_shown">แตะอีกครั้งเพื่อคัดลอกหรือแก้ไข</string>
-    <string name="token_adv_login_description">นี่คือวิธีเข้าสู่ระบบขั้นสูง แทนการใช้เว็บพอร์ทัล คุณสามารถกรอกหรืออัปเดตโทเค็นเข้าสู่ระบบได้โดยตรง ซึ่งช่วยให้เข้าสู่ระบบหลายอุปกรณ์ได้รวดเร็วยิ่งขึ้น โทเค็นที่ระบบไม่รู้จักหรือมีรูปแบบไม่ถูกต้องจะไม่สามารถใช้งานได้</string>
     <string name="yt_sync">ซิงค์กับบัญชีโดยอัตโนมัติ</string>
     <string name="more_content">เนื้อหาเพิ่มเติม</string>
     <string name="edit_playlist_cover">แก้ไขปกเพลย์ลิสต์</string>

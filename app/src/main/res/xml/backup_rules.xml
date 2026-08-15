@@ -9,4 +9,13 @@
     <exclude
         domain="database"
         path="exoplayer_internal.db" />
+    <!--
+        The Preferences DataStore holds the InnerTube session cookie (SAPISID et al.),
+        visitorData and dataSyncId in plaintext protobuf. Backing it up uploads a live
+        Google session to Drive, so the whole store is excluded. Settings still migrate
+        via the in-app backup/restore, which can strip the auth keys on restore.
+    -->
+    <exclude
+        domain="file"
+        path="./datastore" />
 </full-backup-content>

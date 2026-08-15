@@ -45,7 +45,6 @@
     <string name="background_color">Kolor tła</string>
     <string name="show_downloaded_playlist">Pokaż playlistę \"Pobrane\"</string>
     <string name="customize_colors">Dostosuj kolory</string>
-    <string name="token_adv_login_description">Jest to ZAAWANSOWANA metoda logowania. Zamiast korzystania z portalu internetowego możesz wprowadzić lub zaktualizować token bezpośrednio. Może to być użyteczne dla szybkiego logowania się na wielu urządzeniach. Tokeny w nieprawidłowych formatach będą odrzucane</string>
     <string name="text_color">Kolor tekstu</string>
     <string name="secondary_text_color">Drugi kolor tekstu</string>
     <string name="similar_content_desc">Automatycznie dodawaj więcej podobnych utworów po osiągnięciu końca kolejki</string>
@@ -80,9 +79,6 @@
     <string name="auto_playlists">Automatyczna lista odtwarzania</string>
     <string name="show_liked_playlist">Pokaż playlistę \"polubione\"</string>
     <string name="show_top_playlist">Pokaż playlistę \"Top\"</string>
-    <string name="advanced_login">Zaloguj się za pomocą tokena</string>
-    <string name="token_hidden">Stuknij, aby wyświetlić token</string>
-    <string name="token_shown">Naciśnij ponownie, aby skopiować lub edytować</string>
     <string name="app_language">Język aplikacji</string>
     <string name="enable_similar_content">Włącz podobną zawartość</string>
     <string name="auto_download_on_like">Automatyczne pobieranie polubionych utwórów</string>

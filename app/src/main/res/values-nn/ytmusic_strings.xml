@@ -76,10 +76,6 @@
     <string name="show_top_playlist">Syn «Mine topp»-spelelista</string>
     <string name="show_cached_playlist">Syn «Snarlagra»-spelelista</string>
     <string name="show_uploaded_playlist">Syn «Oppladde»-spelelista</string>
-    <string name="advanced_login">Logg inn med lykel</string>
-    <string name="token_hidden">Trykk for å syna lykelen</string>
-    <string name="token_shown">Trykk att for å kopiera eller brigda</string>
-    <string name="token_adv_login_description">Dette er ein AVANSERT innloggingsmetode. Som alternativ til nettportalen, kan du direkte leggja inn eller oppdatera innloggingslykelen din (innloggings-«token») her. Dette kan t.d. gjera det å logga inn på fleire einingar snøggare. NB: Ugilde lykelformat som appen ikkje lukkast i å tolka, kjem ikkje til å verta godtekne</string>
     <string name="yt_sync">Automatisk synkronisering med konto</string>
     <string name="more_content">Meir innhald</string>
     <string name="edit_playlist_cover">Brigd spelelisteomslag</string>

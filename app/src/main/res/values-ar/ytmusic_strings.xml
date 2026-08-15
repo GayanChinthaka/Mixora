@@ -66,10 +66,6 @@
     <string name="text_color">لون النص</string>
     <string name="secondary_text_color">لون النص الثانوي</string>
     <string name="background_color">لون الخلفية</string>
-    <string name="advanced_login">تسجيل الدخول باستخدام الرمز (Token)</string>
-    <string name="token_hidden">اضغط لعرض ال Token</string>
-    <string name="token_shown">اضغط مرة أخرى للنسخ أو التعديل</string>
-    <string name="token_adv_login_description">هذه طريقة تسجيل دخول متقدمة. بدلاً من استخدام بوابة الويب، يمكنك إدخال الرمز الخاص بك أو تحديثه مباشرة. يسهل ذلك تسجيل الدخول على أجهزة متعددة بسرعة. سيتم رفض الرموز ذات الصيغ غير المدعومة</string>
     <string name="general">عام</string>
     <string name="proxy">الوكيل</string>
     <string name="default_lib_chips">تغيير الشريحة الافتراضية للمكتبة</string>

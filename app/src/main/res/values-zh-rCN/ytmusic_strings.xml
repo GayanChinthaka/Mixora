@@ -48,10 +48,6 @@
     <string name="slim">纤细</string>
     <string name="slim_navbar">更细的底部导航栏</string>
     <string name="show_cached_playlist">显示已缓存播放列表</string>
-    <string name="advanced_login">使用令牌登录</string>
-    <string name="token_hidden">点击显示令牌</string>
-    <string name="token_shown">再次点击以复制或编辑</string>
-    <string name="token_adv_login_description">这是高级登录方法。您可以直接输入或更新您的登录令牌，无需使用网页门户。这对于跨多个设备快速登录非常有用。格式无法识别的令牌将被拒绝</string>
     <string name="general">常规</string>
     <string name="proxy">代理</string>
     <string name="set_quick_picks">设置猜你喜欢</string>

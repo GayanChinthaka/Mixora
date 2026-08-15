@@ -160,9 +160,6 @@
     <string name="skip_silence_desc">Паскараць узнаўленне ціхіх участкаў трэкаў</string>
     <string name="skip_silence_instant">Імгненна прапускаць цішыню</string>
     <string name="skip_silence_instant_desc">Прапускаць ціхія фрагменты адразу замест іх паскарэння</string>
-    <string name="token_hidden">Націсніце, каб паказаць токен</string>
-    <string name="token_shown">Націсніце яшчэ раз, каб скапіяваць або змяніць</string>
-    <string name="token_adv_login_description">Гэта ПРАСУНУТЫ спосаб ўваходу. Замест вэб-партала можна напрамую ўвесці або абнавіць токен. Зручна для хуткага ўваходу на некалькіх прыладах. Токены з няправільным фарматам не прымаюцца</string>
     <string name="yt_sync">Аўтасінхранізацыя з акаўнтам</string>
     <string name="more_content">Болей кантенту</string>
     <string name="sort_ascending">Сартаваць па ўзрастанні</string>
@@ -318,7 +315,6 @@
     <string name="show_interval_indicator">Паказваць індыкатар паўз</string>
     <string name="respect_agent_positioning">Улічваць пазіцыянаванне артыста</string>
     <string name="enable_lrclib_desc">База сінхранізаваных тэкстаў песень, якая падтрымліваецца супольнасцю</string>
-    <string name="advanced_login">Уваход па токену</string>
     <string name="remove_custom_image">Выдаліць свой малюнак</string>
     <string name="resume_on_bluetooth_connect">Працягваць пры падключэнні Bluetooth</string>
     <string name="keep_screen_on_when_player_is_expanded">Не выключаць экран калі плэер разгорнуты</string>

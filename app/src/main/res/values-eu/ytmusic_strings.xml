@@ -72,10 +72,6 @@
     <string name="show_downloaded_playlist">\"Deskargatuak\" zerrenda ikusi</string>
     <string name="show_top_playlist">Onenak zerrenda ikusi</string>
     <string name="show_cached_playlist">Cache-an zerrenda ikusi</string>
-    <string name="advanced_login">Token-arekin saioa hasi</string>
-    <string name="token_hidden">Sakatu \"token\"-a ikusteko</string>
-    <string name="token_shown">Sakatu berriro kopiatu edo editatzeko</string>
-    <string name="token_adv_login_description">Hau saioa hasteko modu AURRERATUA da. Web-portalaerabili ordez, hemen zuzenean sartu edo eguneratu dezakezu zure sarrera-tokena. Adibidez, honek hainbat gailutan sartzea azkartzen lagun dezake. Formatu ezezaguneko token-ak errefusatuko dira</string>
     <string name="yt_sync">Kontuarekin sinkronizazio automatikoa</string>
     <string name="more_content">Eduki gehiago</string>
     <string name="edit_playlist_cover">Editatu erreprodukzio-zerrendaren azala</string>

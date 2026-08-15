@@ -77,9 +77,6 @@
     <string name="show_top_playlist">Rodyti grojaraštį \"Populiariausi\"</string>
     <string name="show_cached_playlist">Rodyti grojaraštį \"Saugykloje\"</string>
     <string name="show_uploaded_playlist">Rodyti grojaraštį \"Įkėlimai\"</string>
-    <string name="advanced_login">Prisijungti naudojant žetoną</string>
-    <string name="token_hidden">Prilieskite kad matytumėte žetoną</string>
-    <string name="token_shown">Prilieskite dar kartą, kad kopijuoti ar redaguoti</string>
     <string name="auto_scroll">Sinchronizuoti</string>
     <string name="show_less">Rodyti mažiau</string>
     <string name="artist_page_settings">Kūrėjo puslapis</string>
@@ -268,7 +265,6 @@
     <string name="skip_silence_desc">Greitasis perėjimas per tyliąsias dainos vietas</string>
     <string name="skip_silence_instant">Staigiai praleiskite tylą</string>
     <string name="skip_silence_instant_desc">Peršokite per tylias vietas, vietoj pagreitinant atkūrimą</string>
-    <string name="token_adv_login_description">Tai PAŽANGUS prisijungimo būdas. Kaip alternatyvą žiniatinklio portalui, galite tiesiogiai įvesti arba atnaujinti savo prisijungimo raktą čia. Pavyzdžiui, tai gali pagreitinti prisijungimą keliuose įrenginiuose. Atminkite, kad bet kokie neteisingi rakto formatai, kurių programa nesugeba išanalizuoti, nebus priimti</string>
     <string name="yt_sync">Automatiškai sinchronizuoti su paskyra</string>
     <string name="more_content">Daugiau turinio</string>
     <string name="edit_playlist_cover">Koreguokite grojaraščio viršelį</string>

@@ -28,10 +28,6 @@
     <string name="lyrics_click_change">Thay đổi lời bài hát khi nhấn vào</string>
     <string name="slim">Dạng mỏng</string>
     <string name="slim_navbar">Thanh điều hướng mỏng phía dưới</string>
-    <string name="advanced_login">Đăng nhập bằng token</string>
-    <string name="token_hidden">Chạm để xem Token</string>
-    <string name="token_shown">Chạm lần nữa để sao chép hoặc chỉnh sửa</string>
-    <string name="token_adv_login_description">Đây là phương thức đăng nhập NÂNG CAO. Thay vì sử dụng cổng thông tin trên web, bạn có thể nhập hoặc cập nhật trực tiếp Token đăng nhập. Cách này giúp bạn đăng nhập nhanh chóng trên nhiều thiết bị. Các mã xác thực có định dạng không hợp lệ sẽ bị từ chối</string>
     <string name="general">Nâng cao</string>
     <string name="proxy">Proxy</string>
     <string name="default_lib_chips">Thay đổi thư viện mặc định</string>

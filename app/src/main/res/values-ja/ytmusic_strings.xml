@@ -45,9 +45,6 @@
     <string name="show_liked_playlist">高評価した曲のプレイリストを表示</string>
     <string name="show_downloaded_playlist">ダウンロードした曲のプレイリストを表示</string>
     <string name="show_top_playlist">マイトップのプレイリストを表示</string>
-    <string name="advanced_login">トークンを使用してログイン</string>
-    <string name="token_hidden">トークンを表示</string>
-    <string name="token_shown">トークンを編集</string>
     <string name="general">一般</string>
     <string name="proxy">プロキシ</string>
     <string name="app_language">言語</string>
@@ -84,7 +81,6 @@
     <string name="lyrics_auto_scroll">歌詞を自動でスクロール</string>
     <string name="lyrics_romanize_japanese">日本語の歌詞にローマ字を追加</string>
     <string name="lyrics_romanize_korean">韓国語の歌詞にローマ字を追加</string>
-    <string name="token_adv_login_description">これは高度なログイン方法です。ウェブポータルを使用する代わりに、ログイントークンを直接入力または更新できます。複数のデバイスで迅速にサインインする際に便利です。認識されない形式のトークンは拒否されます</string>
     <string name="yt_sync">アカウントと自動で同期</string>
     <string name="more_content">その他のコンテンツ</string>
     <string name="default_lib_chips">デフォルトのライブラリタブを変更</string>
