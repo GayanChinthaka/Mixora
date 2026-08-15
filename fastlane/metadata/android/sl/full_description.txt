@@ -1,8 +1,8 @@
-Material 3 odjemalec YouTube Music za Android
+﻿Material 3 odjemalec YouTube Music za Android
 
 Lastnosti:
 
-- Predvajajte katerokoli skladbo ali videoposnetek iz YT Music.
+- Predvajajte katerokoli skladbo ali videoposnetek iz Mixora.
 - Predvajanje v ozadju
 - Osebne prilagojene hitre izbire
 - Upravljanje knjižnice

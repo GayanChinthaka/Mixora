@@ -1,8 +1,8 @@
-Client Material 3 YouTube Music pu Android
+﻿Client Material 3 YouTube Music pu Android
 
 Fonksyonaliyé:
 
-- Zwé lamizik ek vidéo ki lor YT Music
+- Zwé lamizik ek vidéo ki lor Mixora
 - Zwé dan background.
 - Choix rapide personalizé.
 - Zere ou librairie.

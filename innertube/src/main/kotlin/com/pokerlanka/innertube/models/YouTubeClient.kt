@@ -1,4 +1,4 @@
-package com.pokerlanka.innertube.models
+﻿package com.pokerlanka.innertube.models
 
 import kotlinx.serialization.Serializable
 
@@ -198,7 +198,7 @@ data class YouTubeClient(
         )
 
         /**
-         * Uses non adaptive bitrate, which fixes audio stuttering with YT Music.
+         * Uses non adaptive bitrate, which fixes audio stuttering with Mixora.
          * Does not use AV1.
          */
         val ANDROID_VR_1_43_32 = YouTubeClient(

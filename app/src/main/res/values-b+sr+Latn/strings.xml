@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="home">Početna</string>
     <string name="songs">Pesme</string>
@@ -29,7 +29,7 @@
     <string name="most_played_artists">Najslušaniji izvođači</string>
     <string name="most_played_albums">Najslušaniji albumi</string>
     <string name="search">Pretraži</string>
-    <string name="search_yt_music">Pretraži YouTube Music…</string>
+    <string name="search_mixora">Pretraži YouTube Music…</string>
     <string name="filter_downloaded">Preuzeto</string>
     <string name="filter_all">Sve</string>
     <string name="filter_songs">Pesme</string>
@@ -221,7 +221,7 @@
     <string name="restore_failed">Neuspešno vraćanje rezervne kopije</string>
     <string name="dismiss">Odbaci</string>
     <string name="options">Opcije</string>
-    <string name="about">O YT Music-u</string>
+    <string name="about">O Mixora-u</string>
     <string name="app_version">Verzija aplikacije</string>
     <string name="new_version_available">Dostupna je nova verzija</string>
     <string name="translation_models">Modeli prevođenja</string>

@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="home">Home</string>
     <string name="songs">Brani</string>
@@ -25,7 +25,7 @@
     <string name="most_played_artists">Artisti più ascoltati</string>
     <string name="most_played_albums">Album più ascoltati</string>
     <string name="search">Cerca</string>
-    <string name="search_yt_music">Cerca su YouTube Music…</string>
+    <string name="search_mixora">Cerca su YouTube Music…</string>
     <string name="search_library">Cerca nella libreria…</string>
     <string name="filter_library">Libreria</string>
     <string name="filter_liked">Piaciuti</string>

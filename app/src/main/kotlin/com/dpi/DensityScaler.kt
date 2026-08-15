@@ -1,4 +1,4 @@
-package com.dpi
+﻿package com.dpi
 
 import android.content.Context
 import timber.log.Timber
@@ -24,7 +24,7 @@ class DensityScaler : BaseLifecycleContentProvider() {
     }
 
     companion object {
-        private const val PREFS_NAME = "ytmusic_settings"
+        private const val PREFS_NAME = "Mixora_settings"
         private const val KEY_DENSITY_SCALE = "density_scale_factor"
         private const val DEFAULT_SCALE_FACTOR = 1.0f
 

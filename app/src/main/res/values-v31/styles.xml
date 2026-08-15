@@ -1,9 +1,9 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Widget Theme for Android 12+ with Dynamic Colors -->
-    <style name="Theme.Widget.YTmusic" parent="@android:style/Theme.DeviceDefault.DayNight" />
+    <style name="Theme.Widget.Mixora" parent="@android:style/Theme.DeviceDefault.DayNight" />
 
-    <style name="Theme.YTmusic.Transparent" parent="@android:style/Theme.Translucent.NoTitleBar">
+    <style name="Theme.Mixora.Transparent" parent="@android:style/Theme.Translucent.NoTitleBar">
         <item name="android:windowBackground">@android:color/transparent</item>
         <item name="android:windowIsTranslucent">true</item>
         <item name="android:windowNoTitle">true</item>

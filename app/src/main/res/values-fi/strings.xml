@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
     <string name="home">Koti</string>
     <string name="songs">Kappaleet</string>
@@ -24,7 +24,7 @@
     <string name="most_played_artists">Eniten soitetut artistit</string>
     <string name="most_played_albums">Eniten soitetut albumit</string>
     <string name="search">Etsi</string>
-    <string name="search_yt_music">Hae YouTube Musicista…</string>
+    <string name="search_mixora">Hae YouTube Musicista…</string>
     <string name="search_library">Hae kirjastosta…</string>
     <string name="filter_library">Kirjasto</string>
     <string name="filter_liked">Tykätty</string>

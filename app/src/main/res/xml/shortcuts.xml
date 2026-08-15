@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
     <shortcut
         android:enabled="true"
@@ -6,9 +6,9 @@
         android:shortcutId="search"
         android:shortcutShortLabel="@string/search">
         <intent
-            android:action="com.pokerlanka.ytmusic.action.SEARCH"
-            android:targetClass="com.pokerlanka.ytmusic.MainActivity"
-            android:targetPackage="com.pokerlanka.ytmusic" />
+            android:action="com.pokerlanka.mixora.action.SEARCH"
+            android:targetClass="com.pokerlanka.mixora.MainActivity"
+            android:targetPackage="com.pokerlanka.mixora" />
     </shortcut>
     <shortcut
         android:enabled="true"
@@ -16,8 +16,8 @@
         android:shortcutId="library"
         android:shortcutShortLabel="@string/filter_library">
         <intent
-            android:action="com.pokerlanka.ytmusic.action.LIBRARY"
-            android:targetClass="com.pokerlanka.ytmusic.MainActivity"
-            android:targetPackage="com.pokerlanka.ytmusic" />
+            android:action="com.pokerlanka.mixora.action.LIBRARY"
+            android:targetClass="com.pokerlanka.mixora.MainActivity"
+            android:targetPackage="com.pokerlanka.mixora" />
     </shortcut>
 </shortcuts>

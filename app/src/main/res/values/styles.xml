@@ -1,6 +1,6 @@
-<resources xmlns:tools="http://schemas.android.com/tools">
+﻿<resources xmlns:tools="http://schemas.android.com/tools">
 
-    <style name="Theme.YTmusic" parent="android:Theme.Material.Light.NoActionBar">
+    <style name="Theme.Mixora" parent="android:Theme.Material.Light.NoActionBar">
         <item name="android:windowContentOverlay">@null</item>
         <item name="android:windowDrawsSystemBarBackgrounds">true</item>
         <item name="android:windowMinWidthMinor">100%</item>
@@ -13,12 +13,12 @@
     </style>
 
     <!-- Widget Theme with Material 3 colors fallback for API < 31 -->
-    <style name="Theme.Widget.YTmusic" parent="@android:style/Theme.DeviceDefault.DayNight">
+    <style name="Theme.Widget.Mixora" parent="@android:style/Theme.DeviceDefault.DayNight">
         <item name="android:colorBackground">#E6E1E5</item>
     </style>
 
     <!-- Transparent theme for Music Recognizer Tile Service -->
-    <style name="Theme.YTmusic.Transparent" parent="@android:style/Theme.Translucent.NoTitleBar">
+    <style name="Theme.Mixora.Transparent" parent="@android:style/Theme.Translucent.NoTitleBar">
         <item name="android:windowBackground">@android:color/transparent</item>
         <item name="android:windowIsTranslucent">true</item>
         <item name="android:windowIsFloating">false</item>
@@ -27,7 +27,7 @@
         <item name="android:windowAnimationStyle">@null</item>
     </style>
 
-    <style name="YTmusicPlaylistWidgetCard">
+    <style name="MixoraPlaylistWidgetCard">
         <item name="android:layout_width">0dp</item>
         <item name="android:layout_height">wrap_content</item>
         <item name="android:layout_weight">1</item>
@@ -35,12 +35,12 @@
         <item name="android:gravity">center_horizontal</item>
     </style>
 
-    <style name="YTmusicPlaylistWidgetArtworkFrame">
+    <style name="MixoraPlaylistWidgetArtworkFrame">
         <item name="android:layout_width">64dp</item>
         <item name="android:layout_height">64dp</item>
     </style>
 
-    <style name="YTmusicPlaylistWidgetArtwork">
+    <style name="MixoraPlaylistWidgetArtwork">
         <item name="android:layout_width">64dp</item>
         <item name="android:layout_height">64dp</item>
         <item name="android:scaleType">centerCrop</item>
@@ -48,7 +48,7 @@
         <item name="android:contentDescription">@string/widget_playlists</item>
     </style>
 
-    <style name="YTmusicPlaylistWidgetCardPlayButton">
+    <style name="MixoraPlaylistWidgetCardPlayButton">
         <item name="android:layout_width">26dp</item>
         <item name="android:layout_height">26dp</item>
         <item name="android:layout_gravity">bottom|end</item>
@@ -57,7 +57,7 @@
         <item name="android:background">@drawable/widget_play_button_circular</item>
     </style>
 
-    <style name="YTmusicPlaylistWidgetCardPlayIcon">
+    <style name="MixoraPlaylistWidgetCardPlayIcon">
         <item name="android:layout_width">15dp</item>
         <item name="android:layout_height">15dp</item>
         <item name="android:layout_gravity">center</item>
@@ -65,7 +65,7 @@
         <item name="android:contentDescription">@string/play</item>
     </style>
 
-    <style name="YTmusicPlaylistWidgetCardTitle">
+    <style name="MixoraPlaylistWidgetCardTitle">
         <item name="android:layout_width">68dp</item>
         <item name="android:layout_height">wrap_content</item>
         <item name="android:layout_marginTop">5dp</item>

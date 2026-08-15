@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="artists">فنانون</string>
     <string name="albums">ألبومات</string>
@@ -15,7 +15,7 @@
     <string name="last_week">الأسبوع الماضي</string>
     <string name="most_played_artists">الفنانون الأكثر استماعًا</string>
     <string name="most_played_albums">الألبومات الأكثر استماعًا</string>
-    <string name="search_yt_music">ابحث في YouTube Music…</string>
+    <string name="search_mixora">ابحث في YouTube Music…</string>
     <string name="search_library">ابحث في المكتبة…</string>
     <string name="filter_liked">أعجبك</string>
     <string name="filter_downloaded">تم تنزيلها</string>

@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
     <string name="home">ഹോം</string>
     <string name="songs">പാട്ടുകൾ</string>
@@ -10,7 +10,7 @@
         <item quantity="other">%d തിരഞ്ഞെടുത്തു</item>
     </plurals>
     <string name="search">തിരയുക</string>
-    <string name="search_yt_music">യൂട്യൂബ് സംഗീതം തിരയുക…</string>
+    <string name="search_mixora">യൂട്യൂബ് സംഗീതം തിരയുക…</string>
     <string name="search_library">ലൈബ്രറിയിൽ തിരയുക…</string>
     <string name="filter_all">എല്ലാം</string>
     <string name="filter_songs">പാട്ടുകൾ</string>

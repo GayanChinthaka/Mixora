@@ -1,8 +1,8 @@
-Cliente em Material 3 do YouTube Music para Android
+﻿Cliente em Material 3 do YouTube Music para Android
 
 Recursos:
 
-- Toque qualquer música ou vídeo do YT Music
+- Toque qualquer música ou vídeo do Mixora
 - Reprodução em segundo plano
 - Escolhas rápidas personalizadas
 - Gestão da biblioteca

@@ -1,6 +1,6 @@
-package com.pokerlanka.ytmusic.betterlyrics
+﻿package com.pokerlanka.mixora.betterlyrics
 
-import com.pokerlanka.ytmusic.betterlyrics.models.TTMLResponse
+import com.pokerlanka.mixora.betterlyrics.models.TTMLResponse
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.engine.cio.CIO

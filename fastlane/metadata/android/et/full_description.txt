@@ -1,8 +1,8 @@
-Material 3 põhine YouTube Musicu klient Androidile
+﻿Material 3 põhine YouTube Musicu klient Androidile
 
 Funktsionaalsused:
 
-- Kuula või vaata kõiki lugusid YT Musicust
+- Kuula või vaata kõiki lugusid Mixoraust
 - Taasesitus taustal 
 - Isiklikud kiirvalikud 
 - Muusikakogu haldus 

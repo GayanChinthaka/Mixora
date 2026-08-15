@@ -1,8 +1,8 @@
-Material 3 YouTube Music klient për Android
+﻿Material 3 YouTube Music klient për Android
 
 Karakteristikat:
 
-- Luaj çdo këngë ose video nga YT Music
+- Luaj çdo këngë ose video nga Mixora
 - Luajtje në sfond
 - Zgjedhje të shpejta të personalizuara
 - Menaxhim i bibliotekës

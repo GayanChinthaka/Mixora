@@ -1,8 +1,8 @@
-Material 3 YouTube Music client for Android
+﻿Material 3 YouTube Music client for Android
 
 Features:
 
-- Play any song or video from YT Music
+- Play any song or video from Mixora
 - Background playback 
 - Personalized quick picks 
 - Library management 

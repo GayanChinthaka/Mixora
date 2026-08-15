@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
     <string name="home">Ana Sayfa</string>
     <string name="songs">Şarkılar</string>
@@ -24,7 +24,7 @@
     <string name="most_played_artists">En çok dinlenen sanatçılar</string>
     <string name="most_played_albums">En çok dinlenen albümler</string>
     <string name="search">Arama</string>
-    <string name="search_yt_music">YouTube Müzik\'te Ara…</string>
+    <string name="search_mixora">YouTube Müzik\'te Ara…</string>
     <string name="search_library">Kütüphanede ara…</string>
     <string name="filter_library">Kütüphane</string>
     <string name="filter_liked">Beğenilenler</string>

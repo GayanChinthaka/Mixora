@@ -24,3 +24,6 @@ local.properties
 .idea/
 *.hprd
 .claude/
+
+release.keystore
+release.env.ps1

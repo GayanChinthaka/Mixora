@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="home">Αρχική</string>
     <string name="songs">Τραγούδια</string>
@@ -27,7 +27,7 @@
     <string name="most_played_artists">Οι πιο πολυπαιγμένοι καλλιτέχνες</string>
     <string name="most_played_albums">Τα πιο πολυπαιγμένα άλμπουμ</string>
     <string name="search">Αναζήτηση</string>
-    <string name="search_yt_music">Αναζήτηση Μουσικής YouTube…</string>
+    <string name="search_mixora">Αναζήτηση Μουσικής YouTube…</string>
     <string name="search_library">Αναζήτηση βιβλιοθήκης…</string>
     <string name="filter_library">Βιβλιοθήκη</string>
     <string name="filter_liked">Αγαπημένα</string>

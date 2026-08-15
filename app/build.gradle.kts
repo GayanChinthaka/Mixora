@@ -1,4 +1,4 @@
-import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+﻿import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import java.util.Properties
 
 val localProperties = Properties()
@@ -7,13 +7,13 @@ if (localPropertiesFile.exists()) {
     localProperties.load(localPropertiesFile.inputStream())
 }
 
-val baseApplicationId = "com.pokerlanka.ytmusic"
-val applicationIdOverride = System.getenv("YTMUSIC_APPLICATION_ID")?.takeIf { it.isNotBlank() }
-val appNameOverride = System.getenv("YTMUSIC_APP_NAME")?.takeIf { it.isNotBlank() }
-val debugKeystorePathOverride = System.getenv("YTMUSIC_DEBUG_KEYSTORE_PATH")?.takeIf { it.isNotBlank() }
-val debugKeystorePassword = System.getenv("YTMUSIC_DEBUG_KEYSTORE_PASSWORD")?.takeIf { it.isNotBlank() } ?: "android"
-val debugKeyAlias = System.getenv("YTMUSIC_DEBUG_KEY_ALIAS")?.takeIf { it.isNotBlank() } ?: "androiddebugkey"
-val debugKeyPassword = System.getenv("YTMUSIC_DEBUG_KEY_PASSWORD")?.takeIf { it.isNotBlank() } ?: "android"
+val baseApplicationId = "com.pokerlanka.mixora"
+val applicationIdOverride = System.getenv("Mixora_APPLICATION_ID")?.takeIf { it.isNotBlank() }
+val appNameOverride = System.getenv("Mixora_APP_NAME")?.takeIf { it.isNotBlank() }
+val debugKeystorePathOverride = System.getenv("Mixora_DEBUG_KEYSTORE_PATH")?.takeIf { it.isNotBlank() }
+val debugKeystorePassword = System.getenv("Mixora_DEBUG_KEYSTORE_PASSWORD")?.takeIf { it.isNotBlank() } ?: "android"
+val debugKeyAlias = System.getenv("Mixora_DEBUG_KEY_ALIAS")?.takeIf { it.isNotBlank() } ?: "androiddebugkey"
+val debugKeyPassword = System.getenv("Mixora_DEBUG_KEY_PASSWORD")?.takeIf { it.isNotBlank() } ?: "android"
 val persistentDebugKeystoreFile = file("persistent-debug.keystore")
 val workflowDebugKeystoreFile = debugKeystorePathOverride?.let(::file)
 
@@ -26,7 +26,7 @@ plugins {
 }
 
 android {
-    namespace = "com.pokerlanka.ytmusic"
+    namespace = "com.pokerlanka.mixora"
     compileSdk = 37
 
     defaultConfig {
@@ -35,7 +35,7 @@ android {
         targetSdk = 36
         versionCode = 152
         versionName = "13.6.3"
-        resValue("string", "app_name", appNameOverride ?: "YT Music")
+        resValue("string", "app_name", appNameOverride ?: "Mixora")
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
@@ -119,7 +119,7 @@ android {
             }
             isDebuggable = true
             if (appNameOverride == null) {
-                resValue("string", "app_name", "YT Music Debug")
+                resValue("string", "app_name", "Mixora Debug")
             }
             signingConfig =
                 if (workflowDebugKeystoreFile != null) {

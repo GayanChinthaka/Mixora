@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="home">ホーム</string>
     <string name="songs">曲</string>
@@ -27,7 +27,7 @@
     <string name="most_played_artists">最も聴いたアーティスト</string>
     <string name="most_played_albums">最も聴いたアルバム</string>
     <string name="search">検索</string>
-    <string name="search_yt_music">YouTube Musicを検索…</string>
+    <string name="search_mixora">YouTube Musicを検索…</string>
     <string name="search_library">ライブラリを検索…</string>
     <string name="filter_library">ライブラリ</string>
     <string name="filter_liked">高評価済み</string>

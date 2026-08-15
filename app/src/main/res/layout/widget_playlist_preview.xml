@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@android:id/background"
     android:layout_width="match_parent"
@@ -10,7 +10,7 @@
     android:paddingEnd="14dp"
     android:paddingTop="12dp"
     android:paddingBottom="12dp"
-    android:theme="@style/Theme.Widget.YTmusic">
+    android:theme="@style/Theme.Widget.Mixora">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -121,36 +121,36 @@
         android:orientation="horizontal"
         android:gravity="start">
 
-        <LinearLayout style="@style/YTmusicPlaylistWidgetCard">
-            <FrameLayout style="@style/YTmusicPlaylistWidgetArtworkFrame">
-                <ImageView style="@style/YTmusicPlaylistWidgetArtwork" android:src="@drawable/playlist_play" />
-                <FrameLayout style="@style/YTmusicPlaylistWidgetCardPlayButton"><ImageView style="@style/YTmusicPlaylistWidgetCardPlayIcon" /></FrameLayout>
+        <LinearLayout style="@style/MixoraPlaylistWidgetCard">
+            <FrameLayout style="@style/MixoraPlaylistWidgetArtworkFrame">
+                <ImageView style="@style/MixoraPlaylistWidgetArtwork" android:src="@drawable/playlist_play" />
+                <FrameLayout style="@style/MixoraPlaylistWidgetCardPlayButton"><ImageView style="@style/MixoraPlaylistWidgetCardPlayIcon" /></FrameLayout>
             </FrameLayout>
-            <TextView style="@style/YTmusicPlaylistWidgetCardTitle" android:text="@string/widget_playlists" />
+            <TextView style="@style/MixoraPlaylistWidgetCardTitle" android:text="@string/widget_playlists" />
         </LinearLayout>
 
-        <LinearLayout style="@style/YTmusicPlaylistWidgetCard">
-            <FrameLayout style="@style/YTmusicPlaylistWidgetArtworkFrame">
-                <ImageView style="@style/YTmusicPlaylistWidgetArtwork" android:src="@drawable/ic_widget_heart_nav" />
-                <FrameLayout style="@style/YTmusicPlaylistWidgetCardPlayButton"><ImageView style="@style/YTmusicPlaylistWidgetCardPlayIcon" /></FrameLayout>
+        <LinearLayout style="@style/MixoraPlaylistWidgetCard">
+            <FrameLayout style="@style/MixoraPlaylistWidgetArtworkFrame">
+                <ImageView style="@style/MixoraPlaylistWidgetArtwork" android:src="@drawable/ic_widget_heart_nav" />
+                <FrameLayout style="@style/MixoraPlaylistWidgetCardPlayButton"><ImageView style="@style/MixoraPlaylistWidgetCardPlayIcon" /></FrameLayout>
             </FrameLayout>
-            <TextView style="@style/YTmusicPlaylistWidgetCardTitle" android:text="@string/liked_songs" />
+            <TextView style="@style/MixoraPlaylistWidgetCardTitle" android:text="@string/liked_songs" />
         </LinearLayout>
 
-        <LinearLayout style="@style/YTmusicPlaylistWidgetCard">
-            <FrameLayout style="@style/YTmusicPlaylistWidgetArtworkFrame">
-                <ImageView style="@style/YTmusicPlaylistWidgetArtwork" android:src="@drawable/cached" />
-                <FrameLayout style="@style/YTmusicPlaylistWidgetCardPlayButton"><ImageView style="@style/YTmusicPlaylistWidgetCardPlayIcon" /></FrameLayout>
+        <LinearLayout style="@style/MixoraPlaylistWidgetCard">
+            <FrameLayout style="@style/MixoraPlaylistWidgetArtworkFrame">
+                <ImageView style="@style/MixoraPlaylistWidgetArtwork" android:src="@drawable/cached" />
+                <FrameLayout style="@style/MixoraPlaylistWidgetCardPlayButton"><ImageView style="@style/MixoraPlaylistWidgetCardPlayIcon" /></FrameLayout>
             </FrameLayout>
-            <TextView style="@style/YTmusicPlaylistWidgetCardTitle" android:text="@string/downloaded_songs" />
+            <TextView style="@style/MixoraPlaylistWidgetCardTitle" android:text="@string/downloaded_songs" />
         </LinearLayout>
 
-        <LinearLayout style="@style/YTmusicPlaylistWidgetCard">
-            <FrameLayout style="@style/YTmusicPlaylistWidgetArtworkFrame">
-                <ImageView style="@style/YTmusicPlaylistWidgetArtwork" android:src="@drawable/trending_up" />
-                <FrameLayout style="@style/YTmusicPlaylistWidgetCardPlayButton"><ImageView style="@style/YTmusicPlaylistWidgetCardPlayIcon" /></FrameLayout>
+        <LinearLayout style="@style/MixoraPlaylistWidgetCard">
+            <FrameLayout style="@style/MixoraPlaylistWidgetArtworkFrame">
+                <ImageView style="@style/MixoraPlaylistWidgetArtwork" android:src="@drawable/trending_up" />
+                <FrameLayout style="@style/MixoraPlaylistWidgetCardPlayButton"><ImageView style="@style/MixoraPlaylistWidgetCardPlayIcon" /></FrameLayout>
             </FrameLayout>
-            <TextView style="@style/YTmusicPlaylistWidgetCardTitle" android:text="@string/my_top" />
+            <TextView style="@style/MixoraPlaylistWidgetCardTitle" android:text="@string/my_top" />
         </LinearLayout>
     </LinearLayout>
 </LinearLayout>

@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <!-- Compact 4x1 Widget - Single row with album art, song info, like and play buttons -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@android:id/background"
@@ -11,7 +11,7 @@
     android:paddingTop="8dp"
     android:paddingBottom="8dp"
     android:gravity="center_vertical"
-    android:theme="@style/Theme.Widget.YTmusic">
+    android:theme="@style/Theme.Widget.Mixora">
 
     <!-- Album Art - Square -->
     <ImageView

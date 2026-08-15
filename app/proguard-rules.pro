@@ -1,4 +1,4 @@
-# Add project specific ProGuard rules here.
+﻿# Add project specific ProGuard rules here.
 # You can control the set of applied configuration files using the
 # proguardFiles setting in build.gradle.kts.
 #
@@ -10,20 +10,20 @@
 # Without this, R8 assigns short names (e.g. `j`, `k`) to renamed classes in a non-deterministic
 # order, causing byte-for-byte differences between builds. This is required for F-Droid / IzzyOnDroid
 # Reproducible Build verification. Code shrinking (dead code removal) remains fully enabled.
-# Since YTmusic is fully open-source, obfuscation provides no meaningful security benefit.
+# Since Mixora is fully open-source, obfuscation provides no meaningful security benefit.
 -dontobfuscate
 
 # WebView JavaScript interfaces
--keepclassmembers class com.pokerlanka.ytmusic.utils.cipher.CipherWebView {
+-keepclassmembers class com.pokerlanka.mixora.utils.cipher.CipherWebView {
     @android.webkit.JavascriptInterface public *;
 }
--keepclassmembers class com.pokerlanka.ytmusic.utils.potoken.PoTokenWebView {
+-keepclassmembers class com.pokerlanka.mixora.utils.potoken.PoTokenWebView {
     @android.webkit.JavascriptInterface public *;
 }
 
 # Keep streaming utility classes
--keep class com.pokerlanka.ytmusic.utils.cipher.** { *; }
--keep class com.pokerlanka.ytmusic.utils.potoken.** { *; }
+-keep class com.pokerlanka.mixora.utils.cipher.** { *; }
+-keep class com.pokerlanka.mixora.utils.potoken.** { *; }
 
 # Keep coroutine continuation for WebView callbacks
 -keepclassmembers class * {
@@ -146,11 +146,11 @@
 
 ## Queue Persistence Rules
 # Keep queue-related classes to prevent serialization issues in release builds
--keep class com.pokerlanka.ytmusic.models.PersistQueue { *; }
--keep class com.pokerlanka.ytmusic.models.PersistPlayerState { *; }
--keep class com.pokerlanka.ytmusic.models.QueueData { *; }
--keep class com.pokerlanka.ytmusic.models.QueueType { *; }
--keep class com.pokerlanka.ytmusic.playback.queues.** { *; }
+-keep class com.pokerlanka.mixora.models.PersistQueue { *; }
+-keep class com.pokerlanka.mixora.models.PersistPlayerState { *; }
+-keep class com.pokerlanka.mixora.models.QueueData { *; }
+-keep class com.pokerlanka.mixora.models.QueueType { *; }
+-keep class com.pokerlanka.mixora.playback.queues.** { *; }
 
 # Keep serialization methods for queue persistence
 -keepclassmembers class * implements java.io.Serializable {
@@ -164,7 +164,7 @@
 -keep interface com.yalantis.ucrop** { *; }
 
 ## Google Cast Rules
--keep class com.pokerlanka.ytmusic.cast.** { *; }
+-keep class com.pokerlanka.mixora.cast.** { *; }
 -keep class com.google.android.gms.cast.** { *; }
 -keep class androidx.mediarouter.** { *; }
 
@@ -172,8 +172,8 @@
 -dontwarn com.google.re2j.**
 
 # Vibra fingerprint library
--keep class com.pokerlanka.ytmusic.recognition.VibraSignature { *; }
--keepclassmembers class com.pokerlanka.ytmusic.recognition.VibraSignature {
+-keep class com.pokerlanka.mixora.recognition.VibraSignature { *; }
+-keepclassmembers class com.pokerlanka.mixora.recognition.VibraSignature {
     native <methods>;
 }
 
@@ -188,8 +188,8 @@
 -dontwarn io.ktor.**
 
 ## Listen Together Protobuf
--keep class com.pokerlanka.ytmusic.listentogether.proto.** { *; }
--keepclassmembers class com.pokerlanka.ytmusic.listentogether.proto.** { *; }
+-keep class com.pokerlanka.mixora.listentogether.proto.** { *; }
+-keepclassmembers class com.pokerlanka.mixora.listentogether.proto.** { *; }
 
 ## Shazam Models
 -keep class com.pokerlanka.shazamkit.models.** { *; }

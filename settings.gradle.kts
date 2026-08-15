@@ -1,4 +1,4 @@
-@file:Suppress("UnstableApiUsage")
+﻿@file:Suppress("UnstableApiUsage")
 
 pluginManagement {
     repositories {
@@ -24,7 +24,7 @@ dependencyResolutionManagement {
 //     id("org.gradle.toolchains.foojay-resolver-convention") version("1.0.0")
 // }
 
-rootProject.name = "YTmusic"
+rootProject.name = "Mixora"
 include(":app")
 include(":innertube")
 include(":kugou")
@@ -36,7 +36,7 @@ include(":shazamkit")
 include(":paxsenix")
 
 // Use a local copy of NewPipe Extractor by uncommenting the lines below.
-// We assume, that YTmusic and NewPipe Extractor have the same parent directory.
+// We assume, that Mixora and NewPipe Extractor have the same parent directory.
 // If this is not the case, please change the path in includeBuild().
 //
 // For this to work you also need to change the implementation in innertube/build.gradle.kts

@@ -1,8 +1,8 @@
-Material 3 YouTube Music aplikazioa Android-erako
+﻿Material 3 YouTube Music aplikazioa Android-erako
 
 Ezaugarriak:
 
-- YT Music-eko edozein abesti edo bideo erreproduzitu
+- Mixora-eko edozein abesti edo bideo erreproduzitu
 - Atzeko planoan erreprodukzioa
 - Aukera azkarrak pertsonalizatuta
 - Liburutegiaren kudeaketa

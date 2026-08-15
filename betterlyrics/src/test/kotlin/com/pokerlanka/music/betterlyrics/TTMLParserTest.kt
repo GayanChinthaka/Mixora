@@ -1,5 +1,5 @@
-
-package com.pokerlanka.ytmusic.betterlyrics
+﻿
+package com.pokerlanka.mixora.betterlyrics
 
 import org.junit.Test
 import org.junit.Assert.*

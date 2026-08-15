@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
     <string name="home">خانه</string>
     <string name="songs">ترانه‌ها</string>
@@ -24,7 +24,7 @@
     <string name="most_played_artists">بیشترین هنرمندهای پخش‌شده</string>
     <string name="most_played_albums">بیشترین مجموعه‌های پخش‌شده</string>
     <string name="search">جستجو</string>
-    <string name="search_yt_music">جستجو در یوتیوب موزیک…</string>
+    <string name="search_mixora">جستجو در یوتیوب موزیک…</string>
     <string name="search_library">جستجوی کتاب‌خانه…</string>
     <string name="filter_library">کتاب‌خانه</string>
     <string name="filter_liked">پسندشده</string>

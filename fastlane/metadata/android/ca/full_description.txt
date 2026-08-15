@@ -1,8 +1,8 @@
-Material 3 client de YouTube Music per a Android
+﻿Material 3 client de YouTube Music per a Android
 
 Característiques:
 
-- Reprodueix qualsevol cançó o vídeo de YT Music
+- Reprodueix qualsevol cançó o vídeo de Mixora
 - Reproducció en segon pla
 - Seleccions ràpides personalitzades
 - Gestió de la biblioteca

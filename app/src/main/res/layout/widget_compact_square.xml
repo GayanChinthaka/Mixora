@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <!-- Compact 2x2 Widget - Album art with play button overlay -->
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@android:id/background"
@@ -6,7 +6,7 @@
     android:layout_height="match_parent"
     android:background="@drawable/widget_background"
     android:padding="12dp"
-    android:theme="@style/Theme.Widget.YTmusic">
+    android:theme="@style/Theme.Widget.Mixora">
 
     <!-- Album Art Container -->
     <FrameLayout

@@ -1,4 +1,4 @@
-package com.pokerlanka.lastfm
+﻿package com.pokerlanka.lastfm
 
 import com.pokerlanka.lastfm.models.Authentication
 import com.pokerlanka.lastfm.models.LastFmError
@@ -50,7 +50,7 @@ object LastFM {
         format: String = "json"
     ) {
         contentType(ContentType.Application.FormUrlEncoded)
-        userAgent("YTmusic (https://github.com/GayanChinthaka/YT-Music)")
+        userAgent("Mixora (https://github.com/GayanChinthaka/Mixora)")
         val paramsForSig = mutableMapOf(
             "method" to method,
             "api_key" to apiKey

@@ -1,8 +1,8 @@
-Materyal 3 Youtube Music na kliyente na para sa Android
+﻿Materyal 3 Youtube Music na kliyente na para sa Android
 
 Mga Katangian:
 
-- Magpatugtog ng anumang awitin o bidyo na mula sa YT Music
+- Magpatugtog ng anumang awitin o bidyo na mula sa Mixora
 - Magpatugtog ng awitin kahit wala sa aplikasyon
 - Personalisadong listahan ng mabilisang pagpili
 - Pamamahala ng Aklatan

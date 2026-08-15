@@ -1,8 +1,8 @@
-„YouTube Music” grotuvas, naudojantis „Material 3”, skirtas „Android”
+﻿„YouTube Music” grotuvas, naudojantis „Material 3”, skirtas „Android”
 
 Funkcijos:
 
-- Grok bet kokią dainą ar klipą iš „YT Music” 
+- Grok bet kokią dainą ar klipą iš „Mixora” 
 - Grojimas fone 
 - Suasmeninti greitieji pasiūlymai
 - Bibliotekos tvarkymas.

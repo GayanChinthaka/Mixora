@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
     <string name="home">Kezdőlap</string>
     <string name="songs">Dalok</string>
@@ -24,7 +24,7 @@
     <string name="most_played_artists">Legtöbbet játszott előadók</string>
     <string name="most_played_albums">Legtöbbet játszott albumok</string>
     <string name="search">Keresés</string>
-    <string name="search_yt_music">Keresés a YouTube Zenén…</string>
+    <string name="search_mixora">Keresés a YouTube Zenén…</string>
     <string name="search_library">Keresés a könyvtárban…</string>
     <string name="filter_library">Könyvtár</string>
     <string name="filter_liked">Kedvelt</string>

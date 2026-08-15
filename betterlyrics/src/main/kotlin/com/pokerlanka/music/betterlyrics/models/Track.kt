@@ -1,4 +1,4 @@
-package com.pokerlanka.ytmusic.betterlyrics.models
+﻿package com.pokerlanka.mixora.betterlyrics.models
 
 import kotlinx.serialization.Serializable
 

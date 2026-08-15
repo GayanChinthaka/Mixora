@@ -1,7 +1,7 @@
-package com.pokerlanka.paxsenix
+﻿package com.pokerlanka.paxsenix
 
 import android.content.Context
-import com.pokerlanka.ytmusic.betterlyrics.TTMLParser
+import com.pokerlanka.mixora.betterlyrics.TTMLParser
 import com.pokerlanka.paxsenix.models.AppleMusicSearchResponse
 import com.pokerlanka.paxsenix.models.LyricsResponse
 
@@ -63,7 +63,7 @@ object Paxsenix {
 
                 defaultRequest {
                     url("https://lyrics.paxsenix.org")
-                    header("User-Agent", "YTmusic/$appVersion")
+                    header("User-Agent", "Mixora/$appVersion")
                 }
 
                 expectSuccess = true

@@ -1,14 +1,14 @@
-<div align="center">
+﻿<div align="center">
 
-<img src="https://github.com/GayanChinthaka/YT-Music/blob/main/fastlane/metadata/android/en-US/images/icon.png" alt="YTmusic app icon" width="200" />
+<img src="https://github.com/GayanChinthaka/Mixora/blob/main/fastlane/metadata/android/en-US/images/icon.png" alt="Mixora app icon" width="200" />
 
-# YT Music
+# Mixora
 
 ### YouTube Music client for Android
 
 <br/>
 
-[![License](https://img.shields.io/github/license/GayanChinthaka/YT-Music?style=for-the-badge&labelColor=0d1117)](https://github.com/GayanChinthaka/YT-Music/blob/main/LICENSE)
+[![License](https://img.shields.io/github/license/GayanChinthaka/Mixora?style=for-the-badge&labelColor=0d1117)](https://github.com/GayanChinthaka/Mixora/blob/main/LICENSE)
 
 <br/>
 
@@ -25,12 +25,12 @@
 
 <h1><a id="screenshots"></a>Screenshots</h1>
 
-<img src="https://github.com/GayanChinthaka/YT-Music/blob/main/fastlane/metadata/android/en-US/images/screenshots/screenshot_1.png" alt="Home screen" width="30%" />
-<img src="https://github.com/GayanChinthaka/YT-Music/blob/main/fastlane/metadata/android/en-US/images/screenshots/screenshot_2.png" alt="Artist screen" width="30%" />
-<img src="https://github.com/GayanChinthaka/YT-Music/blob/main/fastlane/metadata/android/en-US/images/screenshots/screenshot_3.png" alt="Recognize music screen" width="30%" />
-<img src="https://github.com/GayanChinthaka/YT-Music/blob/main/fastlane/metadata/android/en-US/images/screenshots/screenshot_4.png" alt="Listen together screen" width="30%" />
-<img src="https://github.com/GayanChinthaka/YT-Music/blob/main/fastlane/metadata/android/en-US/images/screenshots/screenshot_5.png" alt="Player screen" width="30%" />
-<img src="https://github.com/GayanChinthaka/YT-Music/blob/main/fastlane/metadata/android/en-US/images/screenshots/screenshot_6.png" alt="Player lyrics screen" width="30%" />
+<img src="https://github.com/GayanChinthaka/Mixora/blob/main/fastlane/metadata/android/en-US/images/screenshots/screenshot_1.png" alt="Home screen" width="30%" />
+<img src="https://github.com/GayanChinthaka/Mixora/blob/main/fastlane/metadata/android/en-US/images/screenshots/screenshot_2.png" alt="Artist screen" width="30%" />
+<img src="https://github.com/GayanChinthaka/Mixora/blob/main/fastlane/metadata/android/en-US/images/screenshots/screenshot_3.png" alt="Recognize music screen" width="30%" />
+<img src="https://github.com/GayanChinthaka/Mixora/blob/main/fastlane/metadata/android/en-US/images/screenshots/screenshot_4.png" alt="Listen together screen" width="30%" />
+<img src="https://github.com/GayanChinthaka/Mixora/blob/main/fastlane/metadata/android/en-US/images/screenshots/screenshot_5.png" alt="Player screen" width="30%" />
+<img src="https://github.com/GayanChinthaka/Mixora/blob/main/fastlane/metadata/android/en-US/images/screenshots/screenshot_6.png" alt="Player lyrics screen" width="30%" />
 
 </div>
 

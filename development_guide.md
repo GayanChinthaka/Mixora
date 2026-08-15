@@ -1,6 +1,6 @@
-# YTmusic Dev Guide
+﻿# Mixora Dev Guide
 
-This file outlines the process of setting up a local dev environment for YTmusic.
+This file outlines the process of setting up a local dev environment for Mixora.
 
 ## Prerequisites
 
@@ -13,8 +13,8 @@ This file outlines the process of setting up a local dev environment for YTmusic
 This has been tested on Linux, but should work on other platforms with some adjustments.
 
 ```bash
-git clone https://github.com/GayanChinthaka/YT-Music.git
-cd YT-Music
+git clone https://github.com/GayanChinthaka/Mixora.git
+cd Mixora
 cd app
 bash generate_proto.sh
 cd ..

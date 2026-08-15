@@ -1,4 +1,4 @@
-package com.pokerlanka.innertube
+﻿package com.pokerlanka.innertube
 
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.okhttp.OkHttp
@@ -65,7 +65,7 @@ object NetworkConfig {
                 
                 // Cache configuration
                 if (enableCache) {
-                    val cacheDirectory = cacheDir ?: File(System.getProperty("java.io.tmpdir"), "ytmusic_http_cache")
+                    val cacheDirectory = cacheDir ?: File(System.getProperty("java.io.tmpdir"), "Mixora_http_cache")
                     cache(okhttp3.Cache(cacheDirectory, CACHE_SIZE_MB))
                 }
             }

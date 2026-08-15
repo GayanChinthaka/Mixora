@@ -1,8 +1,8 @@
-Material 3 Android üçün YouTube Musiqi müştərisi
+﻿Material 3 Android üçün YouTube Musiqi müştərisi
 
 Xüsusiyyətlər:
 
-- YT Music-dən istənilən mahnı və ya videonu səsləndirin
+- Mixora-dən istənilən mahnı və ya videonu səsləndirin
 - Fon oxutma
 - Fərdiləşdirilmiş sürətli seçimlər
 - Kitabxananın idarə edilməsi

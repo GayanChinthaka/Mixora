@@ -1,8 +1,8 @@
-Material 3 YouTube Music klient pre Android 
+﻿Material 3 YouTube Music klient pre Android 
 
 Funkcie:
 
-- Prehrajte si akúkoľvek skladbu alebo video z YT Music
+- Prehrajte si akúkoľvek skladbu alebo video z Mixora
 - Prehrávanie na pozadí 
 - Personalizované rýchle výbery 
 - Správa knižnice 
