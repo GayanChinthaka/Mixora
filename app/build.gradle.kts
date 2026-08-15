@@ -33,7 +33,7 @@ android {
         applicationId = applicationIdOverride ?: baseApplicationId
         minSdk = 26
         targetSdk = 36
-        versionCode = 152
+        versionCode = 1
         versionName = "1.0.0"
         resValue("string", "app_name", appNameOverride ?: "Mixora")
 
