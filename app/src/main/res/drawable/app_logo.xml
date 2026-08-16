@@ -1,22 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Full-colour Mixora logo: white mark on the brand red circle.
+    Used by the About screen, Wrapped pages, widget layouts and widget previews.
+-->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
-    android:height="1000dp"
-    android:width="1000dp"
-    android:viewportWidth="279.1"
-    android:viewportHeight="273.06">
-    <group
-        android:scaleX="0.78"
-        android:scaleY="0.78"
-        android:translateX="30.7"
-        android:translateY="30.0">
-        <path
-            android:fillColor="#FF000000"
-            android:pathData="M69.29,82.34L99.33,57.43A86.55,90 50.34,0 1,223.86 66.63L223.86,66.63A86.55,90 50.34,0 1,209.82 190.7L179.77,215.61A86.55,90 50.34,0 1,55.24 206.42L55.24,206.42A86.55,90 50.34,0 1,69.29 82.34z" />
-        <path
-            android:fillColor="#00000000"
-            android:pathData="M112.47,134.09L87.22,160.96C85.51,162.77 85.51,165.74 87.22,167.55L111.56,193.44C113.26,195.25 116.05,195.25 117.75,193.44L143.92,165.6C144.75,164.76 145.19,163.55 145.19,162.35L145.19,82.9C145.19,78.77 149.86,76.68 152.65,79.61L193.17,122.48"
-            android:strokeColor="#FFFFFFFF"
-            android:strokeWidth="22.5"
-            android:strokeLineCap="butt"
-            android:strokeLineJoin="miter" />
-    </group>
+    android:width="100dp"
+    android:height="100dp"
+    android:viewportWidth="432"
+    android:viewportHeight="432">
+
+    <path
+        android:pathData="M216,216m-216,0a216,216 0 1,0 432,0a216,216 0 1,0 -432,0"
+        android:fillColor="#D73131" />
+
+    <path
+        android:pathData="M173.26,130.36L297.42,204.85A13,13 0 0 1 297.42,227.15L173.26,301.64A18,18 0 0 1 146,286.21L146,145.79A18,18 0 0 1 173.26,130.36Z"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeWidth="18"
+        android:strokeLineJoin="round" />
+
+    <path
+        android:pathData="M170,257.1L255.87,205.58L273.37,216.08L170,278.1Z"
+        android:fillColor="#FFFFFFFF" />
+    <path
+        android:pathData="M170,221.1L225.87,187.58L243.37,198.08L170,242.1Z"
+        android:fillColor="#FFFFFFFF" />
+    <path
+        android:pathData="M170,185.1L195.87,169.58L213.37,180.08L170,206.1Z"
+        android:fillColor="#FFFFFFFF" />
 </vector>

@@ -142,7 +142,7 @@ fun AboutScreen(
 
         // App Circular Icon
         Image(
-            painter = painterResource(R.drawable.app_logo_circle),
+            painter = painterResource(R.drawable.app_logo),
             contentDescription = stringResource(R.string.Mixora),
             modifier = Modifier.size(96.dp)
         )

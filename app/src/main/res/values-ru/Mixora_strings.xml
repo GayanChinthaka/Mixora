@@ -767,8 +767,6 @@
     <string name="enable_landscape_scaling">Масштабирование в альбомной ориентации</string>
     <string name="enable_landscape_scaling_desc">Масштабировать интерфейс в альбомной ориентации на больших экранах</string>
     <string name="dynamic_theme">Динамическая тема</string>
-    <string name="enable_dynamic_icon">Динамические цвета значка</string>
-    <string name="enable_dynamic_icon_desc">Использовать динамические цвета темы для значка приложения. Если отключено, используются сплошные цвета.</string>
     <string name="kmp_upgrade_title">Доступен Mixora KMP %s</string>
     <string name="kmp_upgrade_warning">Mixora KMP находится в раннем доступе. Функции могут работать нестабильно, быть неполными или изменяться без предупреждения.</string>
     <string name="kmp_upgrade_action">Обновить до KMP</string>

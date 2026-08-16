@@ -760,6 +760,4 @@
     <string name="enable_landscape_scaling">Ridimensionamento Paesaggio</string>
     <string name="enable_landscape_scaling_desc">Ridimensiona l\'interfaccia utente in modalità orizzontale per schermi più grandi</string>
     <string name="dynamic_theme">Tema Dinamico</string>
-    <string name="enable_dynamic_icon">Colori dinamici delle icone</string>
-    <string name="enable_dynamic_icon_desc">Utilizza i colori del tema dinamico per l\'icona dell\'app. Quando disabilitata, l\'icona utilizza colori solidi.</string>
 </resources>

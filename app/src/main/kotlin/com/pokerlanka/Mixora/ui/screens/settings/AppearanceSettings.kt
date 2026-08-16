@@ -62,7 +62,6 @@ import com.pokerlanka.mixora.constants.DefaultOpenTabKey
 import com.pokerlanka.mixora.constants.DensityScale
 import com.pokerlanka.mixora.constants.DensityScaleKey
 import com.pokerlanka.mixora.constants.DynamicThemeKey
-import com.pokerlanka.mixora.constants.EnableDynamicIconKey
 import com.pokerlanka.mixora.constants.EnableHighRefreshRateKey
 import com.pokerlanka.mixora.constants.EnableLandscapeScalingKey
 import com.pokerlanka.mixora.constants.ExperimentalLyricsKey
@@ -114,7 +113,6 @@ import com.pokerlanka.mixora.ui.component.WavySlider
 import com.pokerlanka.mixora.ui.theme.DefaultThemeColor
 import com.pokerlanka.mixora.ui.theme.PlayerSliderColors
 import com.pokerlanka.mixora.ui.utils.backToMain
-import com.pokerlanka.mixora.utils.IconUtils
 import com.pokerlanka.mixora.utils.rememberEnumPreference
 import com.pokerlanka.mixora.utils.rememberPreference
 import kotlinx.coroutines.launch
@@ -133,16 +131,6 @@ fun AppearanceSettings(
             DynamicThemeKey,
             defaultValue = true,
         )
-    val (enableDynamicIcon, onEnableDynamicIconPrefChange) =
-        rememberPreference(
-            EnableDynamicIconKey,
-            defaultValue = true,
-        )
-    val iconContext = LocalContext.current
-    val onEnableDynamicIconChange: (Boolean) -> Unit = { newValue ->
-        onEnableDynamicIconPrefChange(newValue)
-        IconUtils.setIcon(iconContext, newValue)
-    }
     val (enableHighRefreshRate, onEnableHighRefreshRateChange) =
         rememberPreference(
             EnableHighRefreshRateKey,
@@ -1034,30 +1022,6 @@ fun AppearanceSettings(
                             ),
                         )
                     }
-                    add(
-                        Material3SettingsItem(
-                            icon = painterResource(R.drawable.palette),
-                            title = { Text(stringResource(R.string.enable_dynamic_icon)) },
-                            description = { Text(stringResource(R.string.enable_dynamic_icon_desc)) },
-                            trailingContent = {
-                                Switch(
-                                    checked = enableDynamicIcon,
-                                    onCheckedChange = onEnableDynamicIconChange,
-                                    thumbContent = {
-                                        Icon(
-                                            painter =
-                                                painterResource(
-                                                    id = if (enableDynamicIcon) R.drawable.check else R.drawable.close,
-                                                ),
-                                            contentDescription = null,
-                                            modifier = Modifier.size(SwitchDefaults.IconSize),
-                                        )
-                                    },
-                                )
-                            },
-                            onClick = { onEnableDynamicIconChange(!enableDynamicIcon) },
-                        ),
-                    )
                     add(
                         Material3SettingsItem(
                             icon = painterResource(R.drawable.palette),

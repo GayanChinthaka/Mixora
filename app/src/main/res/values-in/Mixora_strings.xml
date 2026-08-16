@@ -744,10 +744,8 @@
     <string name="stream_source_android_creator_desc">Klien kreator Android. Nonaktif secara default; memerlukan DroidGuard.</string>
     <string name="error_job_cancelled">Video tidak tersedia untuk diputar. Coba lagi atau lewati ke lagu berikutnya.</string>
     <string name="enable_landscape_scaling_desc">Ukuran tampilan mode landscape untuk layar lebih besar</string>
-    <string name="enable_dynamic_icon_desc">Gunakan tema dinamis untuk ikon app. Saat dimatikan, ikon menggunakan warna polos.</string>
     <string name="enable_landscape_scaling">Pengukuran landscape</string>
     <string name="dynamic_theme">Tema Dinamis</string>
-    <string name="enable_dynamic_icon">Warna ikon dinamis</string>
     <string name="kmp_upgrade_title">Mixora KMP %s sudah tersedia</string>
     <string name="kmp_upgrade_warning">Mixora KMP saat ini masih dalam tahap akses awal. Beberapa fitur mungkin belum berfungsi dengan baik, belum lengkap, atau dapat berubah tanpa pemberitahuan sebelumnya.</string>
     <string name="kmp_upgrade_later">Jangan sekarang</string>

@@ -1,37 +1,40 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  Monochrome icon used for:
-    - Notification bar small icon (must be single-color alpha-only)
-    - Thumbnail / Player fallback logo
-  Shape matches the new app icon (MX-Player style play triangle with slanted stripes).
-  Uses stroke and separated paths so the gaps are transparent, allowing the stripes
-  to render correctly on the Android notification bar.
-  Thinned lines and gaps for better visual clarity at small sizes.
+    Notification / status-bar icon. The system tints this flat, so it is a plain
+    white silhouette.
+
+    Unlike the launcher foreground there is no adaptive-icon safe zone here, so
+    the group scales the mark up about its own centre to fill the 24dp box
+    (leaving ~1dp of breathing room) instead of leaving it small and illegible.
 -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="24dp"
     android:height="24dp"
-    android:viewportWidth="100"
-    android:viewportHeight="100">
+    android:viewportWidth="432"
+    android:viewportHeight="432">
 
-    <!-- Outer play triangle outline (thinned to 5dp stroke) -->
-    <path
-        android:strokeColor="#FFFFFFFF"
-        android:strokeWidth="5"
-        android:strokeLineJoin="round"
-        android:strokeLineCap="round"
-        android:fillColor="#00000000"
-        android:pathData="M 25,20 L 78,50 L 25,80 Z" />
+    <group
+        android:pivotX="224.5"
+        android:pivotY="215.5"
+        android:scaleX="2"
+        android:scaleY="2"
+        android:translateX="-8.5"
+        android:translateY="0.5">
 
-    <!-- Slanted stripes (thinned to ~4dp with balanced spacing for notification bar) -->
-    <path
-        android:fillColor="#FFFFFFFF"
-        android:pathData="M 36,43 L 43,36 L 46,39 L 39,46 Z" />
-    <path
-        android:fillColor="#FFFFFFFF"
-        android:pathData="M 36,54 L 53,37 L 56,40 L 39,57 Z" />
-    <path
-        android:fillColor="#FFFFFFFF"
-        android:pathData="M 36,65 L 60,41 L 63,44 L 39,68 Z" />
+        <path
+            android:pathData="M173.26,130.36L297.42,204.85A13,13 0 0 1 297.42,227.15L173.26,301.64A18,18 0 0 1 146,286.21L146,145.79A18,18 0 0 1 173.26,130.36Z"
+            android:strokeColor="#FFFFFFFF"
+            android:strokeWidth="18"
+            android:strokeLineJoin="round" />
 
+        <path
+            android:pathData="M170,257.1L255.87,205.58L273.37,216.08L170,278.1Z"
+            android:fillColor="#FFFFFFFF" />
+        <path
+            android:pathData="M170,221.1L225.87,187.58L243.37,198.08L170,242.1Z"
+            android:fillColor="#FFFFFFFF" />
+        <path
+            android:pathData="M170,185.1L195.87,169.58L213.37,180.08L170,206.1Z"
+            android:fillColor="#FFFFFFFF" />
+    </group>
 </vector>

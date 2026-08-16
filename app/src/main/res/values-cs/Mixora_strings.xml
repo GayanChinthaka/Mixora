@@ -767,8 +767,6 @@
     <string name="enable_landscape_scaling">Škálování na šířku</string>
     <string name="enable_landscape_scaling_desc">Nastavit rozhraní do režimu na šířku pro větší obrazovky</string>
     <string name="dynamic_theme">Dynamický motiv</string>
-    <string name="enable_dynamic_icon">Dynamické barvy ikon</string>
-    <string name="enable_dynamic_icon_desc">Použít barvy dynamického motivu pro ikonu aplikace. Pokud je vypnuto, budou použity jednobarevné odstíny.</string>
     <string name="kmp_upgrade_title">Je dostupný Mixora KMP %s</string>
     <string name="kmp_upgrade_warning">Mixora KMP je v předběžném přístupu. Funkce mohou být rozbité, nedokončené nebo se bez upozornění změnit.</string>
     <string name="kmp_upgrade_action">Aktualizovat na KMP</string>

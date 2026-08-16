@@ -8,7 +8,9 @@ package com.pokerlanka.mixora
 import android.app.Application
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.content.ComponentName
 import android.content.Context
+import android.content.pm.PackageManager
 import android.os.Build
 import android.widget.Toast
 import coil3.ImageLoader
@@ -98,6 +100,21 @@ class App :
             // once and cached, so warming them before the proxy is set would snapshot a null proxy and
             // bypass a configured proxy for the whole session. Warm-up is launched only after this.
             initializeSettings()
+
+            // One-off repair for installs that used the removed "Dynamic icon colors" feature: it
+            // could disable MainActivityAlias and enable MainActivityStatic instead. That static
+            // alias no longer exists, so leaving the alias disabled would strip the launcher icon
+            // entirely. Only DISABLED is repaired — a component that was never toggled reports
+            // DEFAULT, and rewriting it on every launch makes launchers re-query the icon.
+            val pm = packageManager
+            val alias = ComponentName(this@App, "com.pokerlanka.mixora.MainActivityAlias")
+            if (pm.getComponentEnabledSetting(alias) == PackageManager.COMPONENT_ENABLED_STATE_DISABLED) {
+                pm.setComponentEnabledSetting(
+                    alias,
+                    PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
+                    PackageManager.DONT_KILL_APP
+                )
+            }
 
             // Warm the cipher WebView off the first-play critical path. It needs no session, so kick it
             // as soon as settings settle (don't gate it behind visitorData — that's the bigger cold

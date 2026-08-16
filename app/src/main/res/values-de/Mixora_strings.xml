@@ -752,8 +752,6 @@
     <string name="error_job_cancelled">Das Video kann nicht abgespielt werden. Versuchen Sie es erneut oder springen Sie zum nächsten Titel.</string>
     <string name="dynamic_theme">Dynamisches Design</string>
     <string name="enable_landscape_scaling_desc">Benutzeroberfläche im Querformat für größere Bildschirme skalieren</string>
-    <string name="enable_dynamic_icon">Dynamische Symbolfarben</string>
-    <string name="enable_dynamic_icon_desc">Verwenden Sie dynamische Designfarben für das App-Symbol. Wenn diese Option deaktiviert ist, wird das Symbol in Volltonfarben angezeigt.</string>
     <string name="enable_landscape_scaling">Skalierung im Querformat</string>
     <string name="kmp_upgrade_title">Mixora KMP %s ist verfügbar</string>
     <string name="kmp_upgrade_warning">Mixora KMP befindet sich in der Früh-Zugangs-Phase. Funktionen können fehlerhaft oder unvollständig sein oder sich ohne Vorankündigung ändern.</string>

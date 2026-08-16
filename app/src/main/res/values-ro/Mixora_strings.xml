@@ -760,6 +760,4 @@
     <string name="enable_landscape_scaling">Scalare mod peisaj</string>
     <string name="enable_landscape_scaling_desc">Scalează interfața grafică în modul peisaj pentru ecrane mari</string>
     <string name="dynamic_theme">Temă dinamică</string>
-    <string name="enable_dynamic_icon">Culori dinamice pentru pictogramă</string>
-    <string name="enable_dynamic_icon_desc">Folosește culori dinamice pentru pictograma aplicației. Atunci când această opțiune este dezactivată, pictograma folosește culori solide.</string>
 </resources>

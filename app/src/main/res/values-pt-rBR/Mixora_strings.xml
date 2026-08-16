@@ -734,7 +734,6 @@
     <string name="choose_something_below">Escolha algo abaixo</string>
     <string name="error_job_cancelled">O vídeo não está disponível para reprodução. Tente novamente ou pule para a próxima música.</string>
     <string name="not_applicable">N/A</string>
-    <string name="enable_dynamic_icon_desc">Usa cores dinâmicas do tema no ícone do app. Quando desabilitado, o ícone usa cores sólidas.</string>
     <string name="dynamic_theme">Tema Dinâmico</string>
     <string name="enable_landscape_scaling">Escala No Modo Paisagem</string>
     <string name="enable_landscape_scaling_desc">Escala a interface no modo paisagem para telas maiores</string>
@@ -742,7 +741,6 @@
     <string name="restore_database_incompatible">Não foi possível restaurar o backup: versão do banco de dados incompatível. Seus dados atuais foram preservados.</string>
     <string name="stream_client">Cliente de streaming</string>
     <string name="format_player_hash">Hash do reprodutor</string>
-    <string name="enable_dynamic_icon">Cores dinâmicas do ícone</string>
     <string name="stream_sources">Fontes de streaming</string>
     <string name="stream_source_order">Ordem de streaming</string>
     <string name="stream_source_web_clients">Clientes web</string>
