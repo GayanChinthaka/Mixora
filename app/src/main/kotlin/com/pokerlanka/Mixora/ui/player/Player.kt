@@ -58,13 +58,16 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.ContainedLoadingIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.FilledIconButton
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedIconButton
 import androidx.compose.material3.ProvideTextStyle
 import androidx.compose.material3.Slider
@@ -162,7 +165,9 @@ import com.pokerlanka.mixora.extensions.metadata
 import com.pokerlanka.mixora.extensions.togglePlayPause
 import com.pokerlanka.mixora.extensions.toggleRepeatMode
 import com.pokerlanka.mixora.models.MediaMetadata
+import com.pokerlanka.mixora.ui.component.ActionPromptDialog
 import com.pokerlanka.mixora.ui.component.BottomSheet
+import com.pokerlanka.mixora.ui.component.ActionPromptDialog
 import com.pokerlanka.mixora.ui.component.BottomSheetState
 import com.pokerlanka.mixora.ui.component.LocalBottomSheetPageState
 import com.pokerlanka.mixora.ui.component.LocalMenuState
@@ -193,9 +198,6 @@ import kotlinx.coroutines.withContext
 import kotlin.math.max
 import kotlin.math.roundToInt
 import com.pokerlanka.mixora.ui.component.Icon as MIcon
-import com.pokerlanka.mixora.constants.SleepTimerDefaultKey
-import com.pokerlanka.mixora.constants.SleepTimerFadeOutKey
-import com.pokerlanka.mixora.constants.SleepTimerStopAfterCurrentSongKey
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -622,38 +624,20 @@ fun BottomSheetPlayer(
 
 
     if (showSleepTimerDialog) {
-        AlertDialog(
-            properties = DialogProperties(usePlatformDefaultWidth = false),
-            onDismissRequest = { showSleepTimerDialog = false },
-            icon = {
-                Icon(
-                    painter = painterResource(R.drawable.bedtime),
-                    contentDescription = null,
+        ActionPromptDialog(
+            title = stringResource(R.string.sleep_timer),
+            onDismiss = { showSleepTimerDialog = false },
+            onConfirm = {
+                showSleepTimerDialog = false
+                playerConnection.service.sleepTimer?.start(
+                    minute = sleepTimerValue.roundToInt(),
+                    stopAfterCurrentSong = sleepTimerStopAfterCurrentSong,
+                    fadeOut = sleepTimerFadeOut,
                 )
             },
-            title = { Text(stringResource(R.string.sleep_timer)) },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        showSleepTimerDialog = false
-                        playerConnection.service.sleepTimer?.start(
-                            minute = sleepTimerValue.roundToInt(),
-                            stopAfterCurrentSong = sleepTimerStopAfterCurrentSong,
-                            fadeOut = sleepTimerFadeOut,
-                        )
-                    },
-                ) {
-                    Text(stringResource(android.R.string.ok))
-                }
-            },
-            dismissButton = {
-                TextButton(
-                    onClick = { showSleepTimerDialog = false },
-                ) {
-                    Text(stringResource(android.R.string.cancel))
-                }
-            },
-            text = {
+            onCancel = { showSleepTimerDialog = false },
+            onReset = { sleepTimerValue = sleepTimerDefault },
+            content = {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(
                         text =
@@ -665,19 +649,25 @@ fun BottomSheetPlayer(
                         style = MaterialTheme.typography.bodyLarge,
                     )
 
+                    Spacer(Modifier.height(16.dp))
+
                     Slider(
                         value = sleepTimerValue,
                         onValueChange = { sleepTimerValue = it },
                         valueRange = 5f..120f,
                         steps = (120 - 5) / 5 - 1,
+                        modifier = Modifier.fillMaxWidth(),
                     )
 
-                    Column(
-                        verticalArrangement = Arrangement.spacedBy(8.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
+                    Spacer(Modifier.height(8.dp))
+
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier = Modifier.fillMaxWidth()
                     ) {
                         if (isAtDefault) {
-                            FilledIconButton(
+                            Button(
+                                modifier = Modifier.weight(1f),
                                 onClick = {
                                     scope.launch {
                                         context.safeDataStoreEdit { settings ->
@@ -690,15 +680,20 @@ fun BottomSheetPlayer(
                                         Toast.LENGTH_SHORT,
                                     ).show()
                                 },
-                                colors = IconButtonDefaults.filledIconButtonColors(
+                                colors = androidx.compose.material3.ButtonDefaults.buttonColors(
                                     containerColor = MaterialTheme.colorScheme.primary,
                                     contentColor = MaterialTheme.colorScheme.onPrimary,
                                 ),
                             ) {
-                                Text(stringResource(R.string.set_as_default))
+                                Text(
+                                    text = stringResource(R.string.set_as_default),
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
                             }
                         } else {
-                            OutlinedIconButton(
+                            FilledTonalButton(
+                                modifier = Modifier.weight(1f),
                                 onClick = {
                                     scope.launch {
                                         context.safeDataStoreEdit { settings ->
@@ -712,17 +707,26 @@ fun BottomSheetPlayer(
                                     ).show()
                                 },
                             ) {
-                                Text(stringResource(R.string.set_as_default))
+                                Text(
+                                    text = stringResource(R.string.set_as_default),
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
                             }
                         }
 
-                        OutlinedIconButton(
+                        OutlinedButton(
+                            modifier = Modifier.weight(1f),
                             onClick = {
                                 showSleepTimerDialog = false
                                 playerConnection.service.sleepTimer?.start(minute = -1)
                             },
                         ) {
-                            Text(stringResource(R.string.end_of_song))
+                            Text(
+                                text = stringResource(R.string.end_of_song),
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
                         }
                     }
                 }

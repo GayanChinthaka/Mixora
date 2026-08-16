@@ -47,7 +47,9 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -364,12 +366,13 @@ fun Queue(
 
                         Spacer(Modifier.height(8.dp))
 
-                        Column(
-                            verticalArrangement = Arrangement.spacedBy(8.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally,
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            modifier = Modifier.fillMaxWidth()
                         ) {
                             if (isAtDefault) {
                                 Button(
+                                    modifier = Modifier.weight(1f),
                                     onClick = {
                                         coroutineScope.launch {
                                             context.safeDataStoreEdit { settings ->
@@ -387,10 +390,15 @@ fun Queue(
                                         contentColor = MaterialTheme.colorScheme.onPrimary,
                                     ),
                                 ) {
-                                    Text(stringResource(R.string.set_as_default))
+                                    Text(
+                                        text = stringResource(R.string.set_as_default),
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
                                 }
                             } else {
-                                OutlinedButton(
+                                FilledTonalButton(
+                                    modifier = Modifier.weight(1f),
                                     onClick = {
                                         coroutineScope.launch {
                                             context.safeDataStoreEdit { settings ->
@@ -404,11 +412,16 @@ fun Queue(
                                         ).show()
                                     },
                                 ) {
-                                    Text(stringResource(R.string.set_as_default))
+                                    Text(
+                                        text = stringResource(R.string.set_as_default),
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
                                 }
                             }
 
                             OutlinedButton(
+                                modifier = Modifier.weight(1f),
                                 onClick = {
                                     showSleepTimerDialog = false
                                     playerConnection.service.sleepTimer?.start(
@@ -416,7 +429,11 @@ fun Queue(
                                     )
                                 },
                             ) {
-                                Text(stringResource(R.string.end_of_song))
+                                Text(
+                                    text = stringResource(R.string.end_of_song),
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
                             }
                         }
                     }

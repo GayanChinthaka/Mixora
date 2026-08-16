@@ -23,9 +23,11 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialogDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -114,13 +116,21 @@ fun DefaultDialog(
                     Spacer(Modifier.height(16.dp))
                 }
 
-                content()
+                Column(
+                    modifier = Modifier
+                        .weight(1f, fill = false)
+                        .verticalScroll(rememberScrollState()),
+                    horizontalAlignment = horizontalAlignment
+                ) {
+                    content()
+                }
 
                 if (buttons != null) {
                     Spacer(Modifier.height(24.dp))
 
                     FlowRow(
-                        modifier = Modifier.align(Alignment.End),
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.End,
                     ) {
                         CompositionLocalProvider(LocalContentColor provides MaterialTheme.colorScheme.primary) {
                             ProvideTextStyle(
@@ -211,13 +221,13 @@ fun ActionPromptDialog(
             },
         buttons = {
             if (onReset != null) {
-                Row(modifier = Modifier.weight(1f)) {
-                    TextButton(
-                        onClick = { onReset() },
-                    ) {
-                        Text(stringResource(R.string.reset))
-                    }
+                TextButton(
+                    onClick = { onReset() },
+                    modifier = Modifier.padding(end = 8.dp)
+                ) {
+                    Text(stringResource(R.string.reset))
                 }
+                Spacer(modifier = Modifier.weight(1f))
             }
 
             if (onCancel != null) {
