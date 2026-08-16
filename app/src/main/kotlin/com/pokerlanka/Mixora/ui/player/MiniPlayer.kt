@@ -460,20 +460,7 @@ private fun NewMiniPlayer(
                     Spacer(modifier = Modifier.width(12.dp))
                 }
 
-// Subscribe button - isolated composable
-                mediaMetadata?.artists?.firstOrNull()?.id?.let { artistId ->
-                    SubscribeButton(
-                        artistId = artistId,
-                        metadata = mediaMetadata!!,
-                        primaryColor = primaryColor,
-                        outlineColor = outlineColor,
-                        onSurfaceColor = onSurfaceColor,
-                    )
-                }
-
-                Spacer(modifier = Modifier.width(8.dp))
-
-// Add to playlist button - isolated composable
+                // Add to playlist button - isolated composable
                 mediaMetadata?.let { metadata ->
                     AddToPlaylistButton(
                         onClick = {
@@ -492,13 +479,14 @@ private fun NewMiniPlayer(
 
                 Spacer(modifier = Modifier.width(8.dp))
 
-// Favorite button - isolated composable
-                mediaMetadata?.let { FavoriteButton(
-                    songId = it.id,
-                    errorColor = errorColor,
-                    outlineColor = outlineColor,
-                    onSurfaceColor = onSurfaceColor,
-                )
+                // Favorite button - isolated composable
+                mediaMetadata?.let {
+                    FavoriteButton(
+                        songId = it.id,
+                        errorColor = errorColor,
+                        outlineColor = outlineColor,
+                        onSurfaceColor = onSurfaceColor,
+                    )
                 }
             }
         }
@@ -854,33 +842,14 @@ private fun LegacyMiniPlayer(
                 playerConnection = playerConnection,
             )
 
-            IconButton(
-                enabled = canSkipNext,
-                onClick = { playerConnection.seekToNext() },
-            ) {
-                Icon(painter = painterResource(R.drawable.skip_next), contentDescription = null)
-            }
-        }
+            Spacer(modifier = Modifier.width(4.dp))
 
-        // Swipe indicator
-        if (offsetXAnimatable.value.absoluteValue > 50f) {
-            Box(
-                modifier =
-                    Modifier
-                        .align(if (offsetXAnimatable.value > 0) Alignment.CenterStart else Alignment.CenterEnd)
-                        .padding(horizontal = 16.dp),
-            ) {
-                Icon(
-                    painter =
-                        painterResource(
-                            if (offsetXAnimatable.value > 0) R.drawable.skip_previous else R.drawable.skip_next,
-                        ),
-                    contentDescription = null,
-                    tint =
-                        primaryColor.copy(
-                            alpha = (offsetXAnimatable.value.absoluteValue / autoSwipeThreshold).coerceIn(0f, 1f),
-                        ),
-                    modifier = Modifier.size(24.dp),
+            mediaMetadata?.let {
+                FavoriteButton(
+                    songId = it.id,
+                    errorColor = MaterialTheme.colorScheme.error,
+                    outlineColor = MaterialTheme.colorScheme.outline,
+                    onSurfaceColor = MaterialTheme.colorScheme.onSurface,
                 )
             }
         }
@@ -1013,64 +982,9 @@ private fun LegacyMiniMediaInfo(
     }
 }
 
-// ============================================================================
-// ISOLATED BUTTON COMPOSABLES - Prevent parent recomposition
-// ============================================================================
-
-@Composable
-private fun SubscribeButton(
-    artistId: String,
-    metadata: MediaMetadata,
-    primaryColor: Color,
-    outlineColor: Color,
-    onSurfaceColor: Color,
-) {
-    val database = LocalDatabase.current
-    val libraryArtist by database.artist(artistId).collectAsStateWithLifecycle(initialValue = null)
-    val isSubscribed = libraryArtist?.artist?.bookmarkedAt != null
-
-
-    Box(
-        contentAlignment = Alignment.Center,
-        modifier =
-            Modifier
-                .size(40.dp)
-                .clip(CircleShape)
-                .border(
-                    width = 1.dp,
-                    color = if (isSubscribed) primaryColor.copy(alpha = 0.5f) else outlineColor.copy(alpha = 0.3f),
-                    shape = CircleShape,
-                ).background(
-                    color = if (isSubscribed) primaryColor.copy(alpha = 0.1f) else Color.Transparent,
-                    shape = CircleShape,
-                ).clickable {
-                    database.transaction {
-                        val artist = libraryArtist?.artist
-                        if (artist != null) {
-                            update(artist.toggleLike())
-                        } else {
-                            metadata.artists.firstOrNull()?.let { artistInfo ->
-                                insert(
-                                    ArtistEntity(
-                                        id = artistInfo.id ?: "",
-                                        name = artistInfo.name,
-                                        channelId = null,
-                                        thumbnailUrl = null,
-                                    ).toggleLike(),
-                                )
-                            }
-                        }
-                    }
-                },
-    ) {
-        Icon(
-            painter = painterResource(if (isSubscribed) R.drawable.subscribed else R.drawable.subscribe),
-            contentDescription = null,
-            tint = if (isSubscribed) primaryColor else onSurfaceColor.copy(alpha = 0.7f),
-            modifier = Modifier.size(20.dp),
-        )
-    }
-}
+/**
+ * ISOLATED BUTTON COMPOSABLES - Prevent parent recomposition
+ */
 
 @Composable
 private fun AddToPlaylistButton(
