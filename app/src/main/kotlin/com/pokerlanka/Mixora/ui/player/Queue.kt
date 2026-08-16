@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Mixora Project (C) 2026
  * Licensed under GPL-3.0 | See git history for contributors
  */
@@ -46,6 +46,7 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -104,6 +105,7 @@ import com.pokerlanka.mixora.LocalPlayerConnection
 import com.pokerlanka.mixora.R
 import com.pokerlanka.mixora.constants.ListItemHeight
 import com.pokerlanka.mixora.constants.PlayerBackgroundStyle
+import com.pokerlanka.mixora.constants.PlayerHorizontalPadding
 import com.pokerlanka.mixora.constants.QueueEditLockKey
 import com.pokerlanka.mixora.constants.UseNewPlayerDesignKey
 import com.pokerlanka.mixora.extensions.metadata
@@ -256,391 +258,171 @@ fun Queue(
             Box(Modifier.fillMaxSize().background(Color.Unspecified))
         },
         collapsedContent = {
-            if (useNewPlayerDesign) {
-                // New design
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(6.dp),
-                    verticalAlignment = Alignment.CenterVertically,
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = PlayerHorizontalPadding, vertical = 12.dp)
+                        .windowInsetsPadding(
+                            WindowInsets.systemBars.only(
+                                WindowInsetsSides.Bottom + WindowInsetsSides.Horizontal,
+                            ),
+                        ),
+            ) {
+                val buttonHeight = 44.dp
+                val iconSize = 22.dp
+
+                // 1. List / Queue Button (50% width)
+                PlayerQueueButton(
+                    icon = R.drawable.queue_music,
+                    onClick = { state.expandSoft() },
+                    isActive = false,
+                    shape = CircleShape,
                     modifier =
                         Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 30.dp, vertical = 12.dp)
-                            .windowInsetsPadding(
-                                WindowInsets.systemBars.only(
-                                    WindowInsetsSides.Bottom + WindowInsetsSides.Horizontal,
-                                ),
-                            ),
-                ) {
-                    val buttonSize = 42.dp
-                    val iconSize = 24.dp
-                    val queueShape =
-                        RoundedCornerShape(
-                            topStart = 50.dp,
-                            bottomStart = 50.dp,
-                            topEnd = 3.dp,
-                            bottomEnd = 3.dp,
-                        )
-                    val middleShape = RoundedCornerShape(3.dp)
-                    val repeatShape =
-                        RoundedCornerShape(
-                            topStart = 3.dp,
-                            bottomStart = 3.dp,
-                            topEnd = 50.dp,
-                            bottomEnd = 50.dp,
-                        )
+                            .weight(1f)
+                            .height(buttonHeight),
+                    textButtonColor = textButtonColor,
+                    iconButtonColor = iconButtonColor,
+                    iconSize = iconSize,
+                    textBackgroundColor = TextBackgroundColor,
+                    playerBackground = playerBackground,
+                )
 
-                    PlayerQueueButton(
-                        icon = R.drawable.queue_music,
-                        onClick = { state.expandSoft() },
-                        isActive = false,
-                        shape = queueShape,
-                        modifier = Modifier.size(buttonSize),
-                        textButtonColor = textButtonColor,
-                        iconButtonColor = iconButtonColor,
-                        iconSize = iconSize,
-                        textBackgroundColor = TextBackgroundColor,
-                        playerBackground = playerBackground,
-                    )
-
-                    PlayerQueueButton(
-                        icon = R.drawable.bedtime,
-                        onClick = {
-                            if (sleepTimerEnabled) {
-                                playerConnection.service.sleepTimer?.clear()
-                            } else {
-                                showSleepTimerDialog = true
-                            }
-                        },
-                        isActive = sleepTimerEnabled,
-                        shape = middleShape,
-                        modifier = Modifier.size(buttonSize),
-                        textButtonColor = textButtonColor,
-                        iconButtonColor = iconButtonColor,
-                        text = if (sleepTimerEnabled) makeTimeString(sleepTimerTimeLeft) else null,
-                        iconSize = iconSize,
-                        textBackgroundColor = TextBackgroundColor,
-                        playerBackground = playerBackground,
-                    )
-
-                    val shuffleModeEnabled by playerConnection.shuffleModeEnabled.collectAsStateWithLifecycle()
-                    PlayerQueueButton(
-                        icon = R.drawable.shuffle,
-                        onClick = {
-                            playerConnection.player.shuffleModeEnabled = !shuffleModeEnabled
-                        },
-                        isActive = shuffleModeEnabled,
-                        shape = middleShape,
-                        modifier = Modifier.size(buttonSize),
-                        textButtonColor = textButtonColor,
-                        iconButtonColor = iconButtonColor,
-                        iconSize = iconSize,
-                        textBackgroundColor = TextBackgroundColor,
-                        playerBackground = playerBackground,
-                    )
-
-                    PlayerQueueButton(
-                        icon = R.drawable.lyrics,
-                        onClick = { onToggleLyrics() },
-                        isActive = showInlineLyrics,
-                        shape = middleShape,
-                        modifier = Modifier.size(buttonSize),
-                        textButtonColor = textButtonColor,
-                        iconButtonColor = iconButtonColor,
-                        iconSize = iconSize,
-                        textBackgroundColor = TextBackgroundColor,
-                        playerBackground = playerBackground,
-                    )
-
-                    PlayerQueueButton(
-                        icon =
-                            when (repeatMode) {
-                                Player.REPEAT_MODE_ALL -> R.drawable.repeat
-                                Player.REPEAT_MODE_ONE -> R.drawable.repeat_one
-                                else -> R.drawable.repeat
-                            },
-                        onClick = {
-                            playerConnection.player.toggleRepeatMode()
-                        },
-                        isActive = repeatMode != Player.REPEAT_MODE_OFF,
-                        shape = repeatShape,
-                        modifier = Modifier.size(buttonSize),
-                        textButtonColor = textButtonColor,
-                        iconButtonColor = iconButtonColor,
-                        iconSize = iconSize,
-                        textBackgroundColor = TextBackgroundColor,
-                        playerBackground = playerBackground,
-                    )
-
-                    Spacer(modifier = Modifier.weight(1f))
-
-                    Box(
-                        modifier =
-                            Modifier
-                                .size(buttonSize)
-                                .clip(CircleShape)
-                                .background(textButtonColor)
-                                .clickable {
-                                    menuState.show {
-                                        PlayerMenu(
-                                            mediaMetadata = mediaMetadata,
-                                            playerBottomSheetState = playerBottomSheetState,
-                                            onShowDetailsDialog = {
-                                                mediaMetadata?.id?.let {
-                                                    bottomSheetPageState.show {
-                                                        ShowMediaInfo(it)
-                                                    }
-                                                }
-                                            },
-                                            onDismiss = menuState::dismiss,
-                                        )
-                                    }
-                                },
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.more_vert),
-                            contentDescription = null,
-                            modifier = Modifier.size(iconSize),
-                            tint = iconButtonColor,
-                        )
-                    }
-                }
-            } else {
-                // Old design
-                Row(
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically,
+                // 2. Lyrics Button (50% width)
+                PlayerQueueButton(
+                    icon = R.drawable.lyrics,
+                    onClick = { onToggleLyrics() },
+                    isActive = showInlineLyrics,
+                    shape = CircleShape,
                     modifier =
                         Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 30.dp, vertical = 12.dp)
-                            .windowInsetsPadding(
-                                WindowInsets.systemBars
-                                    .only(WindowInsetsSides.Bottom + WindowInsetsSides.Horizontal),
-                            ),
-                ) {
-                    TextButton(
-                        onClick = { state.expandSoft() },
-                        modifier = Modifier.weight(1f),
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.Center,
-                            modifier = Modifier.fillMaxWidth(),
-                        ) {
-                            Icon(
-                                painter = painterResource(id = R.drawable.queue_music),
-                                contentDescription = null,
-                                modifier = Modifier.size(20.dp),
-                                tint = TextBackgroundColor,
-                            )
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text(
-                                text = stringResource(id = R.string.queue),
-                                color = TextBackgroundColor,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis,
-                                textAlign = TextAlign.Center,
-                                modifier = Modifier.basicMarquee(),
-                            )
-                        }
-                    }
-
-                    TextButton(
-                        onClick = {
-                            if (sleepTimerEnabled) {
-                                playerConnection.service.sleepTimer?.clear()
-                            } else {
-                                showSleepTimerDialog = true
-                            }
-                        },
-                        modifier = Modifier.weight(1.2f),
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.Center,
-                            modifier = Modifier.fillMaxWidth(),
-                        ) {
-                            Icon(
-                                painter = painterResource(id = R.drawable.bedtime),
-                                contentDescription = null,
-                                modifier = Modifier.size(20.dp),
-                                tint = TextBackgroundColor,
-                            )
-                            Spacer(modifier = Modifier.width(6.dp))
-                            AnimatedContent(
-                                label = "sleepTimer",
-                                targetState = sleepTimerEnabled,
-                            ) { enabled ->
-                                if (enabled) {
-                                    Text(
-                                        text = makeTimeString(sleepTimerTimeLeft),
-                                        color = TextBackgroundColor,
-                                        maxLines = 1,
-                                        overflow = TextOverflow.Ellipsis,
-                                        textAlign = TextAlign.Center,
-                                        modifier = Modifier.basicMarquee(),
-                                    )
-                                } else {
-                                    Text(
-                                        text = stringResource(id = R.string.sleep_timer),
-                                        color = TextBackgroundColor,
-                                        maxLines = 1,
-                                        overflow = TextOverflow.Ellipsis,
-                                        textAlign = TextAlign.Center,
-                                        modifier = Modifier.basicMarquee(),
-                                    )
-                                }
-                            }
-                        }
-                    }
-
-                    TextButton(
-                        onClick = {
-                            onToggleLyrics()
-                        },
-                        modifier = Modifier.weight(1f),
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.Center,
-                            modifier = Modifier.fillMaxWidth(),
-                        ) {
-                            Icon(
-                                painter = painterResource(id = R.drawable.lyrics),
-                                contentDescription = null,
-                                modifier = Modifier.size(20.dp),
-                                tint = TextBackgroundColor,
-                            )
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text(
-                                text = stringResource(R.string.lyrics),
-                                color = TextBackgroundColor,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis,
-                                textAlign = TextAlign.Center,
-                                modifier = Modifier.basicMarquee(),
-                            )
-                        }
-                    }
-                }
-            }
-
-            if (showSleepTimerDialog) {
-                ActionPromptDialog(
-                    titleBar = {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.Center,
-                        ) {
-                            Text(
-                                text = stringResource(R.string.sleep_timer),
-                                overflow = TextOverflow.Ellipsis,
-                                maxLines = 1,
-                                style = MaterialTheme.typography.headlineSmall,
-                            )
-                        }
-                    },
-                    onDismiss = { showSleepTimerDialog = false },
-                    onConfirm = {
-                        showSleepTimerDialog = false
-                        playerConnection.service.sleepTimer?.start(
-                            minute = sleepTimerValue.roundToInt(),
-                            stopAfterCurrentSong = sleepTimerStopAfterCurrentSong,
-                            fadeOut = sleepTimerFadeOut,
-                        )
-                    },
-                    onCancel = {
-                        showSleepTimerDialog = false
-                    },
-                    onReset = {
-                        sleepTimerValue = sleepTimerDefault
-                    },
-                    content = {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text(
-                                text =
-                                    pluralStringResource(
-                                        R.plurals.minute,
-                                        sleepTimerValue.roundToInt(),
-                                        sleepTimerValue.roundToInt(),
-                                    ),
-                                style = MaterialTheme.typography.bodyLarge,
-                            )
-
-                            Spacer(Modifier.height(16.dp))
-
-                            Slider(
-                                value = sleepTimerValue,
-                                onValueChange = { sleepTimerValue = it },
-                                valueRange = 5f..120f,
-                                steps = (120 - 5) / 5 - 1,
-                                modifier = Modifier.fillMaxWidth(),
-                            )
-
-                            Spacer(Modifier.height(8.dp))
-
-                            Column(
-                                verticalArrangement = Arrangement.spacedBy(8.dp),
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                            ) {
-                                if (isAtDefault) {
-                                    Button(
-                                        onClick = {
-                                            coroutineScope.launch {
-                                                context.safeDataStoreEdit { settings ->
-                                                    settings[SleepTimerDefaultKey] = sleepTimerValue
-                                                }
-                                            }
-                                            Toast.makeText(
-                                                context,
-                                                String.format(sleepTimerDefaultSetTemplate, sleepTimerValue.roundToInt()),
-                                                Toast.LENGTH_SHORT,
-                                            ).show()
-                                        },
-                                        colors = androidx.compose.material3.ButtonDefaults.buttonColors(
-                                            containerColor = MaterialTheme.colorScheme.primary,
-                                            contentColor = MaterialTheme.colorScheme.onPrimary,
-                                        ),
-                                    ) {
-                                        Text(stringResource(R.string.set_as_default))
-                                    }
-                                } else {
-                                    OutlinedButton(
-                                        onClick = {
-                                            coroutineScope.launch {
-                                                context.safeDataStoreEdit { settings ->
-                                                    settings[SleepTimerDefaultKey] = sleepTimerValue
-                                                }
-                                            }
-                                            Toast.makeText(
-                                                context,
-                                                String.format(sleepTimerDefaultSetTemplate, sleepTimerValue.roundToInt()),
-                                                Toast.LENGTH_SHORT,
-                                            ).show()
-                                        },
-                                    ) {
-                                        Text(stringResource(R.string.set_as_default))
-                                    }
-                                }
-
-                                OutlinedButton(
-                                    onClick = {
-                                        showSleepTimerDialog = false
-                                        playerConnection.service.sleepTimer?.start(
-                                            minute = -1,
-                                        )
-                                    },
-                                ) {
-                                    Text(stringResource(R.string.end_of_song))
-                                }
-                            }
-                        }
-                    },
+                            .weight(1f)
+                            .height(buttonHeight),
+                    textButtonColor = textButtonColor,
+                    iconButtonColor = iconButtonColor,
+                    iconSize = iconSize,
+                    textBackgroundColor = TextBackgroundColor,
+                    playerBackground = playerBackground,
                 )
             }
         },
     ) {
+        if (showSleepTimerDialog) {
+            ActionPromptDialog(
+                titleBar = {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.Center,
+                    ) {
+                        Text(
+                            text = stringResource(R.string.sleep_timer),
+                            overflow = TextOverflow.Ellipsis,
+                            maxLines = 1,
+                            style = MaterialTheme.typography.headlineSmall,
+                        )
+                    }
+                },
+                onDismiss = { showSleepTimerDialog = false },
+                onConfirm = {
+                    showSleepTimerDialog = false
+                    playerConnection.service.sleepTimer?.start(
+                        minute = sleepTimerValue.roundToInt(),
+                        stopAfterCurrentSong = sleepTimerStopAfterCurrentSong,
+                        fadeOut = sleepTimerFadeOut,
+                    )
+                },
+                onCancel = {
+                    showSleepTimerDialog = false
+                },
+                onReset = {
+                    sleepTimerValue = sleepTimerDefault
+                },
+                content = {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            text =
+                                pluralStringResource(
+                                    R.plurals.minute,
+                                    sleepTimerValue.roundToInt(),
+                                    sleepTimerValue.roundToInt(),
+                                ),
+                            style = MaterialTheme.typography.bodyLarge,
+                        )
+
+                        Spacer(Modifier.height(16.dp))
+
+                        Slider(
+                            value = sleepTimerValue,
+                            onValueChange = { sleepTimerValue = it },
+                            valueRange = 5f..120f,
+                            steps = (120 - 5) / 5 - 1,
+                            modifier = Modifier.fillMaxWidth(),
+                        )
+
+                        Spacer(Modifier.height(8.dp))
+
+                        Column(
+                            verticalArrangement = Arrangement.spacedBy(8.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                        ) {
+                            if (isAtDefault) {
+                                Button(
+                                    onClick = {
+                                        coroutineScope.launch {
+                                            context.safeDataStoreEdit { settings ->
+                                                settings[SleepTimerDefaultKey] = sleepTimerValue
+                                            }
+                                        }
+                                        Toast.makeText(
+                                            context,
+                                            String.format(sleepTimerDefaultSetTemplate, sleepTimerValue.roundToInt()),
+                                            Toast.LENGTH_SHORT,
+                                        ).show()
+                                    },
+                                    colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+                                        containerColor = MaterialTheme.colorScheme.primary,
+                                        contentColor = MaterialTheme.colorScheme.onPrimary,
+                                    ),
+                                ) {
+                                    Text(stringResource(R.string.set_as_default))
+                                }
+                            } else {
+                                OutlinedButton(
+                                    onClick = {
+                                        coroutineScope.launch {
+                                            context.safeDataStoreEdit { settings ->
+                                                settings[SleepTimerDefaultKey] = sleepTimerValue
+                                            }
+                                        }
+                                        Toast.makeText(
+                                            context,
+                                            String.format(sleepTimerDefaultSetTemplate, sleepTimerValue.roundToInt()),
+                                            Toast.LENGTH_SHORT,
+                                        ).show()
+                                    },
+                                ) {
+                                    Text(stringResource(R.string.set_as_default))
+                                }
+                            }
+
+                            OutlinedButton(
+                                onClick = {
+                                    showSleepTimerDialog = false
+                                    playerConnection.service.sleepTimer?.start(
+                                        minute = -1,
+                                    )
+                                },
+                            ) {
+                                Text(stringResource(R.string.end_of_song))
+                            }
+                        }
+                    }
+                },
+            )
+        }
         val queueTitle by playerConnection.queueTitle.collectAsStateWithLifecycle()
         val queueWindows by playerConnection.queueWindows.collectAsStateWithLifecycle()
         val automix by playerConnection.service.automixItems.collectAsStateWithLifecycle()
@@ -1255,7 +1037,7 @@ private fun PlayerQueueButton(
     onClick: () -> Unit,
     isActive: Boolean,
     enabled: Boolean = true,
-    shape: RoundedCornerShape,
+    shape: Shape,
     modifier: Modifier = Modifier,
     text: String? = null,
     textButtonColor: Color,

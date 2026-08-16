@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Mixora Project (C) 2026
  * Licensed under GPL-3.0 | See git history for contributors
  */
@@ -31,7 +31,9 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import com.pokerlanka.mixora.utils.makeTimeString
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
@@ -199,6 +201,9 @@ fun Thumbnail(
     modifier: Modifier = Modifier,
     isPlayerExpanded: () -> Boolean = { true },
     isLandscape: Boolean = false,
+    onSleepTimerClick: () -> Unit = {},
+    sleepTimerEnabled: Boolean = false,
+    sleepTimerTimeLeft: Long = 0L,
 ) {
     val playerConnection = LocalPlayerConnection.current ?: return
     val context = LocalContext.current
@@ -333,7 +338,10 @@ fun Thumbnail(
                     ThumbnailHeader(
                         queueTitle = queueTitle,
                         albumTitle = mediaMetadata?.album?.title,
-                        textColor = textBackgroundColor
+                        textColor = textBackgroundColor,
+                        onSleepTimerClick = onSleepTimerClick,
+                        sleepTimerEnabled = sleepTimerEnabled,
+                        sleepTimerTimeLeft = sleepTimerTimeLeft,
                     )
                 }
                 
@@ -432,7 +440,10 @@ private fun ThumbnailHeader(
     queueTitle: String?,
     albumTitle: String?,
     textColor: Color,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onSleepTimerClick: () -> Unit = {},
+    sleepTimerEnabled: Boolean = false,
+    sleepTimerTimeLeft: Long = 0L,
 ) {
     Box(
         modifier = modifier
@@ -459,6 +470,33 @@ private fun ThumbnailHeader(
                     color = textColor.copy(alpha = 0.8f),
                     maxLines = 1,
                     modifier = Modifier.basicMarquee()
+                )
+            }
+        }
+
+        IconButton(
+            onClick = onSleepTimerClick,
+            modifier = Modifier.align(Alignment.CenterEnd)
+        ) {
+            if (sleepTimerEnabled) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Icon(
+                        painter = painterResource(R.drawable.bedtime),
+                        contentDescription = stringResource(R.string.sleep_timer),
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                    Text(
+                        text = makeTimeString(sleepTimerTimeLeft),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = textColor,
+                        fontSize = 9.sp
+                    )
+                }
+            } else {
+                Icon(
+                    painter = painterResource(R.drawable.bedtime),
+                    contentDescription = stringResource(R.string.sleep_timer),
+                    tint = textColor.copy(alpha = 0.7f)
                 )
             }
         }
@@ -506,6 +544,25 @@ private fun ThumbnailItem(
             }
             .pointerInput(Unit) {
                 detectTapGestures(
+                    onTap = {
+                        val isCasting = playerConnection.service.castConnectionHandler?.isCasting?.value == true
+                        val castIsPlaying = playerConnection.service.castConnectionHandler?.castIsPlaying?.value == true
+                        val castHandler = playerConnection.service.castConnectionHandler
+                        val playbackState = playerConnection.playbackState.value
+
+                        if (isCasting) {
+                            if (castIsPlaying) {
+                                castHandler?.pause()
+                            } else {
+                                castHandler?.play()
+                            }
+                        } else if (playbackState == Player.STATE_ENDED) {
+                            playerConnection.player.seekTo(0, 0)
+                            playerConnection.player.playWhenReady = true
+                        } else {
+                            playerConnection.togglePlayPause()
+                        }
+                    },
                     onDoubleTap = { offset ->
                         val currentPosition = playerConnection.player.currentPosition
                         val duration = playerConnection.player.duration
