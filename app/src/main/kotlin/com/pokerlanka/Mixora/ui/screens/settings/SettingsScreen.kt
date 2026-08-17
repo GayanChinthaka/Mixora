@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Mixora Project (C) 2026
  * Licensed under GPL-3.0 | See git history for contributors
  */
@@ -7,27 +7,30 @@ package com.pokerlanka.mixora.ui.screens.settings
 
 import android.content.ActivityNotFoundException
 import android.content.Intent
+import android.net.Uri
 import android.os.Build
 import android.provider.Settings
 import android.widget.Toast
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.core.net.toUri
 import androidx.navigation.NavController
 import com.pokerlanka.mixora.BuildConfig
 import com.pokerlanka.mixora.LocalPlayerAwareWindowInsets
@@ -36,7 +39,6 @@ import com.pokerlanka.mixora.ui.component.IconButton
 import com.pokerlanka.mixora.ui.component.Material3SettingsGroup
 import com.pokerlanka.mixora.ui.component.Material3SettingsItem
 import com.pokerlanka.mixora.ui.utils.backToMain
-import androidx.compose.runtime.remember
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -57,143 +59,178 @@ fun SettingsScreen(
         }
     }
 
-    Column(
-        Modifier
-            .windowInsetsPadding(LocalPlayerAwareWindowInsets.current.only(WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom))
-            .verticalScroll(rememberScrollState())
-            .padding(horizontal = 16.dp)
-    ) {
-        Spacer(
-            Modifier.windowInsetsPadding(
-                LocalPlayerAwareWindowInsets.current.only(
-                    WindowInsetsSides.Top
-                )
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text(stringResource(R.string.settings)) },
+                navigationIcon = {
+                    IconButton(
+                        onClick = navController::navigateUp,
+                        onLongClick = navController::backToMain
+                    ) {
+                        Icon(
+                            painter = painterResource(R.drawable.arrow_back),
+                            contentDescription = null
+                        )
+                    }
+                }
             )
-        )
-
-        // User Interface Section
-        Material3SettingsGroup(
-            title = stringResource(R.string.settings_section_ui),
-            items = listOf(
-                Material3SettingsItem(
-                    icon = painterResource(R.drawable.palette),
-                    title = { Text(stringResource(R.string.appearance)) },
-                    onClick = { navController.navigate("settings/appearance") }
-                )
-            )
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Player & Content Section (moved up and combined with content)
-        Material3SettingsGroup(
-            title = stringResource(R.string.settings_section_player_content),
-            items = listOf(
-                Material3SettingsItem(
-                    icon = painterResource(R.drawable.play),
-                    title = { Text(stringResource(R.string.player_and_audio)) },
-                    onClick = { navController.navigate("settings/player") }
-                ),
-                Material3SettingsItem(
-                    icon = painterResource(R.drawable.radio),
-                    title = { Text(stringResource(R.string.stream_sources)) },
-                    onClick = { navController.navigate("settings/stream_sources") }
-                ),
-                Material3SettingsItem(
-                    icon = painterResource(R.drawable.language),
-                    title = { Text(stringResource(R.string.content)) },
-                    onClick = { navController.navigate("settings/content") }
-                )
-            )
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Android Auto Section — only shown if Android Auto is installed
-        if (hasAndroidAuto) {
-            Material3SettingsGroup(
-                title = "Android Auto",
-                items = listOf(
-                    Material3SettingsItem(
-                        icon = painterResource(R.drawable.ic_android_auto),
-                        title = { Text(stringResource(R.string.android_auto)) },
-                        onClick = { navController.navigate("settings/android_auto") }
+        }
+    ) { innerPadding ->
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+                .padding(horizontal = 16.dp),
+            contentPadding = PaddingValues(bottom = 32.dp)
+        ) {
+            item {
+                Material3SettingsGroup(
+                    title = stringResource(R.string.account),
+                    items = listOf(
+                        Material3SettingsItem(
+                            icon = painterResource(R.drawable.account),
+                            title = { Text(stringResource(R.string.account)) },
+                            description = { Text("Account, integrations and security") },
+                            onClick = { navController.navigate("settings/account") }
+                        ),
+                        Material3SettingsItem(
+                            icon = painterResource(R.drawable.group),
+                            title = { Text("Mix Together") },
+                            onClick = { navController.navigate("settings/music_together") }
+                        ),
+                        Material3SettingsItem(
+                            icon = painterResource(R.drawable.stats),
+                            title = { Text(stringResource(R.string.stats)) },
+                            onClick = { navController.navigate("stats") }
+                        )
                     )
                 )
-            )
+            }
 
-            Spacer(modifier = Modifier.height(16.dp))
-        }
-        
-        // Privacy & Security Section
-        Material3SettingsGroup(
-            title = stringResource(R.string.settings_section_privacy),
-            items = listOf(
-                Material3SettingsItem(
-                    icon = painterResource(R.drawable.security),
-                    title = { Text(stringResource(R.string.privacy)) },
-                    onClick = { navController.navigate("settings/privacy") }
-                )
-            )
-        )
+            item { Spacer(modifier = Modifier.height(16.dp)) }
 
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Storage & Data Section
-        Material3SettingsGroup(
-            title = stringResource(R.string.settings_section_storage),
-            items = listOf(
-                Material3SettingsItem(
-                    icon = painterResource(R.drawable.storage),
-                    title = { Text(stringResource(R.string.storage)) },
-                    onClick = { navController.navigate("settings/storage") }
-                ),
-                Material3SettingsItem(
-                    icon = painterResource(R.drawable.restore),
-                    title = { Text(stringResource(R.string.backup_restore)) },
-                    onClick = { navController.navigate("settings/backup_restore") }
-                )
-            )
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // System & About Section
-        Material3SettingsGroup(
-            title = stringResource(R.string.settings_section_system),
-            items = buildList {
-                if (isAndroid12OrLater) {
-                    add(
+            item {
+                Material3SettingsGroup(
+                    title = stringResource(R.string.settings_section_ui),
+                    items = listOf(
                         Material3SettingsItem(
-                            icon = painterResource(R.drawable.link),
-                            title = { Text(stringResource(R.string.default_links)) },
-                            onClick = {
-                                try {
-                                    val intent = Intent(
-                                        Settings.ACTION_APP_OPEN_BY_DEFAULT_SETTINGS,
-                                        "package:${context.packageName}".toUri()
-                                    )
-                                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                                    context.startActivity(intent)
-                                } catch (e: Exception) {
-                                    when (e) {
-                                        is ActivityNotFoundException -> {
-                                            Toast.makeText(
-                                                context,
-                                                R.string.open_app_settings_error,
-                                                Toast.LENGTH_LONG
-                                            ).show()
-                                        }
+                            icon = painterResource(R.drawable.palette),
+                            title = { Text(stringResource(R.string.appearance)) },
+                            onClick = { navController.navigate("settings/appearance") }
+                        )
+                    )
+                )
+            }
 
-                                        is SecurityException -> {
-                                            Toast.makeText(
-                                                context,
-                                                R.string.open_app_settings_error,
-                                                Toast.LENGTH_LONG
-                                            ).show()
-                                        }
+            item { Spacer(modifier = Modifier.height(16.dp)) }
 
-                                        else -> {
+            item {
+                Material3SettingsGroup(
+                    title = stringResource(R.string.settings_section_player_content),
+                    items = listOf(
+                        Material3SettingsItem(
+                            icon = painterResource(R.drawable.play),
+                            title = { Text(stringResource(R.string.player_and_audio)) },
+                            onClick = { navController.navigate("settings/player") }
+                        ),
+                        Material3SettingsItem(
+                            icon = painterResource(R.drawable.lyrics),
+                            title = { Text(stringResource(R.string.lyrics)) },
+                            onClick = { navController.navigate("settings/lyrics") }
+                        ),
+                        Material3SettingsItem(
+                            icon = painterResource(R.drawable.language),
+                            title = { Text(stringResource(R.string.content)) },
+                            onClick = { navController.navigate("settings/content") }
+                        ),
+                        Material3SettingsItem(
+                            icon = painterResource(R.drawable.swipe),
+                            title = { Text("Behavior") },
+                            onClick = { navController.navigate("settings/privacy") }
+                        )
+                    )
+                )
+            }
+
+            item { Spacer(modifier = Modifier.height(16.dp)) }
+
+            if (hasAndroidAuto) {
+                item {
+                    Material3SettingsGroup(
+                        title = "Android Auto",
+                        items = listOf(
+                            Material3SettingsItem(
+                                icon = painterResource(R.drawable.ic_android_auto),
+                                title = { Text(stringResource(R.string.android_auto)) },
+                                onClick = { navController.navigate("settings/android_auto") }
+                            )
+                        )
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                }
+            }
+
+            item {
+                Material3SettingsGroup(
+                    title = stringResource(R.string.settings_section_storage),
+                    items = listOf(
+                        Material3SettingsItem(
+                            icon = painterResource(R.drawable.storage),
+                            title = { Text(stringResource(R.string.storage)) },
+                            onClick = { navController.navigate("settings/storage") }
+                        ),
+                        Material3SettingsItem(
+                            icon = painterResource(R.drawable.restore),
+                            title = { Text(stringResource(R.string.backup_restore)) },
+                            onClick = { navController.navigate("settings/backup_restore") }
+                        )
+                    )
+                )
+            }
+
+            item { Spacer(modifier = Modifier.height(16.dp)) }
+
+            item {
+                Material3SettingsGroup(
+                    title = stringResource(R.string.settings_section_system),
+                    items = buildList {
+                        add(
+                            Material3SettingsItem(
+                                icon = painterResource(R.drawable.wifi_proxy),
+                                title = { Text("Proxy") },
+                                onClick = { navController.navigate("settings/internet") }
+                            )
+                        )
+                        add(
+                            Material3SettingsItem(
+                                icon = painterResource(R.drawable.key),
+                                title = { Text("PO Token Generation") },
+                                onClick = { navController.navigate("settings/po_token_generation") }
+                            )
+                        )
+                        add(
+                            Material3SettingsItem(
+                                icon = painterResource(R.drawable.tune),
+                                title = { Text("Developer Options") },
+                                onClick = { navController.navigate("settings/misc") }
+                            )
+                        )
+                        if (isAndroid12OrLater) {
+                            add(
+                                Material3SettingsItem(
+                                    icon = painterResource(R.drawable.link),
+                                    title = { Text(stringResource(R.string.default_links)) },
+                                    onClick = {
+                                        try {
+                                            val intent = Intent(
+                                                Settings.ACTION_APP_OPEN_BY_DEFAULT_SETTINGS,
+                                                Uri.parse("package:${context.packageName}")
+                                            ).apply {
+                                                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                            }
+                                            context.startActivity(intent)
+                                        } catch (e: Exception) {
                                             Toast.makeText(
                                                 context,
                                                 R.string.open_app_settings_error,
@@ -201,36 +238,26 @@ fun SettingsScreen(
                                             ).show()
                                         }
                                     }
-                                }
-                            }
+                                )
+                            )
+                        }
+                        add(
+                            Material3SettingsItem(
+                                icon = painterResource(R.drawable.update),
+                                title = { Text("Updates") },
+                                onClick = { navController.navigate("settings/updates") }
+                            )
                         )
-                    )
-                }
-                add(
-                    Material3SettingsItem(
-                        icon = painterResource(R.drawable.info),
-                        title = { Text(stringResource(R.string.about)) },
-                        onClick = { navController.navigate("settings/about") }
-                    )
-                )
-            }
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-    }
-
-    TopAppBar(
-        title = { Text(stringResource(R.string.settings)) },
-        navigationIcon = {
-            IconButton(
-                onClick = navController::navigateUp,
-                onLongClick = navController::backToMain
-            ) {
-                Icon(
-                    painterResource(R.drawable.arrow_back),
-                    contentDescription = null
+                        add(
+                            Material3SettingsItem(
+                                icon = painterResource(R.drawable.info),
+                                title = { Text(stringResource(R.string.about)) },
+                                onClick = { navController.navigate("settings/about") }
+                            )
+                        )
+                    }
                 )
             }
         }
-    )
+    }
 }

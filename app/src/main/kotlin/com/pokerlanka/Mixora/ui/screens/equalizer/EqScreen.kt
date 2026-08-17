@@ -316,12 +316,6 @@ private fun NoEqualizationItem(
     onSelected: () -> Unit
 ) {
     ListItem(
-        headlineContent = {
-            Text(
-                stringResource(R.string.eq_disabled),
-                fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal
-            )
-        },
         leadingContent = {
             RadioButton(
                 selected = isSelected,
@@ -331,7 +325,12 @@ private fun NoEqualizationItem(
         modifier = Modifier
             .clickable(onClick = onSelected)
             .padding(horizontal = 8.dp) // align with design
-    )
+    ) {
+        Text(
+            stringResource(R.string.eq_disabled),
+            fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal
+        )
+    }
 }
 
 @Composable
@@ -344,12 +343,6 @@ private fun EQProfileItem(
     var showDeleteDialog by remember { mutableStateOf(false) }
 
     ListItem(
-        headlineContent = {
-            Text(
-                text = profile.deviceModel,
-                fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal
-            )
-        },
         supportingContent = {
             Text(
                 pluralStringResource(
@@ -377,7 +370,12 @@ private fun EQProfileItem(
         modifier = Modifier
             .clickable(onClick = onSelected)
             .padding(horizontal = 8.dp)
-    )
+    ) {
+        Text(
+            text = profile.deviceModel,
+            fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal
+        )
+    }
 
     // Delete confirmation dialog
     if (showDeleteDialog) {

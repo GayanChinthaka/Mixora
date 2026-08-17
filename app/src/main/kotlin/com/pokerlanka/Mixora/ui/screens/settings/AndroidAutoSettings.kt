@@ -53,7 +53,6 @@ import com.pokerlanka.mixora.constants.MediaSessionConstants
 import com.pokerlanka.mixora.ui.component.IconButton
 import com.pokerlanka.mixora.ui.component.Material3SettingsGroup
 import com.pokerlanka.mixora.ui.component.Material3SettingsItem
-import com.pokerlanka.mixora.ui.component.PreferenceEntry
 import com.pokerlanka.mixora.ui.utils.backToMain
 import com.pokerlanka.mixora.utils.rememberPreference
 import kotlinx.coroutines.flow.map

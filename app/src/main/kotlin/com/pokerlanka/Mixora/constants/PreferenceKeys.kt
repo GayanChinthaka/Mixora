@@ -105,6 +105,8 @@ val SelectedYtmPlaylistsKey = stringPreferencesKey("selectedYtmPlaylists")
 val CheckForUpdatesKey = booleanPreferencesKey("checkForUpdates")
 val UpdateNotificationsEnabledKey = booleanPreferencesKey("updateNotifications")
 val LastUpdateCheckTimeKey = longPreferencesKey("lastUpdateCheckTime")
+val TogetherOnlineEndpointCacheKey = stringPreferencesKey("togetherOnlineEndpointCache")
+val TogetherOnlineEndpointLastCheckedAtKey = longPreferencesKey("togetherOnlineEndpointLastCheckedAt")
 
 val AudioQualityKey = stringPreferencesKey("audioQuality")
 
@@ -478,6 +480,11 @@ val AccountNameKey = stringPreferencesKey("accountName")
 val AccountEmailKey = stringPreferencesKey("accountEmail")
 val AccountChannelHandleKey = stringPreferencesKey("accountChannelHandle")
 val UseLoginForBrowse = booleanPreferencesKey("useLoginForBrowse")
+val SavedAccountsKey = stringPreferencesKey("savedAccounts")
+val PoTokenGvsKey = stringPreferencesKey("poTokenGvs")
+val PoTokenPlayerKey = stringPreferencesKey("poTokenPlayer")
+val WebClientPoTokenEnabledKey = booleanPreferencesKey("webClientPoTokenEnabled")
+val ForceSyncOnAccountSwitchKey = booleanPreferencesKey("forceSyncOnAccountSwitch")
 
 val LanguageCodeToName = mapOf("en" to "English")
 

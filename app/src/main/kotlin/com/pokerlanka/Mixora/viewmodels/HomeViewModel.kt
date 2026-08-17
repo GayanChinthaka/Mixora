@@ -6,9 +6,11 @@
 package com.pokerlanka.mixora.viewmodels
 
 import android.content.Context
+import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.pokerlanka.innertube.YouTube
+import com.pokerlanka.innertube.models.AccountChannel
 import com.pokerlanka.innertube.models.AlbumItem
 import com.pokerlanka.innertube.models.Artist
 import com.pokerlanka.innertube.models.ArtistItem
@@ -24,6 +26,10 @@ import com.pokerlanka.innertube.models.filterYoutubeShorts
 import com.pokerlanka.innertube.pages.ExplorePage
 import com.pokerlanka.innertube.pages.HomePage
 import com.pokerlanka.innertube.utils.completed
+import com.pokerlanka.mixora.constants.AccountChannelHandleKey
+import com.pokerlanka.mixora.constants.AccountEmailKey
+import com.pokerlanka.mixora.constants.AccountNameKey
+import com.pokerlanka.mixora.constants.DataSyncIdKey
 import com.pokerlanka.mixora.constants.HideExplicitKey
 import com.pokerlanka.mixora.constants.HideVideoSongsKey
 import com.pokerlanka.mixora.constants.HideYoutubeShortsKey
@@ -31,7 +37,9 @@ import com.pokerlanka.mixora.constants.InnerTubeCookieKey
 import com.pokerlanka.mixora.constants.QuickPicks
 import com.pokerlanka.mixora.constants.QuickPicksKey
 import com.pokerlanka.mixora.constants.ShowWrappedCardKey
+import com.pokerlanka.mixora.constants.VisitorDataKey
 import com.pokerlanka.mixora.constants.WrappedSeenKey
+import com.pokerlanka.mixora.constants.YtmSyncKey
 import com.pokerlanka.mixora.db.MusicDatabase
 import com.pokerlanka.mixora.db.entities.Album
 import com.pokerlanka.mixora.db.entities.LocalItem
@@ -42,6 +50,7 @@ import com.pokerlanka.mixora.extensions.toEnum
 import com.pokerlanka.mixora.models.SimilarRecommendation
 import com.pokerlanka.mixora.ui.screens.wrapped.WrappedAudioService
 import com.pokerlanka.mixora.ui.screens.wrapped.WrappedManager
+import com.pokerlanka.mixora.utils.SavedAccount
 import com.pokerlanka.mixora.utils.SyncUtils
 import com.pokerlanka.mixora.utils.dataStore
 import com.pokerlanka.mixora.utils.safeDataStoreEdit
@@ -54,6 +63,7 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
@@ -74,6 +84,28 @@ data class DailyDiscoverItem(
 data class CommunityPlaylistItem(
     val playlist: PlaylistItem,
     val songs: List<SongItem>
+)
+
+sealed interface AccountChannelsState {
+    data object Loading : AccountChannelsState
+    data class Success(val channels: AccountChannelCollection) : AccountChannelsState
+    data object Empty : AccountChannelsState
+    data class Error(val message: String) : AccountChannelsState
+}
+
+@Immutable
+data class AccountChannelCollection(
+    val items: List<AccountChannelUiModel>,
+)
+
+@Immutable
+data class AccountChannelUiModel(
+    val name: String,
+    val byline: String,
+    val channelHandle: String,
+    val thumbnailUrl: String?,
+    val dataSyncId: String,
+    val isSelected: Boolean,
 )
 
 @HiltViewModel
@@ -252,6 +284,9 @@ class HomeViewModel @Inject constructor(
 
     val accountName = MutableStateFlow("Guest")
     val accountImageUrl = MutableStateFlow<String?>(null)
+
+    private val _accountChannelsState = MutableStateFlow<AccountChannelsState>(AccountChannelsState.Empty)
+    val accountChannelsState: StateFlow<AccountChannelsState> = _accountChannelsState.asStateFlow()
 
 	val showWrappedCard: StateFlow<Boolean> = context.dataStore.data.map { prefs ->
         val showWrappedPref = prefs[ShowWrappedCardKey] ?: false
@@ -578,7 +613,7 @@ class HomeViewModel @Inject constructor(
                     SimilarRecommendation(
                         title = album,
                         items = items
-                            .distinctBy { it.id }
+                            .distinctBy { item -> item.id }
                             .filterExplicit(hideExplicit)
                             .filterVideoSongs(hideVideoSongs)
                             .shuffled().take(10)
@@ -717,6 +752,33 @@ class HomeViewModel @Inject constructor(
         // Run sync when user manually refreshes
         viewModelScope.launch(Dispatchers.IO) {
             syncUtils.tryAutoSync()
+        }
+    }
+
+    fun switchToAccount(
+        account: SavedAccount,
+        forceSyncOnSwitch: Boolean = false,
+    ) {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                context.safeDataStoreEdit { preferences ->
+                    preferences[InnerTubeCookieKey] = account.innerTubeCookie
+                    preferences[VisitorDataKey] = account.visitorData
+                    preferences[DataSyncIdKey] = account.dataSyncId
+                    preferences[AccountNameKey] = account.name
+                    preferences[AccountEmailKey] = account.email
+                    preferences[AccountChannelHandleKey] = account.channelHandle
+                }
+                
+                YouTube.cookie = account.innerTubeCookie
+                
+                if (forceSyncOnSwitch) {
+                    syncUtils.tryAutoSync()
+                }
+            } catch (e: Exception) {
+                Timber.e(e, "Error switching account")
+                reportException(e)
+            }
         }
     }
 

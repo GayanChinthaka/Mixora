@@ -184,14 +184,6 @@ fun YouTubeSongMenu(
     }  
 
     ListItem(  
-        headlineContent = {
-            Text(
-                text = song.title,
-                modifier = Modifier.basicMarquee(),
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-        },  
         supportingContent = {  
             Text(  
                 text = joinByBullet(
@@ -267,7 +259,15 @@ fun YouTubeSongMenu(
                 )
             }
         },  
-    )  
+    ) {
+        Text(
+            text = song.title,
+            modifier = Modifier.basicMarquee(),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+    }
+ 
 
     HorizontalDivider()
 

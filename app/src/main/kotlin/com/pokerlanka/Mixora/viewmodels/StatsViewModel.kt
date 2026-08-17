@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Mixora Project (C) 2026
  * Licensed under GPL-3.0 | See git history for contributors
  */
@@ -6,12 +6,15 @@
 package com.pokerlanka.mixora.viewmodels
 
 import android.content.Context
+import androidx.annotation.StringRes
+import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.snapshotFlow
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.pokerlanka.innertube.YouTube
 import com.pokerlanka.innertube.models.Artist
+import com.pokerlanka.mixora.R
 import com.pokerlanka.mixora.constants.HideVideoSongsKey
 import com.pokerlanka.mixora.constants.LastMonthlyMostPlaylistSyncKey
 import com.pokerlanka.mixora.constants.LastWeeklyMostPlaylistSyncKey
@@ -19,18 +22,28 @@ import com.pokerlanka.mixora.constants.ShowMostStatsPlaylistsKey
 import com.pokerlanka.mixora.constants.StatPeriod
 import com.pokerlanka.mixora.constants.statToPeriod
 import com.pokerlanka.mixora.db.MusicDatabase
+import com.pokerlanka.mixora.db.entities.Album
+import com.pokerlanka.mixora.db.entities.Artist as DbArtist
+import com.pokerlanka.mixora.db.entities.EventWithSong
+import com.pokerlanka.mixora.db.entities.ListeningBySlot
+import com.pokerlanka.mixora.db.entities.ListeningSummary
+import com.pokerlanka.mixora.db.entities.ListeningTotals
 import com.pokerlanka.mixora.db.entities.PlaylistEntity
+import com.pokerlanka.mixora.db.entities.Song
+import com.pokerlanka.mixora.db.entities.SongWithStats
 import com.pokerlanka.mixora.ui.screens.OptionStats
 import com.pokerlanka.mixora.utils.dataStore
-import com.pokerlanka.mixora.utils.safeDataStoreEdit
 import com.pokerlanka.mixora.utils.reportException
-import com.pokerlanka.mixora.R
+import com.pokerlanka.mixora.utils.safeDataStoreEdit
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
@@ -39,15 +52,42 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import java.time.Duration
-import java.time.Instant
-import java.time.LocalDateTime
-import java.time.ZoneId
-import java.time.ZoneOffset
-import javax.inject.Inject
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import kotlin.collections.emptyList
+import java.time.Duration
+import java.time.LocalDateTime
+import javax.inject.Inject
+
+sealed interface StatsScreenState {
+    data object Loading : StatsScreenState
+
+    data class Success(
+        val data: StatsUiData,
+    ) : StatsScreenState
+
+    data object Empty : StatsScreenState
+
+    data class Error(
+        @StringRes val messageResId: Int,
+    ) : StatsScreenState
+}
+
+@Immutable
+data class StatsUiData(
+    val selectedOption: OptionStats,
+    val selectedPeriodIndex: Int,
+    val mostPlayedSongs: List<Song>,
+    val visibleRankedSongs: List<SongWithStats>,
+    val rankedSongCount: Int,
+    val mostPlayedArtists: List<DbArtist>,
+    val mostPlayedAlbums: List<Album>,
+    val listeningByHour: List<ListeningBySlot>,
+    val listeningByDayOfWeek: List<ListeningBySlot>,
+    val listeningSummary: ListeningSummary,
+    val firstEvent: EventWithSong?,
+    val isSongListExpanded: Boolean,
+    val canExpandSongList: Boolean,
+)
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
@@ -60,12 +100,59 @@ constructor(
     private val periodicMostPlaylistSyncMutex = Mutex()
     val selectedOption = MutableStateFlow(OptionStats.CONTINUOUS)
     val indexChips = MutableStateFlow(0)
+    private val isSongListExpanded = MutableStateFlow(false)
+    private val isYearPickerOpen = MutableStateFlow(false)
+    private val refreshRequest = MutableStateFlow(0L)
+
+    val yearPickerOpen: StateFlow<Boolean> = isYearPickerOpen
+
     private val showMostStatsPlaylists =
         context.dataStore.data
             .map { it[ShowMostStatsPlaylistsKey] ?: true }
             .distinctUntilChanged()
 
-    val mostPlayedSongsStats =
+    fun onOptionSelected(option: OptionStats) {
+        if (selectedOption.value == option) return
+        selectedOption.value = option
+        indexChips.value = 0
+        isSongListExpanded.value = false
+    }
+
+    fun onChipIndexChanged(index: Int) {
+        if (indexChips.value == index) return
+        indexChips.value = index
+        isSongListExpanded.value = false
+    }
+
+    fun toggleSongListExpanded() {
+        isSongListExpanded.value = !isSongListExpanded.value
+    }
+
+    fun showYearPicker() {
+        isYearPickerOpen.value = true
+    }
+
+    fun dismissYearPicker() {
+        isYearPickerOpen.value = false
+    }
+
+    fun retry() {
+        refreshRequest.value += 1L
+    }
+
+    private fun periodPair() = combine(selectedOption, indexChips) { opt, idx -> Pair(opt, idx) }
+
+    private fun toTimestamp(
+        selection: OptionStats,
+        t: Int,
+    ): LocalDateTime =
+        if (selection == OptionStats.CONTINUOUS || t == 0) {
+            LocalDateTime.now()
+        } else {
+            statToPeriod(selection, t - 1)
+        }
+
+    val mostPlayedSongsStats: StateFlow<List<SongWithStats>> =
         combine(
             selectedOption,
             indexChips,
@@ -76,18 +163,13 @@ constructor(
                     .mostPlayedSongsStats(
                         fromTimeStamp = statToPeriod(selection, t),
                         limit = -1,
-                        toTimeStamp =
-                        if (selection == OptionStats.CONTINUOUS || t == 0) {
-                            LocalDateTime.now()
-                        } else {
-                            statToPeriod(selection, t - 1)
-                        },
+                        toTimeStamp = toTimestamp(selection, t),
                     ).map { songs ->
                         if (hideVideoSongs) songs.filter { !it.isVideo } else songs
                     }
             }.stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
-    val mostPlayedSongs =
+    val mostPlayedSongs: StateFlow<List<Song>> =
         combine(
             selectedOption,
             indexChips,
@@ -98,57 +180,63 @@ constructor(
                     .mostPlayedSongs(
                         fromTimeStamp = statToPeriod(selection, t),
                         limit = -1,
-                        toTimeStamp =
-                        if (selection == OptionStats.CONTINUOUS || t == 0) {
-                            LocalDateTime.now()
-                        } else {
-                            statToPeriod(selection, t - 1)
-                        },
+                        toTimeStamp = toTimestamp(selection, t),
                     ).map { songs ->
                         if (hideVideoSongs) songs.filter { !it.song.isVideo } else songs
                     }
             }.stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
-    val mostPlayedArtists =
-        combine(
-            selectedOption,
-            indexChips,
-        ) { first, second -> Pair(first, second) }
+    val mostPlayedArtists: StateFlow<List<DbArtist>> =
+        periodPair()
             .flatMapLatest { (selection, t) ->
                 database
                     .mostPlayedArtists(
                         statToPeriod(selection, t),
                         limit = -1,
-                        toTimeStamp =
-                        if (selection == OptionStats.CONTINUOUS || t == 0) {
-                            LocalDateTime.now()
-                        } else {
-                            statToPeriod(selection, t - 1)
-                        },
+                        toTimeStamp = toTimestamp(selection, t),
                     ).map { artists ->
                         artists.filter { it.artist.isYouTubeArtist }
                     }
             }.stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
-    val mostPlayedAlbums =
-        combine(
-            selectedOption,
-            indexChips,
-        ) { first, second -> Pair(first, second) }
+    val mostPlayedAlbums: StateFlow<List<Album>> =
+        periodPair()
             .flatMapLatest { (selection, t) ->
                 database.mostPlayedAlbums(
                     statToPeriod(selection, t),
                     limit = -1,
-                    toTimeStamp =
-                    if (selection == OptionStats.CONTINUOUS || t == 0) {
-                        LocalDateTime.now()
-                    } else {
-                        statToPeriod(selection, t - 1)
-                    },
+                    toTimeStamp = toTimestamp(selection, t),
                 )
             }.stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
-    val firstEvent =
+    val listeningByHour: StateFlow<List<ListeningBySlot>> =
+        periodPair()
+            .flatMapLatest { (selection, t) ->
+                database.listeningByHour(
+                    fromTimeStamp = statToPeriod(selection, t),
+                    toTimeStamp = toTimestamp(selection, t),
+                )
+            }.stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
+
+    val listeningByDayOfWeek: StateFlow<List<ListeningBySlot>> =
+        periodPair()
+            .flatMapLatest { (selection, t) ->
+                database.listeningByDayOfWeek(
+                    fromTimeStamp = statToPeriod(selection, t),
+                    toTimeStamp = toTimestamp(selection, t),
+                )
+            }.stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
+
+    val listeningTotals: StateFlow<ListeningTotals> =
+        periodPair()
+            .flatMapLatest { (selection, t) ->
+                database.listeningTotals(
+                    fromTimeStamp = statToPeriod(selection, t),
+                    toTimeStamp = toTimestamp(selection, t),
+                )
+            }.stateIn(viewModelScope, SharingStarted.Lazily, ListeningTotals(0, 0L))
+
+    val firstEvent: StateFlow<EventWithSong?> =
         database
             .firstEvent()
             .stateIn(viewModelScope, SharingStarted.Lazily, null)
@@ -156,8 +244,8 @@ constructor(
     val selectedArtists = mutableStateListOf<Artist>() // Current artist selection
 
     val filteredSongs = combine(
-        mostPlayedSongsStats, // Unfiltered songs
-        snapshotFlow { selectedArtists.toList() } // Selected artists
+        mostPlayedSongsStats,
+        snapshotFlow { selectedArtists.toList() }
     ) { songs, selected ->
         if (selected.isEmpty()) {
             songs
@@ -169,8 +257,8 @@ constructor(
     }.stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
     val filteredArtists = combine(
-        mostPlayedArtists, // Unfiltered list of artists
-        snapshotFlow { selectedArtists.toList() } // Selected artists
+        mostPlayedArtists,
+        snapshotFlow { selectedArtists.toList() }
     ) { artists, selected ->
         if (selected.isEmpty()) {
             artists
@@ -182,8 +270,8 @@ constructor(
     }.stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
     val filteredAlbums = combine(
-        mostPlayedAlbums, // Unfiltered list of albums
-        snapshotFlow { selectedArtists.toList() } // Selected artists
+        mostPlayedAlbums,
+        snapshotFlow { selectedArtists.toList() }
     ) { albums, selected ->
         if (selected.isEmpty()) {
             albums
@@ -195,6 +283,91 @@ constructor(
             }
         }
     }.stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
+
+    private val primaryStats =
+        combine(
+            mostPlayedSongsStats,
+            mostPlayedSongs,
+            mostPlayedArtists,
+            mostPlayedAlbums,
+        ) { rankedSongs, songs, artists, albums ->
+            PrimaryStats(
+                rankedSongs = rankedSongs,
+                songs = songs,
+                artists = artists,
+                albums = albums,
+            )
+        }
+
+    private val listeningStats =
+        combine(
+            listeningByHour,
+            listeningByDayOfWeek,
+            listeningTotals,
+            firstEvent,
+        ) { byHour, byDay, totals, first ->
+            ListeningStats(
+                byHour = byHour,
+                byDay = byDay,
+                totals = totals,
+                firstEvent = first,
+            )
+        }
+
+    val screenState: StateFlow<StatsScreenState> =
+        refreshRequest
+            .flatMapLatest {
+                combine(
+                    primaryStats,
+                    listeningStats,
+                    selectedOption,
+                    indexChips,
+                    isSongListExpanded,
+                ) { primary, listening, option, periodIndex, expanded ->
+                    val summary =
+                        ListeningSummary(
+                            totalPlayCount = listening.totals.totalPlayCount,
+                            totalTimeListened = listening.totals.totalTimeListened,
+                            uniqueSongsCount = primary.rankedSongs.size,
+                            uniqueArtistsCount = primary.artists.size,
+                            uniqueAlbumsCount = primary.albums.size,
+                        )
+                    if (summary.totalPlayCount == 0 && primary.rankedSongs.isEmpty()) {
+                        StatsScreenState.Empty
+                    } else {
+                        StatsScreenState.Success(
+                            StatsUiData(
+                                selectedOption = option,
+                                selectedPeriodIndex = periodIndex,
+                                mostPlayedSongs = primary.songs,
+                                visibleRankedSongs =
+                                    if (expanded) {
+                                        primary.rankedSongs
+                                    } else {
+                                        primary.rankedSongs.take(COLLAPSED_SONG_COUNT)
+                                    },
+                                rankedSongCount = primary.rankedSongs.size,
+                                mostPlayedArtists = primary.artists,
+                                mostPlayedAlbums = primary.albums,
+                                listeningByHour = listening.byHour,
+                                listeningByDayOfWeek = listening.byDay,
+                                listeningSummary = summary,
+                                firstEvent = listening.firstEvent,
+                                isSongListExpanded = expanded,
+                                canExpandSongList = primary.rankedSongs.size > COLLAPSED_SONG_COUNT,
+                            ),
+                        )
+                    }
+                }.catch { throwable ->
+                    if (throwable is CancellationException) throw throwable
+                    reportException(throwable)
+                    emit(StatsScreenState.Error(R.string.error_unknown))
+                }
+            }.stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(5_000),
+                initialValue = StatsScreenState.Loading,
+            )
 
     fun transferSongStats(fromSongId: String, toSongId: String, onDone: (() -> Unit)? = null) {
         viewModelScope.launch {
@@ -293,7 +466,6 @@ constructor(
                     )
                 }
 
-                // Only write "last sync" when it was a scheduled sync, not a forced rebuild
                 if (!force) {
                     context.safeDataStoreEdit { settings ->
                         if (shouldSyncWeekly) settings[LastWeeklyMostPlaylistSyncKey] = nowEpochMillis
@@ -328,8 +500,7 @@ constructor(
         now: LocalDateTime,
     ): Boolean {
         if (lastSyncMillis == null || lastSyncMillis <= 0L) return true
-
-        val lastSyncAt = LocalDateTime.ofInstant(Instant.ofEpochMilli(lastSyncMillis), ZoneId.systemDefault())
+        val lastSyncAt = LocalDateTime.ofInstant(java.time.Instant.ofEpochMilli(lastSyncMillis), java.time.ZoneId.systemDefault())
         return !lastSyncAt.plusWeeks(1).isAfter(now)
     }
 
@@ -338,8 +509,7 @@ constructor(
         now: LocalDateTime,
     ): Boolean {
         if (lastSyncMillis == null || lastSyncMillis <= 0L) return true
-
-        val lastSyncAt = LocalDateTime.ofInstant(Instant.ofEpochMilli(lastSyncMillis), ZoneId.systemDefault())
+        val lastSyncAt = LocalDateTime.ofInstant(java.time.Instant.ofEpochMilli(lastSyncMillis), java.time.ZoneId.systemDefault())
         return !lastSyncAt.plusMonths(1).isAfter(now)
     }
 
@@ -436,5 +606,23 @@ constructor(
                     }
             }
         }
+    }
+
+    private data class PrimaryStats(
+        val rankedSongs: List<SongWithStats>,
+        val songs: List<Song>,
+        val artists: List<DbArtist>,
+        val albums: List<Album>,
+    )
+
+    private data class ListeningStats(
+        val byHour: List<ListeningBySlot>,
+        val byDay: List<ListeningBySlot>,
+        val totals: ListeningTotals,
+        val firstEvent: EventWithSong?,
+    )
+
+    private companion object {
+        const val COLLAPSED_SONG_COUNT = 5
     }
 }

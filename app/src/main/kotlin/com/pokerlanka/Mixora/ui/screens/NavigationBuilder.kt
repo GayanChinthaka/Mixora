@@ -43,18 +43,25 @@ import com.pokerlanka.mixora.ui.screens.recognition.RecognitionScreen
 import com.pokerlanka.mixora.ui.screens.search.OnlineSearchResult
 import com.pokerlanka.mixora.ui.screens.search.SearchScreen
 import com.pokerlanka.mixora.ui.screens.settings.AboutScreen
+import com.pokerlanka.mixora.ui.screens.settings.AccountSettings
+import com.pokerlanka.mixora.ui.screens.settings.AiIntegrationSettings
 import com.pokerlanka.mixora.ui.screens.settings.AndroidAutoSettings
 import com.pokerlanka.mixora.ui.screens.settings.AppearanceSettings
 import com.pokerlanka.mixora.ui.screens.settings.BackupAndRestore
 import com.pokerlanka.mixora.ui.screens.settings.ContentSettings
 import com.pokerlanka.mixora.ui.screens.settings.DarkMode
+import com.pokerlanka.mixora.ui.screens.settings.InternetSettings
+import com.pokerlanka.mixora.ui.screens.settings.MiscSettings
+import com.pokerlanka.mixora.ui.screens.settings.MusicTogetherScreen
 import com.pokerlanka.mixora.ui.screens.settings.PlayerSettings
+import com.pokerlanka.mixora.ui.screens.settings.PoTokenGenerationScreen
 import com.pokerlanka.mixora.ui.screens.settings.PrivacySettings
 import com.pokerlanka.mixora.ui.screens.settings.RomanizationSettings
 import com.pokerlanka.mixora.ui.screens.settings.SettingsScreen
 import com.pokerlanka.mixora.ui.screens.settings.StorageSettings
 import com.pokerlanka.mixora.ui.screens.settings.StreamSourcesSettings
 import com.pokerlanka.mixora.ui.screens.settings.ThemeScreen
+import com.pokerlanka.mixora.ui.screens.settings.UpdateScreen
 import com.pokerlanka.mixora.ui.screens.settings.integrations.IntegrationScreen
 import com.pokerlanka.mixora.ui.screens.settings.integrations.LastFMSettings
 
@@ -371,6 +378,13 @@ fun NavGraphBuilder.navigationBuilder(
         BackupAndRestore(navController)
     }
 
+    composable("settings/account") {
+        AccountSettings(
+            navController = navController,
+            latestVersionName = latestVersionName
+        )
+    }
+
     composable("settings/integrations") {
         IntegrationScreen(navController)
     }
@@ -381,6 +395,30 @@ fun NavGraphBuilder.navigationBuilder(
 
     composable("settings/about") {
         AboutScreen(navController)
+    }
+
+    composable("settings/ai_integration") {
+        AiIntegrationSettings(navController)
+    }
+
+    composable("settings/music_together") {
+        MusicTogetherScreen(navController)
+    }
+
+    composable("settings/internet") {
+        InternetSettings(navController)
+    }
+
+    composable("settings/po_token_generation") {
+        PoTokenGenerationScreen(navController)
+    }
+
+    composable("settings/misc") {
+        MiscSettings(navController)
+    }
+
+    composable("settings/updates") {
+        UpdateScreen(navController)
     }
 
     composable("login") {

@@ -173,7 +173,7 @@ fun YouTubeAlbumMenu(
         ) {
             item {
                 ListItem(
-                    headlineContent = { Text(text = stringResource(R.string.already_in_playlist)) },
+                    modifier = Modifier.clickable { showErrorPlaylistAddDialog = false },
                     leadingContent = {
                         Image(
                             painter = painterResource(R.drawable.close),
@@ -182,8 +182,9 @@ fun YouTubeAlbumMenu(
                             modifier = Modifier.size(ListThumbnailSize),
                         )
                     },
-                    modifier = Modifier.clickable { showErrorPlaylistAddDialog = false },
-                )
+                ) {
+                    Text(text = stringResource(R.string.already_in_playlist))
+                }
             }
 
             items(notAddedList) { song ->

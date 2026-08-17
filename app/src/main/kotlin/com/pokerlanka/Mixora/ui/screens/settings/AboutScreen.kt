@@ -206,6 +206,47 @@ fun AboutScreen(
             }
         )
 
+        Spacer(Modifier.height(24.dp))
+
+        // Respectores Section
+        Text(
+            text = "Respectores",
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 12.dp)
+        )
+
+        InfoCard(
+            title = "MO AGAMY",
+            value = "Base Framework | Metrolist",
+            leadingContent = {
+                ContributorAvatar(
+                    avatarUrl = "https://avatars.githubusercontent.com/u/80542861?v=4",
+                    sizeDp = 44,
+                    shape = CircleShape,
+                    contentDescription = "MO AGAMY",
+                )
+            }
+        )
+
+        Spacer(Modifier.height(16.dp))
+
+        InfoCard(
+            title = "Zion Huang",
+            value = "Creator of InnerTune · Foundation for Metrolist, ArchiveTune, and other forks",
+            leadingContent = {
+                ContributorAvatar(
+                    avatarUrl = "https://avatars.githubusercontent.com/u/110614797?v=4",
+                    sizeDp = 44,
+                    shape = CircleShape,
+                    contentDescription = "Zion Huang",
+                )
+            }
+        )
+
         Spacer(Modifier.height(48.dp))
 
         // Copyright Footer

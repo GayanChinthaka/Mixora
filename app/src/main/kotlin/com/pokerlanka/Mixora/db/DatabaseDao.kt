@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Mixora Project (C) 2026
  * Licensed under GPL-3.0 | See git history for contributors
  */
@@ -35,6 +35,8 @@ import com.pokerlanka.mixora.db.entities.ArtistEntity
 import com.pokerlanka.mixora.db.entities.Event
 import com.pokerlanka.mixora.db.entities.EventWithSong
 import com.pokerlanka.mixora.db.entities.FormatEntity
+import com.pokerlanka.mixora.db.entities.ListeningBySlot
+import com.pokerlanka.mixora.db.entities.ListeningTotals
 import com.pokerlanka.mixora.db.entities.LyricsEntity
 import com.pokerlanka.mixora.db.entities.PlayCountEntity
 import com.pokerlanka.mixora.db.entities.Playlist
@@ -614,6 +616,49 @@ interface DatabaseDao {
     """
     )
     fun getUniqueAlbumCountInRange(fromTimeStamp: LocalDateTime, toTimeStamp: LocalDateTime): Flow<Int>
+
+    @Query(
+        """
+        SELECT CAST(strftime('%H', datetime(timestamp / 1000, 'unixepoch', 'localtime')) AS INTEGER) AS slot,
+               SUM(playTime) AS timeListened
+        FROM event
+        WHERE timestamp > :fromTimeStamp AND timestamp <= :toTimeStamp
+        GROUP BY slot
+        ORDER BY slot
+        """,
+    )
+    fun listeningByHour(
+        fromTimeStamp: LocalDateTime,
+        toTimeStamp: LocalDateTime,
+    ): Flow<List<ListeningBySlot>>
+
+    @Query(
+        """
+        SELECT CAST(strftime('%w', datetime(timestamp / 1000, 'unixepoch', 'localtime')) AS INTEGER) AS slot,
+               SUM(playTime) AS timeListened
+        FROM event
+        WHERE timestamp > :fromTimeStamp AND timestamp <= :toTimeStamp
+        GROUP BY slot
+        ORDER BY slot
+        """,
+    )
+    fun listeningByDayOfWeek(
+        fromTimeStamp: LocalDateTime,
+        toTimeStamp: LocalDateTime,
+    ): Flow<List<ListeningBySlot>>
+
+    @Query(
+        """
+        SELECT COUNT(1) AS totalPlayCount,
+               COALESCE(SUM(playTime), 0) AS totalTimeListened
+        FROM event
+        WHERE timestamp > :fromTimeStamp AND timestamp <= :toTimeStamp
+        """,
+    )
+    fun listeningTotals(
+        fromTimeStamp: LocalDateTime,
+        toTimeStamp: LocalDateTime,
+    ): Flow<ListeningTotals>
 
     @Transaction
     @SuppressWarnings(RoomWarnings.QUERY_MISMATCH)

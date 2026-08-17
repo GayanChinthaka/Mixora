@@ -672,7 +672,7 @@ fun ArtistScreen(
 
                         if ((section.items.firstOrNull() as? SongItem)?.album != null) {
                             items(
-                                items = distinctItemsBySection[index] ?: section.items,
+                                items = distinctItemsBySection[index],
                                 key = { "youtube_song_${it.id}" },
                             ) { song ->
                                 YouTubeListItem(
@@ -729,7 +729,7 @@ fun ArtistScreen(
                                     contentPadding = WindowInsets.systemBars.only(WindowInsetsSides.Horizontal).asPaddingValues(),
                                 ) {
                                     items(
-                                        items = distinctItemsBySection[index] ?: section.items,
+                                        items = distinctItemsBySection[index],
                                         key = { "youtube_album_${it.id}" },
                                     ) { item ->
                                         YouTubeGridItem(

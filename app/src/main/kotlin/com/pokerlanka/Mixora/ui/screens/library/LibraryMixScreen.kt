@@ -300,7 +300,6 @@ fun LibraryMixScreen(
 
                     is Artist -> matchesNormalizedQuery(normalizedQuery, item.artist.name)
                     is Playlist -> matchesNormalizedQuery(normalizedQuery, item.playlist.name)
-                    else -> true
                 }
             }
 
@@ -315,7 +314,6 @@ fun LibraryMixScreen(
                             is Song -> 1
                             is Artist -> 2
                             is Album -> 3
-                            else -> 4
                         }
                     val secondPriority =
                         when (second) {
@@ -323,7 +321,6 @@ fun LibraryMixScreen(
                             is Song -> 1
                             is Artist -> 2
                             is Album -> 3
-                            else -> 4
                         }
 
                     if (firstPriority != secondPriority) {
@@ -758,8 +755,6 @@ fun LibraryMixScreen(
                                             ).animateItem(),
                                 )
                             }
-
-                            else -> {}
                         }
                     }
 
@@ -1036,8 +1031,6 @@ fun LibraryMixScreen(
                                             ).animateItem(),
                                 )
                             }
-
-                            else -> {}
                         }
                     }
 

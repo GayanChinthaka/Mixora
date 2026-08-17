@@ -169,7 +169,6 @@ import com.pokerlanka.mixora.playback.MusicService
 import com.pokerlanka.mixora.playback.MusicService.MusicBinder
 import com.pokerlanka.mixora.playback.PlayerConnection
 import com.pokerlanka.mixora.playback.queues.YouTubeQueue
-import com.pokerlanka.mixora.ui.component.AccountSettingsDialog
 import com.pokerlanka.mixora.ui.component.AppNavigationBar
 import com.pokerlanka.mixora.ui.component.AppNavigationRail
 import com.pokerlanka.mixora.ui.component.BottomSheetMenu
@@ -198,7 +197,6 @@ import com.pokerlanka.mixora.utils.get
 import com.pokerlanka.mixora.utils.rememberEnumPreference
 import com.pokerlanka.mixora.utils.rememberPreference
 import com.pokerlanka.mixora.utils.reportException
-import com.pokerlanka.mixora.viewmodels.HomeViewModel
 import com.pokerlanka.mixora.widget.PlaylistWidgetReceiver
 import com.valentinilk.shimmer.LocalShimmerTheme
 import dagger.hilt.android.AndroidEntryPoint
@@ -589,8 +587,6 @@ class MainActivity : ComponentActivity() {
 
                 val navController = rememberNavController()
 
-                val homeViewModel: HomeViewModel = hiltViewModel()
-                val accountImageUrl by homeViewModel.accountImageUrl.collectAsStateWithLifecycle()
                 val navBackStackEntry by navController.currentBackStackEntryAsState()
                 val (previousTab, setPreviousTab) = rememberSaveable { mutableStateOf("home") }
 
@@ -862,8 +858,6 @@ class MainActivity : ComponentActivity() {
                         }
                     }
 
-                var showAccountDialog by remember { mutableStateOf(false) }
-
                 val pauseListenHistory by rememberPreference(PauseListenHistoryKey, defaultValue = false)
                 val eventCount by database.eventCount().collectAsStateWithLifecycle(initialValue = 0)
                 val showHistoryButton =
@@ -908,34 +902,19 @@ class MainActivity : ComponentActivity() {
                                                     )
                                                 }
                                             }
-                                            IconButton(onClick = { navController.navigate("stats") }) {
-                                                Icon(
-                                                    painter = painterResource(R.drawable.stats),
-                                                    contentDescription = stringResource(R.string.stats),
-                                                )
-                                            }
-                                            IconButton(onClick = { showAccountDialog = true }) {
+                                            IconButton(onClick = {
+                                                navController.navigate("settings")
+                                            }) {
                                                 BadgedBox(badge = {
                                                     if (latestVersionName != BuildConfig.VERSION_NAME) {
                                                         Badge()
                                                     }
                                                 }) {
-                                                    if (accountImageUrl != null) {
-                                                        AsyncImage(
-                                                            model = accountImageUrl,
-                                                            contentDescription = stringResource(R.string.account),
-                                                            modifier =
-                                                                Modifier
-                                                                    .size(24.dp)
-                                                                    .clip(CircleShape),
-                                                        )
-                                                    } else {
-                                                        Icon(
-                                                            painter = painterResource(R.drawable.account),
-                                                            contentDescription = stringResource(R.string.account),
-                                                            modifier = Modifier.size(24.dp),
-                                                        )
-                                                    }
+                                                    Icon(
+                                                        painter = painterResource(R.drawable.settings),
+                                                        contentDescription = stringResource(R.string.settings),
+                                                        modifier = Modifier.size(24.dp),
+                                                    )
                                                 }
                                             }
                                         },
@@ -1234,16 +1213,6 @@ class MainActivity : ComponentActivity() {
                         state = LocalBottomSheetPageState.current,
                         modifier = Modifier.align(Alignment.BottomCenter),
                     )
-
-                    if (showAccountDialog) {
-                        AccountSettingsDialog(
-                            onDismiss = {
-                                showAccountDialog = false
-                                homeViewModel.refresh()
-                            },
-                            latestVersionName = latestVersionName,
-                        )
-                    }
 
                     sharedSong?.let { song ->
                         playerConnection?.let {

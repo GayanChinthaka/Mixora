@@ -196,7 +196,7 @@ class PoTokenWebView private constructor(
         if (BuildConfig.DEBUG) {
             Timber.tag(TAG).e("Initialization error from JavaScript: $error")
         }
-        onInitializationErrorCloseAndCancel(buildExceptionForJsError(error))
+        onInitializationErrorCloseAndCancel(classifyJsError(error))
     }
 
     /**
@@ -322,7 +322,7 @@ class PoTokenWebView private constructor(
         }
         // Always transient here: the minter was already created successfully, so even a
         // "SyntaxError" comes from Google's challenge/program data, not a broken WebView engine —
-        // buildExceptionForJsError's BadWebViewException mapping would permanently disable
+        // classifyJsError's BrokenWebViewException mapping would permanently disable
         // poTokens for the session in PoTokenGenerator.
         popPoTokenContinuation(requestKey)?.resumeWithException(PoTokenException(error))
     }

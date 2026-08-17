@@ -126,15 +126,14 @@ fun NewMenuItem(
     enabled: Boolean = true,
 ) {
     androidx.compose.material3.ListItem(
-        headlineContent = headlineContent,
-        leadingContent = leadingContent,
-        trailingContent = trailingContent,
-        supportingContent = supportingContent,
         modifier =
             modifier
                 .clickable(enabled = enabled) { onClick?.invoke() }
                 .padding(horizontal = 4.dp),
-        tonalElevation = 0.dp,
+        leadingContent = leadingContent,
+        trailingContent = trailingContent,
+        supportingContent = supportingContent,
+        content = headlineContent
     )
 }
 

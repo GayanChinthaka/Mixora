@@ -39,8 +39,9 @@ fun CustomThumbnailMenu(
     ) {
         item {
             ListItem(
-                headlineContent = { 
-                    Text(text = stringResource(R.string.choose_from_library)) 
+                modifier = Modifier.clickable {
+                    onEdit()
+                    onDismiss()
                 },
                 leadingContent = {
                     Icon(
@@ -48,16 +49,16 @@ fun CustomThumbnailMenu(
                         contentDescription = null,
                     )
                 },
-                modifier = Modifier.clickable {
-                    onEdit()
-                    onDismiss()
+                content = { 
+                    Text(text = stringResource(R.string.choose_from_library)) 
                 }
             )
         }
         item {
             ListItem(
-                headlineContent = { 
-                    Text(text = stringResource(R.string.remove_custom_image)) 
+                modifier = Modifier.clickable {
+                    onRemove()
+                    onDismiss()
                 },
                 leadingContent = {
                     Icon(
@@ -65,9 +66,8 @@ fun CustomThumbnailMenu(
                         contentDescription = null,
                     )
                 },
-                modifier = Modifier.clickable {
-                    onRemove()
-                    onDismiss()
+                content = { 
+                    Text(text = stringResource(R.string.remove_custom_image)) 
                 }
             )
         }

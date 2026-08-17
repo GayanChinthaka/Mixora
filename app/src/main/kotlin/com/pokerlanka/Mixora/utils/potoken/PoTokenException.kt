@@ -1,13 +1,39 @@
-﻿package com.pokerlanka.mixora.utils.potoken
+﻿/**
+ * Mixora Project (C) 2026
+ * Licensed under GPL-3.0 | See git history for contributors
+ */
 
-class PoTokenException(message: String) : Exception(message)
+package com.pokerlanka.mixora.utils.potoken
 
-// to be thrown if the WebView provided by the system is broken
+/**
+ * Thrown when BotGuard PoToken generation fails in a recoverable way
+ * (e.g. timeout, network error). Callers should fall back to unauthenticated playback.
+ */
+class PoTokenException(
+    message: String,
+    cause: Throwable? = null,
+) : Exception(message, cause)
+
+/**
+ * Thrown when the system WebView is fundamentally broken (e.g. throws JavaScript SyntaxErrors).
+ * Once this is thrown the generator marks itself as permanently unavailable for the process lifetime.
+ */
+class BrokenWebViewException(
+    message: String,
+) : Exception(message)
+
+/**
+ * to be thrown if the WebView provided by the system is broken
+ * @deprecated Use BrokenWebViewException instead :)
+ */
 class BadWebViewException(message: String) : Exception(message)
 
-fun buildExceptionForJsError(error: String): Exception {
-    return if (error.contains("SyntaxError"))
-        BadWebViewException(error)
-    else
+/**
+ * Classifies a JavaScript error string into the appropriate exception type.
+ */
+fun classifyJsError(error: String): Exception =
+    if (error.contains("SyntaxError")) {
+        BrokenWebViewException(error)
+    } else {
         PoTokenException(error)
-}
+    }
