@@ -418,29 +418,7 @@ val LyricsScrollKey = booleanPreferencesKey("lyricsScrollKey")
 val HideStatusBarOnFullscreenKey = booleanPreferencesKey("hideStatusBarOnFullscreen")
 val LyricsRomanizeAsMainKey = booleanPreferencesKey("lyricsRomanizeAsMain")
 val LyricsRomanizeCyrillicByLineKey = booleanPreferencesKey("lyricsRomanizeCyrillicByLine")
-val OpenRouterApiKey = stringPreferencesKey("openRouterApiKey")
-val AiProviderKey = stringPreferencesKey("aiProvider")
-val OpenRouterBaseUrlKey = stringPreferencesKey("openRouterBaseUrl")
-val OpenRouterModelKey = stringPreferencesKey("openRouterModel")
 
-const val OpenRouterDefaultBaseUrl = "https://openrouter.ai/api/v1/chat/completions"
-const val OpenRouterDefaultModel = "google/gemini-2.5-flash-lite"
-
-val TranslateModeKey = stringPreferencesKey("translateMode")
-val TranslateLanguageKey = stringPreferencesKey("translateLanguage")
-val DeeplApiKey = stringPreferencesKey("deeplApiKey")
-val DeeplFormalityKey = stringPreferencesKey("deeplFormality")
-val AiSystemPromptKey = stringPreferencesKey("aiSystemPrompt")
-
-const val DEFAULT_AI_SYSTEM_PROMPT = """You are a precise lyrics translation assistant. Your output must ALWAYS be a valid JSON array of strings.
-
-CRITICAL RULES:
-1. Output ONLY a JSON array: ["line1", "line2", "line3"]
-2. NO explanations, NO questions, NO additional text
-3. Each input line maps to exactly one output line
-4. Preserve empty lines as empty strings ""
-5. Return EXACTLY {lineCount} items in the array
-6. If uncertain, provide best approximation but maintain line count"""
 val LyricsGlowEffectKey = booleanPreferencesKey("lyricsGlowEffect")
 
 val LyricsRomanizeList = stringPreferencesKey("lyricsRomanizeList")
@@ -501,86 +479,7 @@ val AccountEmailKey = stringPreferencesKey("accountEmail")
 val AccountChannelHandleKey = stringPreferencesKey("accountChannelHandle")
 val UseLoginForBrowse = booleanPreferencesKey("useLoginForBrowse")
 
-val LanguageCodeToName =
-    mapOf(
-        "af" to "Afrikaans",
-        "az" to "Azərbaycan",
-        "id" to "Bahasa Indonesia",
-        "ms" to "Bahasa Malaysia",
-        "ca" to "Català",
-        "cs" to "Čeština",
-        "da" to "Dansk",
-        "de" to "Deutsch",
-        "et" to "Eesti",
-        "en-GB" to "English (UK)",
-        "en" to "English (US)",
-        "es" to "Español (España)",
-        "es-419" to "Español (Latinoamérica)",
-        "eu" to "Euskara",
-        "fil" to "Filipino",
-        "fr" to "Français",
-        "fr-CA" to "Français (Canada)",
-        "gl" to "Galego",
-        "hr" to "Hrvatski",
-        "zu" to "IsiZulu",
-        "is" to "Íslenska",
-        "it" to "Italiano",
-        "sw" to "Kiswahili",
-        "lt" to "Lietuvių",
-        "hu" to "Magyar",
-        "nl" to "Nederlands",
-        "no" to "Norsk",
-        "or" to "Odia",
-        "uz" to "O‘zbe",
-        "pl" to "Polski",
-        "pt-PT" to "Português",
-        "pt" to "Português (Brasil)",
-        "ro" to "Română",
-        "sq" to "Shqip",
-        "sk" to "Slovenčina",
-        "sl" to "Slovenščina",
-        "fi" to "Suomi",
-        "sv" to "Svenska",
-        "bo" to "Tibetan བོད་སྐད།",
-        "vi" to "Tiếng Việt",
-        "tr" to "Türkçe",
-        "bg" to "Български",
-        "ky" to "Кыргызча",
-        "kk" to "Қазақ Тілі",
-        "mk" to "Македонски",
-        "mn" to "Монгол",
-        "ru" to "Русский",
-        "sr" to "Српски",
-        "uk" to "Українська",
-        "el" to "Ελληνικά",
-        "hy" to "Հայերեն",
-        "iw" to "עברית",
-        "ur" to "اردو",
-        "ar" to "العربية",
-        "fa" to "فارسی",
-        "ne" to "नेपाली",
-        "mr" to "मराठी",
-        "hi" to "हिन्दी",
-        "bn" to "বাংলা",
-        "pa" to "ਪੰਜਾਬੀ",
-        "gu" to "ગુજરાતી",
-        "ta" to "தமிழ்",
-        "te" to "తెలుగు",
-        "kn" to "ಕನ್ನಡ",
-        "ml" to "മലയാളം",
-        "si" to "සිංහල",
-        "th" to "ภาษาไทย",
-        "lo" to "ລາວ",
-        "my" to "ဗမာ",
-        "ka" to "ქართული",
-        "am" to "አማርኛ",
-        "km" to "ខ្មែរ",
-        "zh-CN" to "中文 (简体)",
-        "zh-TW" to "中文 (繁體)",
-        "zh-HK" to "中文 (香港)",
-        "ja" to "日本語",
-        "ko" to "한국어",
-    )
+val LanguageCodeToName = mapOf("en" to "English")
 
 val CountryCodeToName =
     mapOf(

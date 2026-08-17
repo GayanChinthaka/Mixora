@@ -169,7 +169,7 @@ android {
     }
 
     androidResources {
-        generateLocaleConfig = true
+        localeFilters += "en"
     }
 
     packaging {

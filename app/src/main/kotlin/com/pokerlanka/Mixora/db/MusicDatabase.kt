@@ -118,7 +118,7 @@ class MusicDatabase(
         SortedSongAlbumMap::class,
         PlaylistSongMapPreview::class,
     ],
-    version = 38,
+    version = 39,
     exportSchema = true,
     autoMigrations = [
         AutoMigration(from = 2, to = 3),
@@ -156,7 +156,7 @@ class MusicDatabase(
         AutoMigration(from = 34, to = 35),
         AutoMigration(from = 35, to = 36, spec = Migration35To36::class),
         AutoMigration(from = 36, to = 37),
-        AutoMigration(from = 37, to = 38),
+        AutoMigration(from = 37, to = 38, spec = Migration37To38::class),
     ],
 )
 @TypeConverters(Converters::class)
@@ -201,7 +201,8 @@ abstract class InternalDatabase : RoomDatabase() {
                     MIGRATION_21_24,
                     MIGRATION_22_24,
                     MIGRATION_24_25,
-                ).fallbackToDestructiveMigration()
+                    MIGRATION_38_39,
+                ).fallbackToDestructiveMigration(dropAllTables = true)
                 .setJournalMode(RoomDatabase.JournalMode.WRITE_AHEAD_LOGGING)
                 .setTransactionExecutor(
                     java.util.concurrent.Executors
@@ -844,6 +845,17 @@ val MIGRATION_24_25 =
         }
     }
 
+val MIGRATION_38_39 =
+    object : Migration(38, 39) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            // Drop translation columns if they exist (manual dance for older Android versions)
+            db.execSQL("CREATE TABLE IF NOT EXISTS `lyrics_new` (`id` TEXT NOT NULL, `lyrics` TEXT NOT NULL, `provider` TEXT NOT NULL DEFAULT 'Unknown', PRIMARY KEY(`id`))")
+            db.execSQL("INSERT INTO `lyrics_new` (`id`, `lyrics`, `provider`) SELECT `id`, `lyrics`, `provider` FROM `lyrics`")
+            db.execSQL("DROP TABLE `lyrics`")
+            db.execSQL("ALTER TABLE `lyrics_new` RENAME TO `lyrics`")
+        }
+    }
+
 class Migration29To30 : AutoMigrationSpec {
     override fun onPostMigrate(db: SupportSQLiteDatabase) {
         // Ensure isVideo column exists (safeguard)
@@ -907,3 +919,10 @@ class Migration35To36 : AutoMigrationSpec {
         }
     }
 }
+
+@DeleteColumn.Entries(
+    DeleteColumn(tableName = "lyrics", columnName = "translatedLyrics"),
+    DeleteColumn(tableName = "lyrics", columnName = "translationLanguage"),
+    DeleteColumn(tableName = "lyrics", columnName = "translationMode"),
+)
+class Migration37To38 : AutoMigrationSpec

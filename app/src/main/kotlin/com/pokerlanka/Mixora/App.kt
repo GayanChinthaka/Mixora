@@ -164,10 +164,6 @@ class App :
                         ?: "en",
             )
 
-        if (languageTag == "zh-TW") {
-            KuGou.useTraditionalChinese = true
-        }
-
         // Initialize LastFM with API keys from BuildConfig (GitHub Secrets)
         LastFM.initialize(
             apiKey = BuildConfig.LASTFM_API_KEY.takeIf { it.isNotEmpty() } ?: "",
@@ -280,27 +276,21 @@ class App :
 
         applicationScope.launch(Dispatchers.IO) {
             dataStore.data
-                .map { Triple(it[ContentCountryKey], it[ContentLanguageKey], it[AppLanguageKey]) }
+                .map { it[ContentCountryKey] to it[ContentLanguageKey] }
                 .distinctUntilChanged()
-                .collect { (contentCountry, contentLanguage, appLanguage) ->
-                    val systemLocale = Locale.getDefault()
-                    val effectiveAppLocale =
-                        appLanguage
-                            ?.takeUnless { it == SYSTEM_DEFAULT }
-                            ?.let { Locale.forLanguageTag(it) }
-                            ?: systemLocale
+                .collect { (contentCountry, contentLanguage) ->
+                    val locale = Locale.getDefault()
 
                     YouTube.locale =
                         YouTubeLocale(
                             gl =
                                 contentCountry?.takeIf { it != SYSTEM_DEFAULT }
-                                    ?: effectiveAppLocale.country.takeIf { it in CountryCodeToName }
-                                    ?: systemLocale.country.takeIf { it in CountryCodeToName }
+                                    ?: locale.country.takeIf { it in CountryCodeToName }
                                     ?: "US",
                             hl =
                                 contentLanguage?.takeIf { it != SYSTEM_DEFAULT }
-                                    ?: effectiveAppLocale.toLanguageTag().takeIf { it in LanguageCodeToName }
-                                    ?: effectiveAppLocale.language.takeIf { it in LanguageCodeToName }
+                                    ?: locale.toLanguageTag().takeIf { it in LanguageCodeToName }
+                                    ?: locale.language.takeIf { it in LanguageCodeToName }
                                     ?: "en",
                         )
                 }

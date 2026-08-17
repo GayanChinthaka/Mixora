@@ -87,29 +87,17 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.pokerlanka.mixora.LocalDatabase
 import com.pokerlanka.mixora.LocalPlayerConnection
 import com.pokerlanka.mixora.R
-import com.pokerlanka.mixora.constants.AiProviderKey
-import com.pokerlanka.mixora.constants.AiSystemPromptKey
-import com.pokerlanka.mixora.constants.DeeplApiKey
-import com.pokerlanka.mixora.constants.DeeplFormalityKey
 import com.pokerlanka.mixora.constants.LyricsClickKey
 import com.pokerlanka.mixora.constants.LyricsRomanizeAsMainKey
 import com.pokerlanka.mixora.constants.LyricsRomanizeCyrillicByLineKey
 import com.pokerlanka.mixora.constants.LyricsRomanizeList
 import com.pokerlanka.mixora.constants.LyricsTextPositionKey
-import com.pokerlanka.mixora.constants.OpenRouterApiKey
-import com.pokerlanka.mixora.constants.OpenRouterBaseUrlKey
-import com.pokerlanka.mixora.constants.OpenRouterDefaultBaseUrl
-import com.pokerlanka.mixora.constants.OpenRouterDefaultModel
-import com.pokerlanka.mixora.constants.OpenRouterModelKey
 import com.pokerlanka.mixora.constants.PlayerBackgroundStyle
 import com.pokerlanka.mixora.constants.PlayerBackgroundStyleKey
 import com.pokerlanka.mixora.constants.RespectAgentPositioningKey
 import com.pokerlanka.mixora.constants.ShowIntervalIndicatorKey
-import com.pokerlanka.mixora.constants.TranslateLanguageKey
-import com.pokerlanka.mixora.constants.TranslateModeKey
 import com.pokerlanka.mixora.db.entities.LyricsEntity.Companion.LYRICS_NOT_FOUND
 import com.pokerlanka.mixora.lyrics.LyricsResyncHelper
-import com.pokerlanka.mixora.lyrics.LyricsTranslationHelper
 import com.pokerlanka.mixora.lyrics.LyricsUtils.findActiveLineIndices
 import com.pokerlanka.mixora.lyrics.lyricsTextLooksSynced
 import com.pokerlanka.mixora.ui.component.shimmer.ShimmerHost
@@ -165,21 +153,9 @@ fun ExperimentalLyrics(
     val respectAgentPositioning by rememberPreference(RespectAgentPositioningKey, true)
     val showIntervalIndicator by rememberPreference(ShowIntervalIndicatorKey, true)
     
-    // AI Translation Preferences
-    val openRouterApiKey by rememberPreference(OpenRouterApiKey, "")
-    val deeplApiKey by rememberPreference(DeeplApiKey, "")
-    val aiProvider by rememberPreference(AiProviderKey, "OpenRouter")
-    val openRouterBaseUrl by rememberPreference(OpenRouterBaseUrlKey, OpenRouterDefaultBaseUrl)
-    val openRouterModel by rememberPreference(OpenRouterModelKey, OpenRouterDefaultModel)
-    val translateLanguage by rememberPreference(TranslateLanguageKey, "en")
-    val translateMode by rememberPreference(TranslateModeKey, "Literal")
-    val deeplFormality by rememberPreference(DeeplFormalityKey, "default")
-    val aiSystemPrompt by rememberPreference(AiSystemPromptKey, "")
-    
     val scope = rememberCoroutineScope()
 
     val mediaMetadata by playerConnection.mediaMetadata.collectAsStateWithLifecycle()
-    val translationStatus by LyricsTranslationHelper.status.collectAsStateWithLifecycle()
     val currentLyricsEntity by playerConnection.currentLyrics.collectAsStateWithLifecycle(initialValue = null)
     var lastValidLyricsEntity by remember { mutableStateOf<com.pokerlanka.mixora.db.entities.LyricsEntity?>(null) }
     
@@ -189,15 +165,7 @@ fun ExperimentalLyrics(
         }
     }
     
-    val lyricsEntity = remember(currentLyricsEntity, translationStatus) {
-        if (currentLyricsEntity != null) {
-            currentLyricsEntity
-        } else if (translationStatus is LyricsTranslationHelper.TranslationStatus.Translating || translationStatus is LyricsTranslationHelper.TranslationStatus.Success) {
-            lastValidLyricsEntity
-        } else {
-            null
-        }
-    }
+    val lyricsEntity = currentLyricsEntity
     val currentSong by playerConnection.currentSong.collectAsStateWithLifecycle(initialValue = null)
     val lyrics = remember(lyricsEntity) { lyricsEntity?.lyrics?.trim() }
 
@@ -226,72 +194,6 @@ fun ExperimentalLyrics(
 
     val isSynced = remember(lyrics) { lyricsTextLooksSynced(lyrics) }
     val hasWordTimings = remember(lines) { lines.any { it.words?.isNotEmpty() == true } }
-
-    DisposableEffect(Unit) {
-        LyricsTranslationHelper.setCompositionActive(true)
-        onDispose {
-            LyricsTranslationHelper.setCompositionActive(false)
-            LyricsTranslationHelper.cancelTranslation()
-        }
-    }
-    
-    LaunchedEffect(lines, lyricsEntity, translateLanguage, translateMode) {
-        if (lines.isNotEmpty() && lyricsEntity != null) {
-            LyricsTranslationHelper.loadTranslationsFromDatabase(
-                lyrics = lines,
-                lyricsEntity = lyricsEntity,
-                targetLanguage = translateLanguage,
-                mode = translateMode
-            )
-        }
-    }
-    
-    LaunchedEffect(
-        showLyrics, 
-        lines, 
-        aiProvider, 
-        openRouterApiKey, 
-        deeplApiKey, 
-        openRouterBaseUrl, 
-        openRouterModel, 
-        translateLanguage, 
-        translateMode,
-        deeplFormality,
-        aiSystemPrompt,
-        currentSong,
-        database
-    ) {
-        LyricsTranslationHelper.manualTrigger.collectLatest {
-            val effectiveApiKey = if (aiProvider == "DeepL") deeplApiKey else openRouterApiKey
-            if (showLyrics && lines.isNotEmpty() && effectiveApiKey.isNotBlank()) {
-                LyricsTranslationHelper.translateLyrics(
-                    lyrics = lines,
-                    targetLanguage = translateLanguage,
-                    apiKey = openRouterApiKey,
-                    baseUrl = openRouterBaseUrl,
-                    model = openRouterModel,
-                    mode = translateMode,
-                    scope = scope,
-                    context = context,
-                    provider = aiProvider,
-                    deeplApiKey = deeplApiKey,
-                    deeplFormality = deeplFormality,
-                    useStreaming = true,
-                    songId = currentSong?.id ?: "",
-                    database = database,
-                    systemPrompt = aiSystemPrompt,
-                )
-            } else if (effectiveApiKey.isBlank()) {
-                Toast.makeText(context, context.getString(R.string.ai_api_key_required), Toast.LENGTH_SHORT).show()
-            }
-        }
-    }
-    
-    LaunchedEffect(lines) {
-        LyricsTranslationHelper.clearTranslationsTrigger.collectLatest {
-            lines.forEach { it.translatedTextFlow.value = null }
-        }
-    }
 
     val expressiveAccent = when (playerBackground) {
         PlayerBackgroundStyle.DEFAULT -> MaterialTheme.colorScheme.primary
@@ -644,16 +546,11 @@ fun ExperimentalLyrics(
             }
         }
 
-        LyricsTranslationHeader(
-            status = translationStatus,
-            modifier = Modifier.zIndex(1f).padding(top = 56.dp)
-        )
-
         if (lyrics == LYRICS_NOT_FOUND) {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 Text(text = stringResource(R.string.lyrics_not_found), fontSize = 20.sp, color = MaterialTheme.colorScheme.secondary, modifier = Modifier.alpha(0.5f))
             }
-        } else if (lyrics == null && (translationStatus is LyricsTranslationHelper.TranslationStatus.Idle || translationStatus is LyricsTranslationHelper.TranslationStatus.Error)) {
+        } else if (lyrics == null) {
              Column(modifier = Modifier.padding(top = 100.dp)) {
                  ShimmerHost { repeat(10) { Box(contentAlignment = when (lyricsTextPosition) {
                      LyricsPosition.LEFT -> Alignment.CenterStart; LyricsPosition.CENTER -> Alignment.Center; else -> Alignment.CenterEnd

@@ -55,7 +55,6 @@ import androidx.navigation.NavController
 import com.pokerlanka.mixora.LocalDatabase
 import com.pokerlanka.mixora.LocalPlayerAwareWindowInsets
 import com.pokerlanka.mixora.R
-import com.pokerlanka.mixora.constants.AppLanguageKey
 import com.pokerlanka.mixora.constants.ContentCountryKey
 import com.pokerlanka.mixora.constants.ContentLanguageKey
 import com.pokerlanka.mixora.constants.CountryCodeToName
@@ -103,9 +102,6 @@ fun ContentSettings(
 ) {
     val context = LocalContext.current
     val database = LocalDatabase.current
-    // Used only before Android 13
-    val (appLanguage, onAppLanguageChange) = rememberPreference(key = AppLanguageKey, defaultValue = SYSTEM_DEFAULT)
-
     val (contentLanguage, onContentLanguageChange) = rememberPreference(key = ContentLanguageKey, defaultValue = "system")
     val (contentCountry, onContentCountryChange) = rememberPreference(key = ContentCountryKey, defaultValue = "system")
     val (hideExplicit, onHideExplicitChange) = rememberPreference(key = HideExplicitKey, defaultValue = false)
@@ -329,26 +325,6 @@ fun ContentSettings(
             values = (listOf(SYSTEM_DEFAULT) + CountryCodeToName.keys.toList()),
             valueText = {
                 CountryCodeToName.getOrElse(it) { stringResource(R.string.system_default) }
-            }
-        )
-    }
-
-    var showAppLanguageDialog by rememberSaveable {
-        mutableStateOf(false)
-    }
-
-    if (showAppLanguageDialog) {
-        EnumDialog(
-            onDismiss = { showAppLanguageDialog = false },
-            onSelect = {
-                onAppLanguageChange(it)
-                showAppLanguageDialog = false
-            },
-            title = stringResource(R.string.app_language),
-            current = appLanguage,
-            values = (listOf(SYSTEM_DEFAULT) + LanguageCodeToName.keys.toList()),
-            valueText = {
-                LanguageCodeToName.getOrElse(it) { stringResource(R.string.system_default) }
             }
         )
     }
@@ -825,39 +801,6 @@ fun ContentSettings(
                     },
                     onClick = { onShowMonthlyListenersChange(!showMonthlyListeners) }
                 )
-            )
-        )
-
-        Spacer(modifier = Modifier.height(27.dp))
-
-        Material3SettingsGroup(
-            title = stringResource(R.string.app_language),
-            items = listOf(
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                    Material3SettingsItem(
-                        icon = painterResource(R.drawable.language),
-                        title = { Text(stringResource(R.string.app_language)) },
-                        onClick = {
-                            context.startActivity(
-                                Intent(
-                                    Settings.ACTION_APP_LOCALE_SETTINGS,
-                                    "package:${context.packageName}".toUri()
-                                )
-                            )
-                        }
-                    )
-                } else {
-                    Material3SettingsItem(
-                        icon = painterResource(R.drawable.language),
-                        title = { Text(stringResource(R.string.app_language)) },
-                        description = {
-                            Text(
-                                LanguageCodeToName.getOrElse(appLanguage) { stringResource(R.string.system_default) }
-                            )
-                        },
-                        onClick = { showAppLanguageDialog = true }
-                    )
-                }
             )
         )
 

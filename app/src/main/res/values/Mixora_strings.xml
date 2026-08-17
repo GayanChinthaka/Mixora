@@ -1,4 +1,4 @@
-ï»¿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="local_history">Local</string>
     <string name="remote_history">Remote</string>
@@ -29,7 +29,7 @@
     <string name="allows_for_sync_witch_youtube">NOTE: This option enables syncing with YouTube Music and CANNOT be changed later</string>
 
     <string name="and">and</string>
-    <string name="generating_image">Generating imageâ€¦</string>
+    <string name="generating_image">Generating image…</string>
     <string name="please_wait">Please wait</string>
     <string name="cancel">Cancel</string>
     <string name="enable">Enable</string>
@@ -67,7 +67,7 @@
     <string name="dislike_all">Dislike all</string>
     <string name="sort_by_last_updated">Date updated</string>
     <string name="link_copied">Link copied to clipboard</string>
-    <string name="starting_radio">Starting radioâ€¦</string>
+    <string name="starting_radio">Starting radio…</string>
     <string name="now_playing">Now Playing</string>
 
     <string name="lyrics">Lyrics</string>
@@ -238,13 +238,13 @@
     <string name="changelog">Changelog</string>
     <string name="changelog_empty">No changelogs available</string>
     <string name="github_releases_url">https://github.com/MixoraGroup/Mixora/releases</string>
-    <string name="list_bullet">â€¢</string>
+    <string name="list_bullet">•</string>
     <string name="view_on_github">View on GitHub</string>
     <string name="current_version">Current version</string>
     <string name="version_format">Version: %s</string>
     <string name="update_settings">Update settings</string>
     <string name="check_for_updates_title">Check for updates</string>
-    <string name="checking_for_updates">Checking for updatesâ€¦</string>
+    <string name="checking_for_updates">Checking for updates…</string>
     <string name="latest_version_format">Latest: %s</string>
     <string name="check_for_updates_button">Check for updates</string>
     <string name="hide_changelog">Hide changelog</string>
@@ -419,7 +419,7 @@
     <string name="lastfm_now_playing">Send Now Playing status</string>
     <string name="last_fm_send_likes">Sync Loved and Unloved</string>
     <string name="last_fm_send_likes_description">Love or unlove songs in Last.fm when you like or unlike them in Mixora</string>
-    <string name="logging_in">Logging inâ€¦</string>
+    <string name="logging_in">Logging in…</string>
 
     <string name="scrobbling_configuration">Scrobbling configuration</string>
     <string name="scrobble_min_track_duration">Scrobble songs longer than (seconds)</string>
@@ -480,12 +480,12 @@
     <string name="wrapped_total_songs_title">You\'ve listened to</string>
     <string name="wrapped_total_songs_subtitle">unique songs!</string>
     <string name="wrapped_intro_title">Mixora</string>
-    <string name="wrapped_intro_subtitle">it\'s time to see what you\'ve been listening to all this yearâ€¦</string>
+    <string name="wrapped_intro_subtitle">it\'s time to see what you\'ve been listening to all this year…</string>
     <string name="wrapped_intro_button">let\'s go!</string>
     <string name="wrapped_logo_content_description">Mixora Logo</string>
     <string name="wrapped_year">2025</string>
     <string name="wrapped_ready_title">YOUR WRAPPED IS READY!</string>
-    <string name="wrapped_ready_subtitle">Time to see what you loved all this yearâ€¦</string>
+    <string name="wrapped_ready_subtitle">Time to see what you loved all this year…</string>
     <string name="wrapped_thank_you">Thank you for listening!</string>
     <string name="wrapped_special_thanks">Special thanks to MO Agamy for creating Mixora</string>
     <string name="wrapped_close">Close Wrapped</string>
@@ -506,7 +506,7 @@
     <string name="eq_disabled">Disabled</string>
     <string name="eq_wizard">AutoEQ Wizard</string>
     <string name="eq_download_db">Download AutoEQ database (17 MB)</string>
-    <string name="eq_downloading">Downloadingâ€¦</string>
+    <string name="eq_downloading">Downloading…</string>
     <string name="import_from_file">Import from file</string>
     <string name="add_profile">Add profile</string>
     <plurals name="band_count">
@@ -574,8 +574,8 @@
     <string name="widget_recognizer_name">Music Recognizer</string>
     <string name="widget_recognizer_description">Identify songs playing around you directly from your home screen</string>
     <string name="widget_recognizer_tap_to_search">Tap to identify a song</string>
-    <string name="widget_recognizer_listening">Listeningâ€¦</string>
-    <string name="widget_recognizer_processing">Identifyingâ€¦</string>
+    <string name="widget_recognizer_listening">Listening…</string>
+    <string name="widget_recognizer_processing">Identifying…</string>
     <string name="widget_recognizer_no_match">No match found. Try again</string>
     <string name="widget_recognizer_error">Recognition failed</string>
     <string name="widget_recognizer_error_generic">Something went wrong. Please try again</string>
@@ -584,7 +584,7 @@
     <string name="widget_recognizer_mic_desc">Identify a song</string>
     <string name="widget_recognizer_channel_name">Music Recognition</string>
     <string name="widget_recognizer_channel_desc">Shows a notification while identifying a song from the widget</string>
-    <string name="widget_recognizer_notification_text">Recording audio to identify the songâ€¦</string>
+    <string name="widget_recognizer_notification_text">Recording audio to identify the song…</string>
 
     <!-- Player Client Settings -->
 
@@ -595,48 +595,6 @@
     <string name="copy_all_lyrics">Copy all lyrics</string>
     <string name="copied_to_clipboard">Copied to clipboard</string>
     <string name="not_set">Not set</string>
-
-    <!-- AI Lyrics Translation -->
-    <string name="ai_lyrics_translation">AI lyrics translation</string>
-    <string name="ai_translating_lyrics">Translating lyricsâ€¦</string>
-    <string name="ai_lyrics_translated">Lyrics translated</string>
-    <string name="ai_provider">Provider</string>
-    <string name="ai_base_url">Base URL</string>
-    <string name="ai_api_key">API key</string>
-    <string name="ai_model">Model</string>
-    <string name="ai_translation_mode">Translation mode</string>
-    <string name="ai_target_language">Target language</string>
-    <string name="ai_setup_guide">API credentials</string>
-    <string name="ai_translation_literal">Translation</string>
-    <string name="ai_translation_literal_desc">Translates the meaning into the target language</string>
-    <string name="ai_translation_transcribed">Transcription</string>
-    <string name="ai_translation_transcribed_desc">Converts pronunciation into the target script</string>
-    <string name="ai_api_key_required">API key required</string>
-    <string name="ai_error_api_key_required">An API key is required</string>
-    <string name="ai_error_no_lyrics">No lyrics to translate</string>
-    <string name="ai_error_lyrics_empty">Lyrics are empty</string>
-    <string name="ai_error_language_required">A target language is required</string>
-    <string name="ai_error_unexpected">Unexpected translation result</string>
-    <string name="ai_error_unknown">An unknown error occurred</string>
-    <string name="ai_error_translation_failed">Translation failed</string>
-    <string name="ai_provider_help">Get API keys</string>
-    <string name="ai_provider_openrouter_help">Visit https://openrouter.ai for free and paid models</string>
-    <string name="ai_provider_openai_help">Visit https://platform.openai.com/api-keys</string>
-    <string name="ai_provider_claude_help">Visit https://console.anthropic.com/settings/keys</string>
-    <string name="ai_provider_gemini_help">Visit https://aistudio.google.com/apikey</string>
-    <string name="ai_provider_perplexity_help">Visit https://perplexity.ai/settings/api</string>
-    <string name="ai_provider_xai_help">Visit https://console.x.ai</string>
-    <string name="ai_provider_deepl_help">Visit https://deepl.com/pro-api for free and paid keys</string>
-    <string name="ai_provider_mistral_help">Visit https://console.mistral.ai/api-keys</string>
-    <string name="ai_deepl_formality">Formality</string>
-    <string name="ai_deepl_formality_default">Default</string>
-    <string name="ai_deepl_formality_more">More formal</string>
-    <string name="ai_deepl_formality_less">Less formal</string>
-    <string name="ai_system_prompt">System prompt</string>
-    <string name="ai_system_prompt_desc">Custom instructions sent to the AI model. Leave empty to use the default prompt</string>
-    <string name="ai_system_prompt_placeholder">Use {lineCount} as a placeholder for the number of lines to translate</string>
-    <string name="ai_system_prompt_default">Default</string>
-    <string name="ai_system_prompt_reset">Reset to default</string>
 
     <!-- Crash Handler -->
     <string name="crash_title">App crashed</string>
@@ -686,8 +644,8 @@
     <!-- Music Recognition -->
     <string name="recognize_music">Recognize music</string>
     <string name="tap_to_recognize">Tap to recognize</string>
-    <string name="listening">Listeningâ€¦</string>
-    <string name="processing">Processingâ€¦</string>
+    <string name="listening">Listening…</string>
+    <string name="processing">Processing…</string>
     <string name="no_match_found">No match found</string>
     <string name="recognition_error">Recognition error</string>
     <string name="try_again">Try again</string>
@@ -700,8 +658,8 @@
     <string name="qs_tile_music_recognizer">Recognize music</string>
     <string name="recognition_notification_channel_name">Music recognition</string>
     <string name="recognition_notification_channel_desc">Shows a notification while identifying a song from quick settings</string>
-    <string name="recognition_notification_listening">Listening for musicâ€¦</string>
-    <string name="recognition_notification_processing">Identifyingâ€¦</string>
+    <string name="recognition_notification_listening">Listening for music…</string>
+    <string name="recognition_notification_processing">Identifying…</string>
     <string name="recognition_notification_no_match">No match found</string>
     <string name="recognition_notification_failed">Recognition failed</string>
     <string name="listen_on_Mixora">Listen on Mixora</string>
@@ -713,8 +671,8 @@
     <string name="song_title_column">Song title column</string>
     <string name="youtube_url_column">YouTube URL column (optional)</string>
     <string name="continue_action">Continue</string>
-    <string name="importing_csv">Importing CSVâ€¦</string>
-    <string name="importing_playlist">Importing playlistâ€¦</string>
+    <string name="importing_csv">Importing CSV…</string>
+    <string name="importing_playlist">Importing playlist…</string>
 
     <string name="recently_converted">Recently converted</string>
     <string name="column_label">Column %d</string>
@@ -751,12 +709,12 @@
     <string name="credits_website">Website</string>
     <string name="credits_instagram">Instagram</string>
     <string name="credits_github">GitHub</string>
-    <string name="app_version_info">%1$s â€¢ %2$s</string>
+    <string name="app_version_info">%1$s • %2$s</string>
     <string name="like_what_i_do">Like what I do?</string>
     <string name="Mixora">Mixora</string>
     <string name="wanna_play_favorite_song">Want to play their favorite song?</string>
     <string name="yeah">Yeah!</string>
-    <string name="stands_with_palestine">This project stands with Palestine ðŸ‡µðŸ‡¸</string>
+    <string name="stands_with_palestine">This project stands with Palestine ????</string>
 
     <!-- Podcasts -->
     <string name="filter_podcasts">Podcasts</string>
@@ -792,14 +750,14 @@
     <string name="restore_account_warning">The following account information will be restored and preserved:</string>
     <string name="restore">Restore</string>
     <string name="restore_database_incompatible">Cannot restore backup: database version incompatible. Your current data has been preserved.</string>
-    <string name="checking_previous_account">Checking for previous accountâ€¦</string>
+    <string name="checking_previous_account">Checking for previous account…</string>
     <string name="no_account_found">No account found</string>
 
     <!-- Cache settings -->
 
     <!-- Upload songs -->
     <string name="upload_songs">Upload songs</string>
-    <string name="uploading">Uploadingâ€¦</string>
+    <string name="uploading">Uploading…</string>
     <string name="upload_progress">%1$d of %2$d</string>
     <string name="upload_complete">Upload complete</string>
     <string name="upload_failed">Upload failed</string>
@@ -812,7 +770,7 @@
     <string name="delete_uploaded_songs">Delete uploaded songs</string>
     <string name="delete_uploaded_songs_confirm">Are you sure you want to delete %1$d uploaded songs? This action cannot be undone</string>
     <string name="deleted_n_songs">Deleted %1$d songs</string>
-    <string name="deleting">Deletingâ€¦</string>
+    <string name="deleting">Deleting…</string>
 
     <!-- Android Auto settings -->
     <string name="android_auto">Android Auto</string>

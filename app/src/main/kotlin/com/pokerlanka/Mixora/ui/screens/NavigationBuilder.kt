@@ -43,7 +43,6 @@ import com.pokerlanka.mixora.ui.screens.recognition.RecognitionScreen
 import com.pokerlanka.mixora.ui.screens.search.OnlineSearchResult
 import com.pokerlanka.mixora.ui.screens.search.SearchScreen
 import com.pokerlanka.mixora.ui.screens.settings.AboutScreen
-import com.pokerlanka.mixora.ui.screens.settings.AiSettings
 import com.pokerlanka.mixora.ui.screens.settings.AndroidAutoSettings
 import com.pokerlanka.mixora.ui.screens.settings.AppearanceSettings
 import com.pokerlanka.mixora.ui.screens.settings.BackupAndRestore
@@ -350,10 +349,6 @@ fun NavGraphBuilder.navigationBuilder(
 
     composable("settings/content/romanization") {
         RomanizationSettings(navController)
-    }
-
-    composable("settings/ai") {
-        AiSettings(navController)
     }
 
     composable("settings/player") {

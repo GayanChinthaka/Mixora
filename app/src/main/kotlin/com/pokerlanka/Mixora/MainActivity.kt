@@ -134,7 +134,6 @@ import com.pokerlanka.innertube.YouTube
 import com.pokerlanka.innertube.models.SongItem
 import com.pokerlanka.innertube.models.WatchEndpoint
 import com.pokerlanka.mixora.constants.AppBarHeight
-import com.pokerlanka.mixora.constants.AppLanguageKey
 import com.pokerlanka.mixora.constants.DarkModeKey
 import com.pokerlanka.mixora.constants.DefaultOpenTabKey
 import com.pokerlanka.mixora.constants.DisableScreenshotKey
@@ -199,7 +198,6 @@ import com.pokerlanka.mixora.utils.get
 import com.pokerlanka.mixora.utils.rememberEnumPreference
 import com.pokerlanka.mixora.utils.rememberPreference
 import com.pokerlanka.mixora.utils.reportException
-import com.pokerlanka.mixora.utils.setAppLocale
 import com.pokerlanka.mixora.viewmodels.HomeViewModel
 import com.pokerlanka.mixora.widget.PlaylistWidgetReceiver
 import com.valentinilk.shimmer.LocalShimmerTheme
@@ -212,7 +210,6 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import timber.log.Timber
-import java.util.Locale
 import javax.inject.Inject
 
 @Suppress("DEPRECATION", "ASSIGNED_BUT_NEVER_ACCESSED_VARIABLE")
@@ -366,15 +363,6 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         window.decorView.layoutDirection = View.LAYOUT_DIRECTION_LTR
         WindowCompat.setDecorFitsSystemWindows(window, false)
-
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
-            val locale =
-                dataStore[AppLanguageKey]
-                    ?.takeUnless { it == SYSTEM_DEFAULT }
-                    ?.let { Locale.forLanguageTag(it) }
-                    ?: Locale.getDefault()
-            setAppLocale(this, locale)
-        }
 
         lifecycleScope.launch {
             dataStore.data
