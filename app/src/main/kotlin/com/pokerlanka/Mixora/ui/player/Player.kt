@@ -217,14 +217,12 @@ fun BottomSheetPlayer(
     val bottomSheetPageState = LocalBottomSheetPageState.current
     val playerConnection = LocalPlayerConnection.current ?: return
 
-    val (useNewPlayerDesign, onUseNewPlayerDesignChange) =
-        rememberPreference(
-            UseNewPlayerDesignKey,
-            defaultValue = true,
-        )
-    val (hidePlayerThumbnail, onHidePlayerThumbnailChange) = rememberPreference(HidePlayerThumbnailKey, false)
     val (hideStatusBarOnFullscreen) = rememberPreference(HideStatusBarOnFullscreenKey, false)
-    val cropAlbumArt by rememberPreference(CropAlbumArtKey, false)
+    val playerBackground = PlayerBackgroundStyle.DEFAULT
+    val playerButtonsStyle = PlayerButtonsStyle.DEFAULT
+    val hidePlayerThumbnail = false
+    val cropAlbumArt = false
+    val useNewPlayerDesign = true
 
     var showInlineLyrics by rememberSaveable {
         mutableStateOf(false)
@@ -233,15 +231,6 @@ fun BottomSheetPlayer(
     var isFullScreen by rememberSaveable {
         mutableStateOf(false)
     }
-
-    val playerBackground by rememberEnumPreference(
-        key = PlayerBackgroundStyleKey,
-        defaultValue = PlayerBackgroundStyle.DEFAULT,
-    )
-    val playerButtonsStyle by rememberEnumPreference(
-        key = PlayerButtonsStyleKey,
-        defaultValue = PlayerButtonsStyle.DEFAULT,
-    )
 
     val isSystemInDarkTheme = isSystemInDarkTheme()
     val darkTheme by rememberEnumPreference(DarkModeKey, defaultValue = DarkMode.AUTO)

@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Mixora Project (C) 2026
  * Licensed under GPL-3.0 | See git history for contributors
  */
@@ -138,8 +138,6 @@ import com.pokerlanka.mixora.constants.DarkModeKey
 import com.pokerlanka.mixora.constants.DefaultOpenTabKey
 import com.pokerlanka.mixora.constants.DisableScreenshotKey
 import com.pokerlanka.mixora.constants.DynamicThemeKey
-import com.pokerlanka.mixora.constants.EnableHighRefreshRateKey
-import com.pokerlanka.mixora.constants.EnableLandscapeScalingKey
 import com.pokerlanka.mixora.constants.ExperimentalLyricsKey
 import com.pokerlanka.mixora.constants.LastSeenVersionKey
 import com.pokerlanka.mixora.constants.LyricsProviderOrderKey
@@ -158,7 +156,6 @@ import com.pokerlanka.mixora.constants.SimpMusicMigrationDoneKey
 import com.pokerlanka.mixora.constants.SlimNavBarHeight
 import com.pokerlanka.mixora.constants.SlimNavBarKey
 import com.pokerlanka.mixora.constants.StopMusicOnTaskClearKey
-import com.pokerlanka.mixora.constants.UseNewMiniPlayerDesignKey
 import com.pokerlanka.mixora.db.MusicDatabase
 import com.pokerlanka.mixora.db.entities.SearchHistory
 import com.pokerlanka.mixora.extensions.toEnum
@@ -433,32 +430,16 @@ class MainActivity : ComponentActivity() {
         syncUtils: SyncUtils,
     ) {
         val enableDynamicTheme by rememberPreference(DynamicThemeKey, defaultValue = true)
-        val enableHighRefreshRate by rememberPreference(EnableHighRefreshRateKey, defaultValue = true)
 
-        LaunchedEffect(enableHighRefreshRate) {
+        LaunchedEffect(Unit) {
             val window = this@MainActivity.window
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                 val layoutParams = window.attributes
-                if (enableHighRefreshRate) {
-                    layoutParams.preferredDisplayModeId = 0
-                } else {
-                    val modes = window.windowManager.defaultDisplay.supportedModes
-                    val mode60 =
-                        modes.firstOrNull { kotlin.math.abs(it.refreshRate - 60f) < 1f }
-                            ?: modes.minByOrNull { kotlin.math.abs(it.refreshRate - 60f) }
-
-                    if (mode60 != null) {
-                        layoutParams.preferredDisplayModeId = mode60.modeId
-                    }
-                }
+                layoutParams.preferredDisplayModeId = 0
                 window.attributes = layoutParams
             } else {
                 val params = window.attributes
-                if (enableHighRefreshRate) {
-                    params.preferredRefreshRate = 0f
-                } else {
-                    params.preferredRefreshRate = 60f
-                }
+                params.preferredRefreshRate = 0f
                 window.attributes = params
             }
         }
@@ -474,7 +455,6 @@ class MainActivity : ComponentActivity() {
             setSystemBarAppearance(useDarkTheme)
         }
 
-        val enableLandscapeScaling by rememberPreference(EnableLandscapeScalingKey, defaultValue = false)
         val pureBlackEnabled by rememberPreference(PureBlackKey, defaultValue = false)
         val pureBlack =
             remember(pureBlackEnabled, useDarkTheme) {
@@ -552,18 +532,7 @@ class MainActivity : ComponentActivity() {
             val containerSize = windowInfo.containerDpSize
             val smallestDimensionDp = minOf(containerSize.width, containerSize.height)
 
-            val densityScale = remember(smallestDimensionDp, enableLandscapeScaling) {
-                if (enableLandscapeScaling) {
-                    when {
-                        smallestDimensionDp >= 840.dp -> 1.15f
-                        smallestDimensionDp >= 720.dp -> 1.1f
-                        smallestDimensionDp >= 600.dp -> 1.05f
-                        else -> 1.0f
-                    }
-                } else {
-                    1.0f
-                }
-            }
+            val densityScale = 1.0f
             val scaledDensity: Density = remember(currentDensity, densityScale) {
                 Density(
                     density = currentDensity.density * densityScale,
@@ -595,7 +564,6 @@ class MainActivity : ComponentActivity() {
                     navigationItems.mapIndexed { i, s -> s.route to i }.toMap()
                 }
                 val (slimNav) = rememberPreference(SlimNavBarKey, defaultValue = false)
-                val (useNewMiniPlayerDesign) = rememberPreference(UseNewMiniPlayerDesignKey, defaultValue = true)
                 val (defaultOpenTabInt) = rememberPreference(DefaultOpenTabKey, defaultValue = NavigationTab.HOME.name)
                 val defaultOpenTab = remember(defaultOpenTabInt) {
                     try {
@@ -691,7 +659,7 @@ class MainActivity : ComponentActivity() {
                         collapsedBound =
                             bottomInset +
                                 (if (!showRail && shouldShowNavigationBar) navPadding else 0.dp) +
-                                (if (useNewMiniPlayerDesign) MiniPlayerBottomSpacing else 0.dp) +
+                                MiniPlayerBottomSpacing +
                                 MiniPlayerHeight,
                         expandedBound = maxHeight,
                     )
@@ -1056,9 +1024,7 @@ class MainActivity : ComponentActivity() {
                                                 .graphicsLayer {
                                                     val progress = playerBottomSheetState.progress
                                                     alpha =
-                                                        if (progress > 0f ||
-                                                            (useNewMiniPlayerDesign && !shouldShowNavigationBar)
-                                                        ) {
+                                                        if (progress > 0f || !shouldShowNavigationBar) {
                                                             0f
                                                         } else {
                                                             1f
@@ -1087,7 +1053,7 @@ class MainActivity : ComponentActivity() {
                                             .graphicsLayer {
                                                 val progress = playerBottomSheetState.progress
                                                 alpha =
-                                                    if (progress > 0f || (useNewMiniPlayerDesign && !shouldShowNavigationBar)) 0f else 1f
+                                                    if (progress > 0f || !shouldShowNavigationBar) 0f else 1f
                                             }.background(baseBg),
                                 )
                             }

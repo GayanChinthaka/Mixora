@@ -218,8 +218,6 @@ fun Thumbnail(
 
     // Preferences - computed once
     val swipeThumbnail by rememberPreference(SwipeThumbnailKey, true)
-    val hidePlayerThumbnail by rememberPreference(HidePlayerThumbnailKey, false)
-    val cropAlbumArt by rememberPreference(CropAlbumArtKey, false)
     val playerBackground by rememberEnumPreference(
         key = PlayerBackgroundStyleKey,
         defaultValue = PlayerBackgroundStyle.DEFAULT
@@ -396,8 +394,6 @@ fun Thumbnail(
                             ThumbnailItem(
                                 item = item,
                                 dimensions = dimensions,
-                                hidePlayerThumbnail = hidePlayerThumbnail,
-                                cropAlbumArt = cropAlbumArt,
                                 textBackgroundColor = textBackgroundColor,
                                 layoutDirection = layoutDirection,
                                 onSeek = onSeekCallback,
@@ -510,8 +506,6 @@ private fun ThumbnailHeader(
 private fun ThumbnailItem(
     item: MediaItem,
     dimensions: ThumbnailDimensions,
-    hidePlayerThumbnail: Boolean,
-    cropAlbumArt: Boolean,
     textBackgroundColor: Color,
     layoutDirection: LayoutDirection,
     onSeek: (String, Boolean) -> Unit,
@@ -597,20 +591,16 @@ private fun ThumbnailItem(
                 .size(dimensions.thumbnailSize)
                 .clip(RoundedCornerShape(dimensions.cornerRadius))
         ) {
-            if (hidePlayerThumbnail) {
-                HiddenThumbnailPlaceholder(textBackgroundColor = textBackgroundColor)
+            val artworkUriToUse = if (item.mediaId == currentMediaId && !currentMediaThumbnail.isNullOrBlank()) {
+                currentMediaThumbnail
             } else {
-                val artworkUriToUse = if (item.mediaId == currentMediaId && !currentMediaThumbnail.isNullOrBlank()) {
-                    currentMediaThumbnail
-                } else {
-                    item.mediaMetadata.artworkUri?.toString()
-                }
-
-                ThumbnailImage(
-                    artworkUri = artworkUriToUse,
-                    cropArtwork = cropAlbumArt
-                )
+                item.mediaMetadata.artworkUri?.toString()
             }
+
+            ThumbnailImage(
+                artworkUri = artworkUriToUse,
+                cropArtwork = false
+            )
             
             // Cast button at top-right corner of thumbnail
             CastButton(

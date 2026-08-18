@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Mixora Project (C) 2026
  * Licensed under GPL-3.0 | See git history for contributors
  */
@@ -51,6 +51,7 @@ import com.pokerlanka.mixora.ui.screens.settings.BackupAndRestore
 import com.pokerlanka.mixora.ui.screens.settings.ContentSettings
 import com.pokerlanka.mixora.ui.screens.settings.DarkMode
 import com.pokerlanka.mixora.ui.screens.settings.InternetSettings
+import com.pokerlanka.mixora.ui.screens.settings.LyricsSettings
 import com.pokerlanka.mixora.ui.screens.settings.MiscSettings
 import com.pokerlanka.mixora.ui.screens.settings.MusicTogetherScreen
 import com.pokerlanka.mixora.ui.screens.settings.PlayerSettings
@@ -360,6 +361,10 @@ fun NavGraphBuilder.navigationBuilder(
 
     composable("settings/player") {
         PlayerSettings(navController)
+    }
+
+    composable("settings/lyrics") {
+        LyricsSettings(navController)
     }
 
     composable("settings/stream_sources") {
