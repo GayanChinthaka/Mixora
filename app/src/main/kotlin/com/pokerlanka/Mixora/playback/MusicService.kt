@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Mixora Project (C) 2026
  * Licensed under GPL-3.0 | See git history for contributors
  */
@@ -302,6 +302,210 @@ class MusicService :
     inner class MusicBinder : Binder() {
         val service: MusicService
             get() = this@MusicService
+    }
+
+    val togetherSessionState = MutableStateFlow<com.pokerlanka.mixora.together.TogetherSessionState>(com.pokerlanka.mixora.together.TogetherSessionState.Idle)
+    private var togetherServer: com.pokerlanka.mixora.together.TogetherServer? = null
+    private var togetherClient: com.pokerlanka.mixora.together.TogetherClient? = null
+    private var togetherOnlineHost: com.pokerlanka.mixora.together.TogetherOnlineHost? = null
+
+    private fun buildTogetherRoomState(
+        sessionId: String,
+        hostId: String,
+        settings: com.pokerlanka.mixora.together.TogetherRoomSettings,
+    ): com.pokerlanka.mixora.together.TogetherRoomState {
+        val tracks = if (::player.isInitialized) {
+            (0 until player.mediaItemCount).mapNotNull { idx ->
+                val item = player.getMediaItemAt(idx)
+                val meta = currentMediaMetadata.value
+                com.pokerlanka.mixora.together.TogetherTrack(
+                    id = item.mediaId,
+                    title = item.mediaMetadata.title?.toString() ?: meta?.title ?: "Track",
+                    artists = listOfNotNull(item.mediaMetadata.artist?.toString() ?: meta?.artists?.firstOrNull()?.name),
+                    durationSec = (item.mediaMetadata.extras?.getInt("duration") ?: meta?.duration ?: -1),
+                    thumbnailUrl = item.mediaMetadata.artworkUri?.toString() ?: meta?.thumbnailUrl,
+                )
+            }
+        } else emptyList()
+
+        val queueHash = tracks.joinToString("|") { it.id }.hashCode().toString()
+
+        return com.pokerlanka.mixora.together.TogetherRoomState(
+            sessionId = sessionId,
+            hostId = hostId,
+            settings = settings,
+            participants = emptyList(),
+            queue = tracks,
+            queueHash = queueHash,
+            currentIndex = if (::player.isInitialized) player.currentMediaItemIndex.coerceAtLeast(0) else 0,
+            isPlaying = if (::player.isInitialized) player.isPlaying else false,
+            positionMs = if (::player.isInitialized) player.currentPosition.coerceAtLeast(0L) else 0L,
+            repeatMode = if (::player.isInitialized) player.repeatMode else 0,
+            shuffleEnabled = if (::player.isInitialized) player.shuffleModeEnabled else false,
+            sentAtElapsedRealtimeMs = android.os.SystemClock.elapsedRealtime(),
+        )
+    }
+
+    fun startTogetherHost(
+        port: Int,
+        displayName: String,
+        settings: com.pokerlanka.mixora.together.TogetherRoomSettings,
+    ) {
+        leaveTogether()
+        val sessionId = java.util.UUID.randomUUID().toString()
+        val sessionKey = java.util.UUID.randomUUID().toString()
+        val server = com.pokerlanka.mixora.together.TogetherServer(
+            scope = scope,
+            sessionId = sessionId,
+            sessionKey = sessionKey,
+            hostDisplayName = displayName,
+            initialSettings = settings,
+        )
+        togetherServer = server
+        scope.launch(Dispatchers.IO) {
+            server.start(port)
+            val joinLink = com.pokerlanka.mixora.together.TogetherLink.encode(
+                com.pokerlanka.mixora.together.TogetherJoinInfo(
+                    host = "0.0.0.0",
+                    port = port,
+                    sessionId = sessionId,
+                    sessionKey = sessionKey,
+                ),
+            )
+            val initialRoomState = withContext(Dispatchers.Main) {
+                buildTogetherRoomState(sessionId, "host", settings)
+            }
+            withContext(Dispatchers.Main) {
+                togetherSessionState.value = com.pokerlanka.mixora.together.TogetherSessionState.Hosting(
+                    sessionId = server.sessionId,
+                    joinLink = joinLink,
+                    localAddressHint = "0.0.0.0",
+                    port = port,
+                    settings = settings,
+                    roomState = initialRoomState,
+                )
+            }
+        }
+    }
+
+    fun startTogetherOnlineHost(
+        displayName: String,
+        settings: com.pokerlanka.mixora.together.TogetherRoomSettings,
+    ) {
+        leaveTogether()
+        val sessionId = java.util.UUID.randomUUID().toString()
+        val sessionKey = java.util.UUID.randomUUID().toString()
+        val hostId = java.util.UUID.randomUUID().toString()
+        val onlineHost = com.pokerlanka.mixora.together.TogetherOnlineHost(
+            externalScope = scope,
+            sessionId = sessionId,
+            sessionKey = sessionKey,
+            hostId = hostId,
+            hostDisplayName = displayName,
+            initialSettings = settings,
+        )
+        togetherOnlineHost = onlineHost
+        scope.launch(Dispatchers.IO) {
+            val code = (100000..999999).random().toString()
+            val initialRoomState = withContext(Dispatchers.Main) {
+                buildTogetherRoomState(sessionId, hostId, settings)
+            }
+            withContext(Dispatchers.Main) {
+                togetherSessionState.value = com.pokerlanka.mixora.together.TogetherSessionState.HostingOnline(
+                    sessionId = sessionId,
+                    code = code,
+                    settings = settings,
+                    roomState = initialRoomState,
+                )
+            }
+        }
+    }
+
+    fun joinTogether(
+        rawInput: String,
+        displayName: String,
+    ) {
+        leaveTogether()
+        val decoded = com.pokerlanka.mixora.together.TogetherLink.decode(rawInput) ?: return
+        val client = com.pokerlanka.mixora.together.TogetherClient(externalScope = scope)
+        togetherClient = client
+        client.connect(decoded, displayName)
+        togetherSessionState.value = com.pokerlanka.mixora.together.TogetherSessionState.Joining(rawInput)
+    }
+
+    fun joinTogetherOnline(
+        rawInput: String,
+        displayName: String,
+    ) {
+        leaveTogether()
+        val client = com.pokerlanka.mixora.together.TogetherClient(externalScope = scope)
+        togetherClient = client
+        togetherSessionState.value = com.pokerlanka.mixora.together.TogetherSessionState.JoiningOnline(rawInput)
+    }
+
+    fun leaveTogether() {
+        scope.launch(Dispatchers.IO) {
+            togetherServer?.stop()
+            togetherServer = null
+            togetherOnlineHost?.disconnect()
+            togetherOnlineHost = null
+            togetherClient?.disconnect()
+            togetherClient = null
+            withContext(Dispatchers.Main) {
+                togetherSessionState.value = com.pokerlanka.mixora.together.TogetherSessionState.Idle
+            }
+        }
+    }
+
+    fun updateTogetherSettings(settings: com.pokerlanka.mixora.together.TogetherRoomSettings) {
+        scope.launch(Dispatchers.IO) {
+            togetherServer?.updateSettings(settings)
+            togetherOnlineHost?.updateSettings(settings)
+        }
+    }
+
+    fun approveTogetherParticipant(
+        participantId: String,
+        approved: Boolean,
+    ) {
+        scope.launch(Dispatchers.IO) {
+            togetherServer?.approveParticipant(participantId, approved)
+            togetherOnlineHost?.approveParticipant(participantId, approved)
+        }
+    }
+
+    fun kickTogetherParticipant(participantId: String) {
+        scope.launch(Dispatchers.IO) {
+            togetherServer?.kickParticipant(participantId)
+            togetherOnlineHost?.kickParticipant(participantId)
+        }
+    }
+
+    fun banTogetherParticipant(participantId: String) {
+        scope.launch(Dispatchers.IO) {
+            togetherServer?.banParticipant(participantId)
+            togetherOnlineHost?.banParticipant(participantId)
+        }
+    }
+
+    fun transferTogetherHostOwnership(participantId: String) {
+        scope.launch(Dispatchers.IO) {
+            togetherServer?.transferHostOwnership(participantId)
+            togetherOnlineHost?.transferHostOwnership(participantId)
+        }
+    }
+
+    fun requestTogetherControl(action: com.pokerlanka.mixora.together.ControlAction) {
+        val state = togetherSessionState.value as? com.pokerlanka.mixora.together.TogetherSessionState.Joined ?: return
+        togetherClient?.requestControl(state.sessionId, action)
+    }
+
+    fun requestTogetherAddTrack(
+        track: com.pokerlanka.mixora.together.TogetherTrack,
+        mode: com.pokerlanka.mixora.together.AddTrackMode,
+    ) {
+        val state = togetherSessionState.value as? com.pokerlanka.mixora.together.TogetherSessionState.Joined ?: return
+        togetherClient?.requestAddTrack(state.sessionId, track, mode)
     }
 
     private lateinit var connectivityManager: ConnectivityManager

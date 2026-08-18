@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Mixora Project (C) 2026
  * Licensed under GPL-3.0 | See git history for contributors
  */
@@ -107,6 +107,13 @@ val UpdateNotificationsEnabledKey = booleanPreferencesKey("updateNotifications")
 val LastUpdateCheckTimeKey = longPreferencesKey("lastUpdateCheckTime")
 val TogetherOnlineEndpointCacheKey = stringPreferencesKey("togetherOnlineEndpointCache")
 val TogetherOnlineEndpointLastCheckedAtKey = longPreferencesKey("togetherOnlineEndpointLastCheckedAt")
+val TogetherDisplayNameKey = stringPreferencesKey("togetherDisplayName")
+val TogetherDefaultPortKey = intPreferencesKey("togetherDefaultPort")
+val TogetherAllowGuestsToAddTracksKey = booleanPreferencesKey("togetherAllowGuestsToAddTracks")
+val TogetherAllowGuestsToControlPlaybackKey = booleanPreferencesKey("togetherAllowGuestsToControlPlayback")
+val TogetherRequireHostApprovalToJoinKey = booleanPreferencesKey("togetherRequireHostApprovalToJoin")
+val TogetherLastJoinLinkKey = stringPreferencesKey("togetherLastJoinLink")
+val TogetherWelcomeShownKey = booleanPreferencesKey("togetherWelcomeShown")
 
 val AudioQualityKey = stringPreferencesKey("audioQuality")
 

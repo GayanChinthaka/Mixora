@@ -323,7 +323,7 @@ fun AccountSettings(
                             subtitle = "Manage external service integrations",
                             onClick = { navController.navigate("settings/integrations") },
                             index = 0,
-                            count = 2,
+                            count = 3,
                         )
                         
                         ExpressiveActionRow(
@@ -332,7 +332,16 @@ fun AccountSettings(
                             subtitle = "Personalized recommendations and search",
                             onClick = { navController.navigate("settings/ai_integration") },
                             index = 1,
-                            count = 2,
+                            count = 3,
+                        )
+
+                        ExpressiveActionRow(
+                            icon = painterResource(R.drawable.group),
+                            title = stringResource(R.string.music_together),
+                            subtitle = "Listen together in real-time with friends",
+                            onClick = { navController.navigate("settings/music_together") },
+                            index = 2,
+                            count = 3,
                         )
                     }
                 }
