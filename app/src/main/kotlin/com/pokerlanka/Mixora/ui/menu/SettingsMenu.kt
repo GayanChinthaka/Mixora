@@ -257,14 +257,6 @@ fun SettingsMenu(
                                 onDismiss()
                                 navController.navigate("settings/content")
                             }
-                        ),
-                        Material3SettingsItem(
-                            icon = painterResource(R.drawable.swipe),
-                            title = { Text("Behavior") },
-                            onClick = {
-                                onDismiss()
-                                navController.navigate("settings/privacy")
-                            }
                         )
                     )
                 )
@@ -331,14 +323,6 @@ fun SettingsMenu(
                             onClick = {
                                 onDismiss()
                                 navController.navigate("settings/po_token_generation")
-                            }
-                        ),
-                        Material3SettingsItem(
-                            icon = painterResource(R.drawable.tune),
-                            title = { Text("Developer Options") },
-                            onClick = {
-                                onDismiss()
-                                navController.navigate("settings/misc")
                             }
                         ),
                         Material3SettingsItem(

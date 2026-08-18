@@ -52,7 +52,6 @@ import com.pokerlanka.mixora.ui.screens.settings.ContentSettings
 import com.pokerlanka.mixora.ui.screens.settings.DarkMode
 import com.pokerlanka.mixora.ui.screens.settings.InternetSettings
 import com.pokerlanka.mixora.ui.screens.settings.LyricsSettings
-import com.pokerlanka.mixora.ui.screens.settings.MiscSettings
 import com.pokerlanka.mixora.ui.screens.settings.MusicTogetherScreen
 import com.pokerlanka.mixora.ui.screens.settings.PlayerSettings
 import com.pokerlanka.mixora.ui.screens.settings.PoTokenGenerationScreen
@@ -416,10 +415,6 @@ fun NavGraphBuilder.navigationBuilder(
 
     composable("settings/po_token_generation") {
         PoTokenGenerationScreen(navController)
-    }
-
-    composable("settings/misc") {
-        MiscSettings(navController)
     }
 
     composable("settings/updates") {

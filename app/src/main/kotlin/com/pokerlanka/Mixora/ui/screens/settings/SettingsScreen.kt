@@ -143,11 +143,6 @@ fun SettingsScreen(
                             icon = painterResource(R.drawable.language),
                             title = { Text(stringResource(R.string.content)) },
                             onClick = { navController.navigate("settings/content") }
-                        ),
-                        Material3SettingsItem(
-                            icon = painterResource(R.drawable.swipe),
-                            title = { Text("Behavior") },
-                            onClick = { navController.navigate("settings/privacy") }
                         )
                     )
                 )
@@ -207,13 +202,6 @@ fun SettingsScreen(
                                 icon = painterResource(R.drawable.key),
                                 title = { Text("PO Token Generation") },
                                 onClick = { navController.navigate("settings/po_token_generation") }
-                            )
-                        )
-                        add(
-                            Material3SettingsItem(
-                                icon = painterResource(R.drawable.tune),
-                                title = { Text("Developer Options") },
-                                onClick = { navController.navigate("settings/misc") }
                             )
                         )
                         if (isAndroid12OrLater) {
