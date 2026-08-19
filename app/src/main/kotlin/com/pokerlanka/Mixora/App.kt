@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Mixora Project (C) 2026
  * Licensed under GPL-3.0 | See git history for contributors
  */
@@ -158,8 +158,7 @@ class App :
                         ?: locale.country.takeIf { it in CountryCodeToName }
                         ?: "US",
                 hl =
-                    settings[ContentLanguageKey]?.takeIf { it != SYSTEM_DEFAULT }
-                        ?: locale.language.takeIf { it in LanguageCodeToName }
+                    locale.language.takeIf { it in LanguageCodeToName }
                         ?: languageTag.takeIf { it in LanguageCodeToName }
                         ?: "en",
             )
@@ -276,9 +275,9 @@ class App :
 
         applicationScope.launch(Dispatchers.IO) {
             dataStore.data
-                .map { it[ContentCountryKey] to it[ContentLanguageKey] }
+                .map { it[ContentCountryKey] }
                 .distinctUntilChanged()
-                .collect { (contentCountry, contentLanguage) ->
+                .collect { contentCountry ->
                     val locale = Locale.getDefault()
 
                     YouTube.locale =
@@ -288,8 +287,7 @@ class App :
                                     ?: locale.country.takeIf { it in CountryCodeToName }
                                     ?: "US",
                             hl =
-                                contentLanguage?.takeIf { it != SYSTEM_DEFAULT }
-                                    ?: locale.toLanguageTag().takeIf { it in LanguageCodeToName }
+                                locale.toLanguageTag().takeIf { it in LanguageCodeToName }
                                     ?: locale.language.takeIf { it in LanguageCodeToName }
                                     ?: "en",
                         )

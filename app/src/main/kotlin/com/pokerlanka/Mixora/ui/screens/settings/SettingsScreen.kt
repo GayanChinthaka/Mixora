@@ -153,7 +153,7 @@ fun SettingsScreen(
                         Material3SettingsItem(
                             icon = painterResource(R.drawable.language),
                             title = { Text(stringResource(R.string.content)) },
-                            description = { Text("Language, location and content preferences") },
+                            description = { Text("Location and content preferences") },
                             onClick = { navController.navigate("settings/content") }
                         )
                     )
