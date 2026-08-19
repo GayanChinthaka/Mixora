@@ -89,6 +89,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.pokerlanka.mixora.LocalPlayerAwareWindowInsets
 import com.pokerlanka.mixora.R
+import com.pokerlanka.mixora.ai.AiModelCategory
 import com.pokerlanka.mixora.ai.AiModelOption
 import com.pokerlanka.mixora.constants.AiApiKeyKey
 import com.pokerlanka.mixora.constants.AiApiValidationStatus
@@ -652,6 +653,36 @@ private fun AiProvider.label(): String =
     }
 
 @Composable
+private fun aiModelCategoryLabels(): Map<AiModelCategory, String> {
+    val text = stringResource(R.string.ai_model_category_text)
+    val computerUse = stringResource(R.string.ai_model_category_computer_use)
+    val agent = stringResource(R.string.ai_model_category_agent)
+    val image = stringResource(R.string.ai_model_category_image)
+    val video = stringResource(R.string.ai_model_category_video)
+    val music = stringResource(R.string.ai_model_category_music)
+    val speech = stringResource(R.string.ai_model_category_speech)
+    val live = stringResource(R.string.ai_model_category_live)
+    val groundedQa = stringResource(R.string.ai_model_category_grounded_qa)
+    val embedding = stringResource(R.string.ai_model_category_embedding)
+    val other = stringResource(R.string.ai_model_category_other)
+    return remember(text, computerUse, agent, image, video, music, speech, live, groundedQa, embedding, other) {
+        mapOf(
+            AiModelCategory.TEXT to text,
+            AiModelCategory.COMPUTER_USE to computerUse,
+            AiModelCategory.AGENT to agent,
+            AiModelCategory.IMAGE to image,
+            AiModelCategory.VIDEO to video,
+            AiModelCategory.MUSIC to music,
+            AiModelCategory.SPEECH to speech,
+            AiModelCategory.LIVE to live,
+            AiModelCategory.GROUNDED_QA to groundedQa,
+            AiModelCategory.EMBEDDING to embedding,
+            AiModelCategory.OTHER to other,
+        )
+    }
+}
+
+@Composable
 private fun AiApiValidationStatus.label(): String =
     when (this) {
         AiApiValidationStatus.UNKNOWN -> stringResource(R.string.ai_api_status_unknown)
@@ -699,7 +730,9 @@ private fun ModelPickerPreferenceSheet(
     var searchQuery by rememberSaveable { mutableStateOf("") }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     val coroutineScope = rememberCoroutineScope()
-    val filteredModels by remember(availableModels, searchQuery) {
+    val categoryLabels = aiModelCategoryLabels()
+    val unsupportedNote = stringResource(R.string.ai_model_unsupported)
+    val filteredModels by remember(availableModels, searchQuery, categoryLabels) {
         derivedStateOf {
             val query = searchQuery.trim()
             if (query.isBlank()) {
@@ -707,7 +740,8 @@ private fun ModelPickerPreferenceSheet(
             } else {
                 availableModels.filter { model ->
                     model.displayName.contains(query, ignoreCase = true) ||
-                        model.id.contains(query, ignoreCase = true)
+                        model.id.contains(query, ignoreCase = true) ||
+                        categoryLabels[model.category]?.contains(query, ignoreCase = true) == true
                 }
             }
         }
@@ -807,21 +841,23 @@ private fun ModelPickerPreferenceSheet(
                     contentType = { "model" },
                 ) { model ->
                     val id = model.id
-                    val displayName = model.displayName
                     val selected = id == selectedModel
+                    val usable = model.category.isCallableForText
+                    val categoryLabel = categoryLabels[model.category].orEmpty()
                     Row(
                         modifier =
                             Modifier
                                 .fillMaxWidth()
                                 .clip(MaterialTheme.shapes.extraLarge)
                                 .background(
-                                    if (selected) {
-                                        MaterialTheme.colorScheme.primary
-                                    } else {
-                                        MaterialTheme.colorScheme.surfaceContainerHigh
+                                    when {
+                                        selected -> MaterialTheme.colorScheme.primary
+                                        usable -> MaterialTheme.colorScheme.surfaceContainerHigh
+                                        else -> MaterialTheme.colorScheme.surfaceContainer
                                     },
                                 ).selectable(
                                     selected = selected,
+                                    enabled = usable,
                                     role = Role.RadioButton,
                                     onClick = {
                                         onModelSelected(id)
@@ -839,32 +875,30 @@ private fun ModelPickerPreferenceSheet(
                             verticalArrangement = Arrangement.spacedBy(4.dp),
                         ) {
                             Text(
-                                text = displayName,
+                                text = model.displayName,
                                 style = MaterialTheme.typography.titleLarge,
                                 fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
                                 color =
-                                    if (selected) {
-                                        MaterialTheme.colorScheme.onPrimary
-                                    } else {
-                                        MaterialTheme.colorScheme.onSurface
+                                    when {
+                                        selected -> MaterialTheme.colorScheme.onPrimary
+                                        usable -> MaterialTheme.colorScheme.onSurface
+                                        else -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.45f)
                                     },
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis,
                             )
-                            if (displayName != id) {
-                                Text(
-                                    text = id,
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color =
-                                        if (selected) {
-                                            MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.78f)
-                                        } else {
-                                            MaterialTheme.colorScheme.onSurfaceVariant
-                                        },
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis,
-                                )
-                            }
+                            Text(
+                                text = if (usable) categoryLabel else "$categoryLabel · $unsupportedNote",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color =
+                                    when {
+                                        selected -> MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.78f)
+                                        usable -> MaterialTheme.colorScheme.onSurfaceVariant
+                                        else -> MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.45f)
+                                    },
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                            )
                         }
                     }
                 }

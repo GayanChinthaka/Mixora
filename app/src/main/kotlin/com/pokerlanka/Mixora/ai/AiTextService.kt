@@ -9,6 +9,7 @@ import io.ktor.client.HttpClient
 import io.ktor.client.engine.okhttp.OkHttp
 import io.ktor.client.request.get
 import io.ktor.client.request.header
+import io.ktor.client.request.parameter
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
@@ -31,6 +32,12 @@ object AiTextService {
     private const val OpenRouterModelsEndpoint = "https://openrouter.ai/api/v1/models"
     private const val GeminiBaseEndpoint = "https://generativelanguage.googleapis.com/v1beta"
 
+    // Enough headroom for a thinking model to reason and still emit the health-check answer.
+    private const val HealthCheckMaxTokens = 512
+    private const val GeminiModelsPageSize = 200
+    private const val GeminiModelsMaxPages = 10
+
+
     private val client =
         HttpClient(OkHttp) {
             engine {
@@ -46,11 +53,11 @@ object AiTextService {
     suspend fun test(config: AiServiceConfig) {
         val response =
             complete(
-                config = config.copy(model = config.model.ifBlank { defaultModelFor(config.provider) }),
+                config = config,
                 systemPrompt = "You are a health check endpoint. Reply with OK only.",
                 userPrompt = "Reply exactly OK.",
                 temperature = 0.0,
-                maxTokens = 32,
+                maxTokens = HealthCheckMaxTokens,
             ).trim()
         if (!response.contains("OK", ignoreCase = true)) {
             throw AiServiceException("AI API returned an unexpected test response")
@@ -95,7 +102,12 @@ object AiTextService {
         maxTokens: Int = 4096,
     ): String {
         if (!config.canCallApi) throw AiServiceException("AI provider is not configured")
-        val model = config.model.ifBlank { defaultModelFor(config.provider) }
+        // Never substitute a hardcoded fallback: model ids get retired, and a guessed id
+        // fails as an opaque 404 instead of telling the user to pick a model.
+        val model =
+            config.model.trim().ifBlank {
+                throw AiServiceException("No AI model selected")
+            }
         return when (config.provider) {
             AiProvider.CHATGPT -> {
                 completeOpenAiCompatible(
@@ -207,7 +219,16 @@ object AiTextService {
         temperature: Double,
         maxTokens: Int,
     ): String {
-        val endpoint = "$GeminiBaseEndpoint/models/${model.trim()}:generateContent?key=${apiKey.trim()}"
+        val trimmedModel = model.trim()
+        val endpoint = "$GeminiBaseEndpoint/models/$trimmedModel:generateContent?key=${apiKey.trim()}"
+        // No thinkingConfig here on purpose: a zero budget is rejected outright by several
+        // current models (gemini-3.6-flash, gemini-flash-lite-latest, the Gemma 4 family)
+        // and there is no identifier pattern that predicts which. A generous
+        // maxOutputTokens leaves room for thinking plus the answer on every model instead.
+        val generationConfig =
+            JSONObject()
+                .put("temperature", temperature)
+                .put("maxOutputTokens", maxTokens)
         val body =
             JSONObject()
                 .put(
@@ -220,12 +241,8 @@ object AiTextService {
                             ),
                         ),
                     ),
-                ).put(
-                    "generationConfig",
-                    JSONObject()
-                        .put("temperature", temperature)
-                        .put("maxOutputTokens", maxTokens),
-                ).toString()
+                ).put("generationConfig", generationConfig)
+                .toString()
         val response =
             client.post(endpoint) {
                 contentType(ContentType.Application.Json)
@@ -233,26 +250,28 @@ object AiTextService {
             }
         val raw = response.bodyAsText()
         if (response.status.value !in 200..299) throw apiException(response.status.value, raw)
+        val candidate = JSONObject(raw).optJSONArray("candidates")?.optJSONObject(0)
+        val parts = candidate?.optJSONObject("content")?.optJSONArray("parts")
         val content =
-            JSONObject(raw)
-                .optJSONArray("candidates")
-                ?.optJSONObject(0)
-                ?.optJSONObject("content")
-                ?.optJSONArray("parts")
-                ?.optJSONObject(0)
-                ?.optString("text")
-                ?.takeIf { it.isNotBlank() }
-        return content ?: throw AiServiceException("AI API returned an empty response")
-    }
-
-    private fun defaultModelFor(provider: AiProvider): String =
-        when (provider) {
-            AiProvider.CHATGPT -> "gpt-4o-mini"
-            AiProvider.GEMINI -> "gemini-1.5-flash"
-            AiProvider.OPENROUTER -> "openai/gpt-4o-mini"
-            AiProvider.CUSTOM -> throw AiServiceException("No AI model configured")
-            AiProvider.NONE -> throw AiServiceException("AI provider is disabled")
+            (0 until (parts?.length() ?: 0))
+                .mapNotNull { parts?.optJSONObject(it)?.optString("text")?.takeIf { text -> text.isNotBlank() } }
+                .joinToString("")
+                .takeIf { it.isNotBlank() }
+        if (content != null) return content
+        // A thinking model can burn the whole output budget before emitting any text,
+        // which comes back as a 200 with a part-less candidate.
+        throw when (candidate?.optString("finishReason")?.takeIf { it.isNotBlank() }) {
+            null -> AiServiceException("AI API returned an empty response")
+            "MAX_TOKENS" ->
+                AiServiceException(
+                    "AI API returned no text: $trimmedModel hit the output token limit before answering",
+                )
+            else ->
+                AiServiceException(
+                    "AI API returned no text (finishReason: ${candidate.optString("finishReason")})",
+                )
         }
+    }
 
     private suspend fun fetchOpenAiModels(
         endpoint: String,
@@ -269,29 +288,105 @@ object AiTextService {
             for (i in 0 until data.length()) {
                 val obj = data.optJSONObject(i) ?: continue
                 val id = obj.optString("id").takeIf { it.isNotBlank() } ?: continue
-                add(AiModelOption(id = id, displayName = id))
+                add(
+                    AiModelOption(
+                        id = id,
+                        displayName = obj.optString("name").ifBlank { id },
+                        category = openAiCategoryFor(id),
+                    ),
+                )
             }
-        }.sortedBy { it.id }
+        }.sortedWith(compareBy({ it.category.ordinal }, { it.id }))
     }
 
     private suspend fun fetchGeminiModels(apiKey: String): List<AiModelOption> {
-        val response = client.get("$GeminiBaseEndpoint/models?key=${apiKey.trim()}")
-        val raw = response.bodyAsText()
-        if (response.status.value !in 200..299) throw apiException(response.status.value, raw)
-        val models = JSONObject(raw).optJSONArray("models") ?: return emptyList()
+        val key = apiKey.trim()
+        var pageToken: String? = null
+        var page = 0
         return buildList {
-            for (i in 0 until models.length()) {
-                val obj = models.optJSONObject(i) ?: continue
-                val methods = obj.optJSONArray("supportedGenerationMethods")
-                val supportsGenerate =
-                    (0 until (methods?.length() ?: 0)).any {
-                        methods?.optString(it) == "generateContent"
+            do {
+                val response =
+                    client.get("$GeminiBaseEndpoint/models") {
+                        parameter("key", key)
+                        parameter("pageSize", GeminiModelsPageSize)
+                        pageToken?.takeIf { it.isNotBlank() }?.let { parameter("pageToken", it) }
                     }
-                if (!supportsGenerate) continue
-                val id = obj.optString("name").removePrefix("models/").takeIf { it.isNotBlank() } ?: continue
-                val displayName = obj.optString("displayName").ifBlank { id }
-                add(AiModelOption(id = id, displayName = displayName))
-            }
+                val raw = response.bodyAsText()
+                if (response.status.value !in 200..299) throw apiException(response.status.value, raw)
+                val json = JSONObject(raw)
+                val models = json.optJSONArray("models")
+                for (i in 0 until (models?.length() ?: 0)) {
+                    val obj = models?.optJSONObject(i) ?: continue
+                    val id = obj.optString("name").removePrefix("models/").takeIf { it.isNotBlank() } ?: continue
+                    val methodsArray = obj.optJSONArray("supportedGenerationMethods")
+                    val methods =
+                        (0 until (methodsArray?.length() ?: 0))
+                            .mapNotNull { methodsArray?.optString(it)?.takeIf { m -> m.isNotBlank() } }
+                            .toSet()
+                    add(
+                        AiModelOption(
+                            id = id,
+                            displayName = obj.optString("displayName").ifBlank { id },
+                            category = geminiCategoryFor(id, methods),
+                        ),
+                    )
+                }
+                pageToken = json.optString("nextPageToken").takeIf { it.isNotBlank() }
+                page++
+            } while (pageToken != null && page < GeminiModelsMaxPages)
+        }.sortedWith(compareBy({ it.category.ordinal }, { it.displayName }))
+    }
+
+    /**
+     * Gemini's listing advertises every model the key can see, including ones that need a
+     * different endpoint or extra response modalities. Identifier markers are checked before
+     * the method set because several text models also advertise `bidiGenerateContent`, and
+     * treating those as Live-only would wrongly lock them out of the picker.
+     */
+    private fun geminiCategoryFor(
+        id: String,
+        methods: Set<String>,
+    ): AiModelCategory {
+        val lower = id.lowercase()
+        return when {
+            lower.contains("computer-use") -> AiModelCategory.COMPUTER_USE
+            // Listed with generateContent, but answer "This model only supports Interactions API".
+            lower.contains("deep-research") || lower.contains("antigravity") -> AiModelCategory.AGENT
+            lower.contains("native-audio") ||
+                lower.contains("audio-dialog") ||
+                lower.contains("-live-") -> AiModelCategory.LIVE
+            lower.contains("-tts") -> AiModelCategory.SPEECH
+            lower.contains("veo") -> AiModelCategory.VIDEO
+            lower.contains("lyria") -> AiModelCategory.MUSIC
+            // "nano-banana-pro-preview" carries no -image marker, so match the family name too.
+            lower.contains("imagen") ||
+                lower.contains("nano-banana") ||
+                lower.contains("-image") ||
+                lower.contains("image-generation") -> AiModelCategory.IMAGE
+            "embedContent" in methods || "embedText" in methods -> AiModelCategory.EMBEDDING
+            "generateContent" in methods -> AiModelCategory.TEXT
+            "bidiGenerateContent" in methods -> AiModelCategory.LIVE
+            "predictLongRunning" in methods -> AiModelCategory.VIDEO
+            "predict" in methods -> AiModelCategory.IMAGE
+            "generateAnswer" in methods -> AiModelCategory.GROUNDED_QA
+            else -> AiModelCategory.OTHER
+        }
+    }
+
+    /** OpenAI-style listings carry no capability metadata, so fall back to the identifier. */
+    private fun openAiCategoryFor(id: String): AiModelCategory {
+        val lower = id.lowercase()
+        return when {
+            lower.contains("computer-use") -> AiModelCategory.COMPUTER_USE
+            lower.contains("embed") -> AiModelCategory.EMBEDDING
+            lower.contains("realtime") -> AiModelCategory.LIVE
+            lower.contains("whisper") || lower.contains("tts") || lower.contains("transcribe") ||
+                lower.contains("audio") -> AiModelCategory.SPEECH
+            lower.contains("sora") || lower.contains("veo") -> AiModelCategory.VIDEO
+            lower.contains("dall-e") || lower.contains("imagen") ||
+                lower.contains("-image") || lower.contains("image-") -> AiModelCategory.IMAGE
+            lower.contains("moderation") -> AiModelCategory.OTHER
+            else -> AiModelCategory.TEXT
         }
     }
 
