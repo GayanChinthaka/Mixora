@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Mixora Project (C) 2026
  * Licensed under GPL-3.0 | See git history for contributors
  */
@@ -45,9 +45,7 @@ import com.pokerlanka.innertube.models.WatchEndpoint
 import com.pokerlanka.mixora.LocalPlayerAwareWindowInsets
 import com.pokerlanka.mixora.LocalPlayerConnection
 import com.pokerlanka.mixora.R
-import com.pokerlanka.mixora.constants.GridItemSize
-import com.pokerlanka.mixora.constants.GridItemsSizeKey
-import com.pokerlanka.mixora.constants.GridThumbnailHeight
+import com.pokerlanka.mixora.constants.SmallGridThumbnailHeight
 import com.pokerlanka.mixora.models.toMediaMetadata
 import com.pokerlanka.mixora.playback.queues.YouTubeQueue
 import com.pokerlanka.mixora.ui.component.IconButton
@@ -62,7 +60,6 @@ import com.pokerlanka.mixora.ui.menu.YouTubeArtistMenu
 import com.pokerlanka.mixora.ui.menu.YouTubePlaylistMenu
 import com.pokerlanka.mixora.ui.menu.YouTubeSongMenu
 import com.pokerlanka.mixora.ui.utils.backToMain
-import com.pokerlanka.mixora.utils.rememberEnumPreference
 import com.pokerlanka.mixora.viewmodels.ArtistItemsViewModel
 
 @OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
@@ -80,7 +77,6 @@ fun ArtistItemsScreen(
     val lazyListState = rememberLazyListState()
     val lazyGridState = rememberLazyGridState()
     val coroutineScope = rememberCoroutineScope()
-    val gridItemSize by rememberEnumPreference(GridItemsSizeKey, GridItemSize.BIG)
 
     val title by viewModel.title.collectAsStateWithLifecycle()
     val itemsPage by viewModel.itemsPage.collectAsStateWithLifecycle()
@@ -252,7 +248,7 @@ fun ArtistItemsScreen(
     } else {
         LazyVerticalGrid(
             state = lazyGridState,
-            columns = GridCells.Adaptive(minSize = GridThumbnailHeight + if (gridItemSize == GridItemSize.BIG) 24.dp else (-24).dp),
+            columns = GridCells.Adaptive(minSize = SmallGridThumbnailHeight),
             contentPadding = LocalPlayerAwareWindowInsets.current.asPaddingValues(),
         ) {
             items(

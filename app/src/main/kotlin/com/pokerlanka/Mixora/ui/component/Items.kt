@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Mixora Project (C) 2026
  * Licensed under GPL-3.0 | See git history for contributors
  * 
@@ -103,8 +103,6 @@ import com.pokerlanka.mixora.LocalNavController
 import com.pokerlanka.mixora.LocalPlayerConnection
 import com.pokerlanka.mixora.R
 import com.pokerlanka.mixora.constants.CropAlbumArtKey
-import com.pokerlanka.mixora.constants.GridItemSize
-import com.pokerlanka.mixora.constants.GridItemsSizeKey
 import com.pokerlanka.mixora.constants.GridThumbnailHeight
 import com.pokerlanka.mixora.constants.ListItemHeight
 import com.pokerlanka.mixora.constants.ListThumbnailSize
@@ -138,10 +136,7 @@ import kotlin.jvm.JvmName
 const val ActiveBoxAlpha = 0.6f
 
 @Composable
-fun currentGridThumbnailHeight(): Dp {
-    val gridItemSize by rememberEnumPreference(GridItemsSizeKey, GridItemSize.BIG)
-    return if (gridItemSize == GridItemSize.BIG) GridThumbnailHeight else SmallGridThumbnailHeight
-}
+fun currentGridThumbnailHeight(): Dp = SmallGridThumbnailHeight
 
 @JvmName("ClickableArtistTextEntities")
 @Composable

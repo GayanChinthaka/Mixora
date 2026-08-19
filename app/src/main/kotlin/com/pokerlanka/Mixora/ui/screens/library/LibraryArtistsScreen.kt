@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Mixora Project (C) 2026
  * Licensed under GPL-3.0 | See git history for contributors
  */
@@ -58,10 +58,8 @@ import com.pokerlanka.mixora.constants.ArtistSortTypeKey
 import com.pokerlanka.mixora.constants.ArtistViewTypeKey
 import com.pokerlanka.mixora.constants.CONTENT_TYPE_ARTIST
 import com.pokerlanka.mixora.constants.CONTENT_TYPE_HEADER
-import com.pokerlanka.mixora.constants.GridItemSize
-import com.pokerlanka.mixora.constants.GridItemsSizeKey
-import com.pokerlanka.mixora.constants.GridThumbnailHeight
 import com.pokerlanka.mixora.constants.LibraryViewType
+import com.pokerlanka.mixora.constants.SmallGridThumbnailHeight
 import com.pokerlanka.mixora.constants.YtmSyncKey
 import com.pokerlanka.mixora.ui.component.ChipsRow
 import com.pokerlanka.mixora.ui.component.LibraryArtistGridItem
@@ -95,7 +93,6 @@ fun LibraryArtistsScreen(
         ArtistSortType.CREATE_DATE
     )
     val (sortDescending, onSortDescendingChange) = rememberPreference(ArtistSortDescendingKey, true)
-    val gridItemSize by rememberEnumPreference(GridItemsSizeKey, GridItemSize.BIG)
     val (ytmSync) = rememberPreference(YtmSyncKey, true)
 
     val filterContent = @Composable {
@@ -290,7 +287,7 @@ fun LibraryArtistsScreen(
                     state = lazyGridState,
                     columns =
                     GridCells.Adaptive(
-                        minSize = GridThumbnailHeight + if (gridItemSize == GridItemSize.BIG) 24.dp else (-24).dp,
+                        minSize = SmallGridThumbnailHeight,
                     ),
                     contentPadding = LocalPlayerAwareWindowInsets.current.asPaddingValues(),
                 ) {

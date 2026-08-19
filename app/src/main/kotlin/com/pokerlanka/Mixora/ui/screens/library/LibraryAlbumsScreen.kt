@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Mixora Project (C) 2026
  * Licensed under GPL-3.0 | See git history for contributors
  */
@@ -60,11 +60,9 @@ import com.pokerlanka.mixora.constants.AlbumSortTypeKey
 import com.pokerlanka.mixora.constants.AlbumViewTypeKey
 import com.pokerlanka.mixora.constants.CONTENT_TYPE_ALBUM
 import com.pokerlanka.mixora.constants.CONTENT_TYPE_HEADER
-import com.pokerlanka.mixora.constants.GridItemSize
-import com.pokerlanka.mixora.constants.GridItemsSizeKey
-import com.pokerlanka.mixora.constants.GridThumbnailHeight
 import com.pokerlanka.mixora.constants.HideExplicitKey
 import com.pokerlanka.mixora.constants.LibraryViewType
+import com.pokerlanka.mixora.constants.SmallGridThumbnailHeight
 import com.pokerlanka.mixora.constants.YtmSyncKey
 import com.pokerlanka.mixora.extensions.matchesNormalizedQuery
 import com.pokerlanka.mixora.extensions.normalizeForSearch
@@ -105,7 +103,6 @@ fun LibraryAlbumsScreen(
             AlbumSortType.CREATE_DATE,
         )
     val (sortDescending, onSortDescendingChange) = rememberPreference(AlbumSortDescendingKey, true)
-    val gridItemSize by rememberEnumPreference(GridItemsSizeKey, GridItemSize.BIG)
 
     val (ytmSync) = rememberPreference(YtmSyncKey, true)
     val hideExplicit by rememberPreference(key = HideExplicitKey, defaultValue = false)
@@ -310,7 +307,7 @@ fun LibraryAlbumsScreen(
                     state = lazyGridState,
                     columns =
                         GridCells.Adaptive(
-                            minSize = GridThumbnailHeight + if (gridItemSize == GridItemSize.BIG) 24.dp else (-24).dp,
+                            minSize = SmallGridThumbnailHeight,
                         ),
                     contentPadding = LocalPlayerAwareWindowInsets.current.asPaddingValues(),
                 ) {

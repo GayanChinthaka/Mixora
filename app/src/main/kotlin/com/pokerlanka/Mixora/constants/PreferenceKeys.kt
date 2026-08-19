@@ -52,9 +52,6 @@ enum class DensityScale(
     }
 }
 
-val DefaultOpenTabKey = stringPreferencesKey("defaultOpenTab")
-val SlimNavBarKey = booleanPreferencesKey("slimNavBar")
-val GridItemsSizeKey = stringPreferencesKey("gridItemSize")
 val SliderStyleKey = stringPreferencesKey("sliderStyle")
 val SwipeToSongKey = booleanPreferencesKey("SwipeToSong")
 val SwipeToRemoveSongKey = booleanPreferencesKey("SwipeToRemoveSong")
@@ -189,7 +186,6 @@ val ScrobbleDelayPercentKey = floatPreferencesKey("scrobbleDelayPercent")
 val ScrobbleMinSongDurationKey = intPreferencesKey("scrobbleMinSongDuration")
 val ScrobbleDelaySecondsKey = intPreferencesKey("scrobbleDelaySeconds")
 
-val ChipSortTypeKey = stringPreferencesKey("chipSortType")
 val SongSortTypeKey = stringPreferencesKey("songSortType")
 val SongSortDescendingKey = booleanPreferencesKey("songSortDescending")
 val PlaylistSongSortTypeKey = stringPreferencesKey("playlistSongSortType")
@@ -338,11 +334,6 @@ enum class MixSortType {
     CREATE_DATE,
     NAME,
     LAST_UPDATED,
-}
-
-enum class GridItemSize {
-    BIG,
-    SMALL,
 }
 
 enum class MyTopFilter {

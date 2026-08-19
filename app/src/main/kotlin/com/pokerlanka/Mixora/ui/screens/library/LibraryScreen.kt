@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Mixora Project (C) 2026
  * Licensed under GPL-3.0 | See git history for contributors
  */
@@ -10,20 +10,20 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import com.pokerlanka.mixora.LocalNavController
 import com.pokerlanka.mixora.R
-import com.pokerlanka.mixora.constants.ChipSortTypeKey
 import com.pokerlanka.mixora.constants.LibraryFilter
 import com.pokerlanka.mixora.ui.component.ChipsRow
-import com.pokerlanka.mixora.utils.rememberEnumPreference
 
 @Composable
 fun LibraryScreen() {
     val navController = LocalNavController.current
-    var filterType by rememberEnumPreference(ChipSortTypeKey, LibraryFilter.LIBRARY)
+    var filterType by rememberSaveable { mutableStateOf(LibraryFilter.LIBRARY) }
 
     val filterContent = @Composable {
         Row {

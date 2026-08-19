@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Mixora Project (C) 2026
  * Licensed under GPL-3.0 | See git history for contributors
  */
@@ -58,9 +58,6 @@ import com.pokerlanka.mixora.LocalPlayerAwareWindowInsets
 import com.pokerlanka.mixora.R
 import com.pokerlanka.mixora.constants.CONTENT_TYPE_HEADER
 import com.pokerlanka.mixora.constants.CONTENT_TYPE_PLAYLIST
-import com.pokerlanka.mixora.constants.GridItemSize
-import com.pokerlanka.mixora.constants.GridItemsSizeKey
-import com.pokerlanka.mixora.constants.GridThumbnailHeight
 import com.pokerlanka.mixora.constants.InnerTubeCookieKey
 import com.pokerlanka.mixora.constants.LibraryViewType
 import com.pokerlanka.mixora.constants.PlaylistSortDescendingKey
@@ -72,6 +69,7 @@ import com.pokerlanka.mixora.constants.ShowDownloadedPlaylistKey
 import com.pokerlanka.mixora.constants.ShowLikedPlaylistKey
 import com.pokerlanka.mixora.constants.ShowTopPlaylistKey
 import com.pokerlanka.mixora.constants.ShowUploadedPlaylistKey
+import com.pokerlanka.mixora.constants.SmallGridThumbnailHeight
 import com.pokerlanka.mixora.constants.YtmSyncKey
 import com.pokerlanka.mixora.db.entities.Playlist
 import com.pokerlanka.mixora.db.entities.PlaylistEntity
@@ -124,7 +122,6 @@ fun LibraryPlaylistsScreen(
         PlaylistSortDescendingKey,
         true
     )
-    val gridItemSize by rememberEnumPreference(GridItemsSizeKey, GridItemSize.BIG)
 
     val playlists by viewModel.allPlaylists.collectAsStateWithLifecycle()
 
@@ -473,7 +470,7 @@ fun LibraryPlaylistsScreen(
                     state = lazyGridState,
                     columns =
                     GridCells.Adaptive(
-                        minSize = GridThumbnailHeight + if (gridItemSize == GridItemSize.BIG) 24.dp else (-24).dp,
+                        minSize = SmallGridThumbnailHeight,
                     ),
                     contentPadding = LocalPlayerAwareWindowInsets.current.asPaddingValues(),
                 ) {

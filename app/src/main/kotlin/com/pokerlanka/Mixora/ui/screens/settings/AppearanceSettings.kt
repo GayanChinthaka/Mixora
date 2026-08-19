@@ -59,11 +59,9 @@ import androidx.core.content.edit
 import androidx.navigation.NavController
 import com.pokerlanka.mixora.LocalPlayerAwareWindowInsets
 import com.pokerlanka.mixora.R
-import com.pokerlanka.mixora.constants.ChipSortTypeKey
 import com.pokerlanka.mixora.constants.CropAlbumArtKey
 import com.pokerlanka.mixora.constants.CustomThemeColorKey
 import com.pokerlanka.mixora.constants.DarkModeKey
-import com.pokerlanka.mixora.constants.DefaultOpenTabKey
 import com.pokerlanka.mixora.constants.DensityScale
 import com.pokerlanka.mixora.constants.DensityScaleKey
 import com.pokerlanka.mixora.constants.DynamicThemeKey
@@ -72,11 +70,7 @@ import com.pokerlanka.mixora.constants.ExperimentalLyricsKey
 import com.pokerlanka.mixora.ui.theme.ThemePalettes
 import com.pokerlanka.mixora.ui.theme.ThemeSeedPaletteCodec
 import com.pokerlanka.mixora.ui.theme.toThemePalette
-import com.pokerlanka.mixora.constants.GridItemSize
-import com.pokerlanka.mixora.constants.GridItemsSizeKey
 import com.pokerlanka.mixora.constants.HidePlayerThumbnailKey
-import com.pokerlanka.mixora.constants.HideStatusBarOnFullscreenKey
-import com.pokerlanka.mixora.constants.LibraryFilter
 import com.pokerlanka.mixora.constants.LyricsAnimationStyle
 import com.pokerlanka.mixora.constants.LyricsAnimationStyleKey
 import com.pokerlanka.mixora.constants.LyricsClickKey
@@ -101,7 +95,6 @@ import com.pokerlanka.mixora.constants.ShowTopPlaylistKey
 import com.pokerlanka.mixora.constants.ShowUploadedPlaylistKey
 import com.pokerlanka.mixora.constants.SliderStyle
 import com.pokerlanka.mixora.constants.SliderStyleKey
-import com.pokerlanka.mixora.constants.SlimNavBarKey
 import com.pokerlanka.mixora.constants.UseNewMiniPlayerDesignKey
 import com.pokerlanka.mixora.constants.UseNewPlayerDesignKey
 import com.pokerlanka.mixora.ui.component.DefaultDialog
@@ -136,26 +129,10 @@ fun AppearanceSettings(
             CustomThemeColorKey,
             defaultValue = ThemePalettes.Default.id,
         )
-    val (defaultOpenTab, onDefaultOpenTabChange) =
-        rememberEnumPreference(
-            DefaultOpenTabKey,
-            defaultValue = NavigationTab.HOME,
-        )
     val (sliderStyle, onSliderStyleChange) =
         rememberEnumPreference(
             SliderStyleKey,
             defaultValue = SliderStyle.SLIM,
-        )
-    val (gridItemSize, onGridItemSizeChange) =
-        rememberEnumPreference(
-            GridItemsSizeKey,
-            defaultValue = GridItemSize.SMALL,
-        )
-
-    val (slimNav, onSlimNavChange) =
-        rememberPreference(
-            SlimNavBarKey,
-            defaultValue = false,
         )
 
     // Density scale preferences
@@ -204,89 +181,8 @@ fun AppearanceSettings(
             defaultValue = true,
         )
 
-    val (defaultChip, onDefaultChipChange) =
-        rememberEnumPreference(
-            key = ChipSortTypeKey,
-            defaultValue = LibraryFilter.LIBRARY,
-        )
-
     var showSliderOptionDialog by rememberSaveable {
         mutableStateOf(false)
-    }
-
-
-    var showDefaultOpenTabDialog by rememberSaveable {
-        mutableStateOf(false)
-    }
-
-    if (showDefaultOpenTabDialog) {
-        EnumDialog(
-            onDismiss = { showDefaultOpenTabDialog = false },
-            onSelect = {
-                onDefaultOpenTabChange(it)
-                showDefaultOpenTabDialog = false
-            },
-            title = stringResource(R.string.default_open_tab),
-            current = defaultOpenTab,
-            values = NavigationTab.values().toList(),
-            valueText = {
-                when (it) {
-                    NavigationTab.HOME -> stringResource(R.string.home)
-                    NavigationTab.SEARCH -> stringResource(R.string.search)
-                    NavigationTab.LIBRARY -> stringResource(R.string.filter_library)
-                }
-            },
-        )
-    }
-
-    var showDefaultChipDialog by rememberSaveable {
-        mutableStateOf(false)
-    }
-
-    if (showDefaultChipDialog) {
-        EnumDialog(
-            onDismiss = { showDefaultChipDialog = false },
-            onSelect = {
-                onDefaultChipChange(it)
-                showDefaultChipDialog = false
-            },
-            title = stringResource(R.string.default_lib_chips),
-            current = defaultChip,
-            values = LibraryFilter.values().toList(),
-            valueText = {
-                when (it) {
-                    LibraryFilter.SONGS -> stringResource(R.string.songs)
-                    LibraryFilter.ARTISTS -> stringResource(R.string.artists)
-                    LibraryFilter.ALBUMS -> stringResource(R.string.albums)
-                    LibraryFilter.PLAYLISTS -> stringResource(R.string.playlists)
-                    LibraryFilter.PODCASTS -> stringResource(R.string.filter_podcasts)
-                    LibraryFilter.LIBRARY -> stringResource(R.string.filter_library)
-                }
-            },
-        )
-    }
-
-    var showGridSizeDialog by rememberSaveable {
-        mutableStateOf(false)
-    }
-
-    if (showGridSizeDialog) {
-        EnumDialog(
-            onDismiss = { showGridSizeDialog = false },
-            onSelect = {
-                onGridItemSizeChange(it)
-                showGridSizeDialog = false
-            },
-            title = stringResource(R.string.grid_cell_size),
-            current = gridItemSize,
-            values = GridItemSize.values().toList(),
-            valueText = {
-                when (it) {
-                    GridItemSize.BIG -> stringResource(R.string.big)
-                    GridItemSize.SMALL -> stringResource(R.string.small)
-                }
-            },
-        )
     }
 
     if (showRestartDialog) {
@@ -590,10 +486,8 @@ fun AppearanceSettings(
 
         Spacer(modifier = Modifier.height(27.dp))
 
-        var showSensitivityDialog by rememberSaveable { mutableStateOf(false) }
-
         Material3SettingsGroup(
-            title = stringResource(R.string.player),
+            title = stringResource(R.string.misc),
             items =
                 listOf(
                     Material3SettingsItem(
@@ -617,80 +511,6 @@ fun AppearanceSettings(
                             )
                         },
                         onClick = { showSliderOptionDialog = true },
-                    ),
-                ),
-        )
-
-        Spacer(modifier = Modifier.height(27.dp))
-
-        Material3SettingsGroup(
-            title = stringResource(R.string.misc),
-            items =
-                listOf(
-                    Material3SettingsItem(
-                        icon = painterResource(R.drawable.nav_bar),
-                        title = { Text(stringResource(R.string.default_open_tab)) },
-                        description = {
-                            Text(
-                                when (defaultOpenTab) {
-                                    NavigationTab.HOME -> stringResource(R.string.home)
-                                    NavigationTab.SEARCH -> stringResource(R.string.search)
-                                    NavigationTab.LIBRARY -> stringResource(R.string.filter_library)
-                                },
-                            )
-                        },
-                        onClick = { showDefaultOpenTabDialog = true },
-                    ),
-                    Material3SettingsItem(
-                        icon = painterResource(R.drawable.tab),
-                        title = { Text(stringResource(R.string.default_lib_chips)) },
-                        description = {
-                            Text(
-                                when (defaultChip) {
-                                    LibraryFilter.SONGS -> stringResource(R.string.songs)
-                                    LibraryFilter.ARTISTS -> stringResource(R.string.artists)
-                                    LibraryFilter.ALBUMS -> stringResource(R.string.albums)
-                                    LibraryFilter.PLAYLISTS -> stringResource(R.string.playlists)
-                                    LibraryFilter.PODCASTS -> stringResource(R.string.filter_podcasts)
-                                    LibraryFilter.LIBRARY -> stringResource(R.string.filter_library)
-                                },
-                            )
-                        },
-                        onClick = { showDefaultChipDialog = true },
-                    ),
-                    Material3SettingsItem(
-                        icon = painterResource(R.drawable.nav_bar),
-                        title = { Text(stringResource(R.string.slim_navbar)) },
-                        trailingContent = {
-                            Switch(
-                                checked = slimNav,
-                                onCheckedChange = onSlimNavChange,
-                                thumbContent = {
-                                    Icon(
-                                        painter =
-                                            painterResource(
-                                                id = if (slimNav) R.drawable.check else R.drawable.close,
-                                            ),
-                                        contentDescription = null,
-                                        modifier = Modifier.size(SwitchDefaults.IconSize),
-                                    )
-                                },
-                            )
-                        },
-                        onClick = { onSlimNavChange(!slimNav) },
-                    ),
-                    Material3SettingsItem(
-                        icon = painterResource(R.drawable.grid_view),
-                        title = { Text(stringResource(R.string.grid_cell_size)) },
-                        description = {
-                            Text(
-                                when (gridItemSize) {
-                                    GridItemSize.BIG -> stringResource(R.string.big)
-                                    GridItemSize.SMALL -> stringResource(R.string.small)
-                                },
-                            )
-                        },
-                        onClick = { showGridSizeDialog = true },
                     ),
                     Material3SettingsItem(
                         icon = painterResource(R.drawable.grid_view),

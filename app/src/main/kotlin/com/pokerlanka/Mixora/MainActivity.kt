@@ -136,7 +136,6 @@ import com.pokerlanka.innertube.models.WatchEndpoint
 import com.pokerlanka.mixora.constants.AppBarHeight
 import com.pokerlanka.mixora.constants.CustomThemeColorKey
 import com.pokerlanka.mixora.constants.DarkModeKey
-import com.pokerlanka.mixora.constants.DefaultOpenTabKey
 import com.pokerlanka.mixora.constants.DisableAnimationsKey
 import com.pokerlanka.mixora.constants.DynamicThemeKey
 import com.pokerlanka.mixora.constants.ExperimentalLyricsKey
@@ -154,8 +153,6 @@ import com.pokerlanka.mixora.constants.PureBlackKey
 import com.pokerlanka.mixora.constants.SYSTEM_DEFAULT
 import com.pokerlanka.mixora.constants.SelectedThemeColorKey
 import com.pokerlanka.mixora.constants.SimpMusicMigrationDoneKey
-import com.pokerlanka.mixora.constants.SlimNavBarHeight
-import com.pokerlanka.mixora.constants.SlimNavBarKey
 import com.pokerlanka.mixora.constants.StopMusicOnTaskClearKey
 import com.pokerlanka.mixora.db.MusicDatabase
 import com.pokerlanka.mixora.db.entities.SearchHistory
@@ -553,15 +550,6 @@ class MainActivity : ComponentActivity() {
                 val routeIndexMap = remember(navigationItems) {
                     navigationItems.mapIndexed { i, s -> s.route to i }.toMap()
                 }
-                val (slimNav) = rememberPreference(SlimNavBarKey, defaultValue = false)
-                val (defaultOpenTabInt) = rememberPreference(DefaultOpenTabKey, defaultValue = NavigationTab.HOME.name)
-                val defaultOpenTab = remember(defaultOpenTabInt) {
-                    try {
-                        NavigationTab.valueOf(defaultOpenTabInt)
-                    } catch (_: IllegalArgumentException) {
-                        NavigationTab.HOME
-                    }
-                }
                 val tabOpenedFromShortcut =
                     remember {
                         when (intent?.action) {
@@ -632,7 +620,7 @@ class MainActivity : ComponentActivity() {
 
                 val navPadding =
                     if (shouldShowNavigationBar && !showRail) {
-                        if (slimNav) SlimNavBarHeight else NavigationBarHeight
+                        NavigationBarHeight
                     } else {
                         0.dp
                     }
@@ -978,7 +966,6 @@ class MainActivity : ComponentActivity() {
                                         currentRoute = currentRoute,
                                         onItemClick = onNavItemClick,
                                         pureBlack = pureBlack,
-                                        slimNav = slimNav,
                                         onSearchLongClick = onSearchLongClick,
                                         modifier =
                                             Modifier
@@ -1099,7 +1086,7 @@ class MainActivity : ComponentActivity() {
                                 NavHost(
                                     navController = navController,
                                     startDestination =
-                                        when (tabOpenedFromShortcut ?: defaultOpenTab) {
+                                        when (tabOpenedFromShortcut) {
                                             NavigationTab.HOME -> Screens.Home
                                             NavigationTab.LIBRARY -> Screens.Library
                                             else -> Screens.Home

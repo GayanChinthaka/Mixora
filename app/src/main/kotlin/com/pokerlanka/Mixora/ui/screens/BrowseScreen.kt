@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Mixora Project (C) 2026
  * Licensed under GPL-3.0 | See git history for contributors
  */
@@ -30,9 +30,7 @@ import com.pokerlanka.innertube.models.PlaylistItem
 import com.pokerlanka.mixora.LocalPlayerAwareWindowInsets
 import com.pokerlanka.mixora.LocalPlayerConnection
 import com.pokerlanka.mixora.R
-import com.pokerlanka.mixora.constants.GridItemSize
-import com.pokerlanka.mixora.constants.GridItemsSizeKey
-import com.pokerlanka.mixora.constants.GridThumbnailHeight
+import com.pokerlanka.mixora.constants.SmallGridThumbnailHeight
 import com.pokerlanka.mixora.ui.component.IconButton
 import com.pokerlanka.mixora.ui.component.LocalMenuState
 import com.pokerlanka.mixora.ui.component.YouTubeGridItem
@@ -42,7 +40,6 @@ import com.pokerlanka.mixora.ui.menu.YouTubeAlbumMenu
 import com.pokerlanka.mixora.ui.menu.YouTubeArtistMenu
 import com.pokerlanka.mixora.ui.menu.YouTubePlaylistMenu
 import com.pokerlanka.mixora.ui.utils.backToMain
-import com.pokerlanka.mixora.utils.rememberEnumPreference
 import com.pokerlanka.mixora.viewmodels.BrowseViewModel
 
 @OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
@@ -61,10 +58,9 @@ fun BrowseScreen(
     val items by viewModel.items.collectAsStateWithLifecycle()
 
     val coroutineScope = rememberCoroutineScope()
-    val gridItemSize by rememberEnumPreference(GridItemsSizeKey, GridItemSize.BIG)
 
     LazyVerticalGrid(
-        columns = GridCells.Adaptive(minSize = GridThumbnailHeight + if (gridItemSize == GridItemSize.BIG) 24.dp else (-24).dp),
+        columns = GridCells.Adaptive(minSize = SmallGridThumbnailHeight),
         contentPadding = LocalPlayerAwareWindowInsets.current.asPaddingValues(),
     ) {
         items?.let { items ->
