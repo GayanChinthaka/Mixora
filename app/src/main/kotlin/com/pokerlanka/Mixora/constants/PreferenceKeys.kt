@@ -56,7 +56,6 @@ val DefaultOpenTabKey = stringPreferencesKey("defaultOpenTab")
 val SlimNavBarKey = booleanPreferencesKey("slimNavBar")
 val GridItemsSizeKey = stringPreferencesKey("gridItemSize")
 val SliderStyleKey = stringPreferencesKey("sliderStyle")
-val SquigglySliderKey = booleanPreferencesKey("squigglySlider")
 val SwipeToSongKey = booleanPreferencesKey("SwipeToSong")
 val SwipeToRemoveSongKey = booleanPreferencesKey("SwipeToRemoveSong")
 val UseNewPlayerDesignKey = booleanPreferencesKey("useNewPlayerDesign")
@@ -77,9 +76,9 @@ val AlarmEntriesKey = stringPreferencesKey("alarmEntries")
 val DeveloperModeKey = booleanPreferencesKey("developerMode")
 
 enum class SliderStyle {
-    DEFAULT,
-    WAVY,
     SLIM,
+    BALL,
+    LINE,
 }
 
 const val SYSTEM_DEFAULT = "SYSTEM_DEFAULT"

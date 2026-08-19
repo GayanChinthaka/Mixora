@@ -255,8 +255,8 @@
     <string name="center">Center</string>
     <string name="right">Right</string>
     <string name="player_slider_style">Player slider style</string>
-    <string name="default_">Default</string>
-    <string name="squiggly">Squiggly</string>
+    <string name="ball">Ball</string>
+    <string name="line">Line</string>
     <string name="misc">Misc</string>
     <string name="default_open_tab">Default open tab</string>
     <string name="grid_cell_size">Grid cell size</string>

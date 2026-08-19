@@ -158,7 +158,6 @@ import com.pokerlanka.mixora.constants.SleepTimerFadeOutKey
 import com.pokerlanka.mixora.constants.SleepTimerStopAfterCurrentSongKey
 import com.pokerlanka.mixora.constants.SliderStyle
 import com.pokerlanka.mixora.constants.SliderStyleKey
-import com.pokerlanka.mixora.constants.SquigglySliderKey
 import com.pokerlanka.mixora.constants.ThumbnailCornerRadius
 import com.pokerlanka.mixora.constants.UseNewPlayerDesignKey
 import com.pokerlanka.mixora.db.entities.LyricsEntity
@@ -175,8 +174,6 @@ import com.pokerlanka.mixora.ui.component.LocalMenuState
 import com.pokerlanka.mixora.ui.component.Lyrics
 import com.pokerlanka.mixora.ui.component.PlayerSliderTrack
 import com.pokerlanka.mixora.ui.component.ResizableIconButton
-import com.pokerlanka.mixora.ui.component.SquigglySlider
-import com.pokerlanka.mixora.ui.component.WavySlider
 import com.pokerlanka.mixora.ui.component.rememberBottomSheetState
 import com.pokerlanka.mixora.ui.menu.PlayerMenu
 import com.pokerlanka.mixora.ui.screens.settings.DarkMode
@@ -317,8 +314,7 @@ fun BottomSheetPlayer(
     val canSkipNext by playerConnection.canSkipNext.collectAsStateWithLifecycle()
     val isMuted by playerConnection.isMuted.collectAsStateWithLifecycle()
 
-    val sliderStyle by rememberEnumPreference(SliderStyleKey, SliderStyle.DEFAULT)
-    val squigglySlider by rememberPreference(SquigglySliderKey, defaultValue = false)
+    val sliderStyle by rememberEnumPreference(SliderStyleKey, SliderStyle.SLIM)
 
     // Cast state - safely access castConnectionHandler to prevent crashes during service lifecycle changes
     val castHandler =
@@ -1358,111 +1354,41 @@ fun BottomSheetPlayer(
 
             Spacer(Modifier.height(24.dp))
 
-            when (sliderStyle) {
-                SliderStyle.DEFAULT -> {
-                    Slider(
-                        value = (sliderPosition ?: effectivePosition).toFloat(),
-                        valueRange = 0f..(if (duration == C.TIME_UNSET) 0f else duration.toFloat()),
-                        onValueChange = {
-                            sliderPosition = it.toLong()
-                        },
-                        onValueChangeFinished = {
-                            sliderPosition?.let {
-                                if (isCasting) {
-                                    castHandler?.seekTo(it)
-                                    lastManualSeekTime = System.currentTimeMillis()
-                                } else {
-                                    playerConnection.player.seekTo(it)
-                                }
-                                position = it
-                            }
-                            sliderPosition = null
-                        },
-                        colors = PlayerSliderColors.getSliderColors(textButtonColor, playerBackground, useDarkTheme),
-                        modifier = Modifier.padding(horizontal = PlayerHorizontalPadding),
-                    )
-                }
-
-                SliderStyle.WAVY -> {
-                    if (squigglySlider) {
-                        SquigglySlider(
-                            value = (sliderPosition ?: effectivePosition).toFloat(),
-                            valueRange = 0f..(if (duration == C.TIME_UNSET) 0f else duration.toFloat()),
-                            onValueChange = {
-                                sliderPosition = it.toLong()
-                            },
-                            onValueChangeFinished = {
-                                sliderPosition?.let {
-                                    if (isCasting) {
-                                        castHandler?.seekTo(it)
-                                        lastManualSeekTime = System.currentTimeMillis()
-                                    } else {
-                                        playerConnection.player.seekTo(it)
-                                    }
-                                    position = it
-                                }
-                                sliderPosition = null
-                            },
-                            modifier = Modifier.padding(horizontal = PlayerHorizontalPadding),
-                            colors = PlayerSliderColors.getSliderColors(textButtonColor, playerBackground, useDarkTheme),
-                            isPlaying = effectiveIsPlaying,
-                        )
-                    } else {
-                        WavySlider(
-                            value = (sliderPosition ?: effectivePosition).toFloat(),
-                            valueRange = 0f..(if (duration == C.TIME_UNSET) 0f else duration.toFloat()),
-                            onValueChange = {
-                                sliderPosition = it.toLong()
-                            },
-                            onValueChangeFinished = {
-                                sliderPosition?.let {
-                                    if (isCasting) {
-                                        castHandler?.seekTo(it)
-                                        lastManualSeekTime = System.currentTimeMillis()
-                                    } else {
-                                        playerConnection.player.seekTo(it)
-                                    }
-                                    position = it
-                                }
-                                sliderPosition = null
-                            },
-                            colors = PlayerSliderColors.getSliderColors(textButtonColor, playerBackground, useDarkTheme),
-                            modifier = Modifier.padding(horizontal = PlayerHorizontalPadding),
-                            isPlaying = effectiveIsPlaying,
-                        )
-                    }
-                }
-
-                SliderStyle.SLIM -> {
-                    Slider(
-                        value = (sliderPosition ?: effectivePosition).toFloat(),
-                        valueRange = 0f..(if (duration == C.TIME_UNSET) 0f else duration.toFloat()),
-                        onValueChange = {
-                            sliderPosition = it.toLong()
-                        },
-                        onValueChangeFinished = {
-                            sliderPosition?.let {
-                                if (isCasting) {
-                                    castHandler?.seekTo(it)
-                                    lastManualSeekTime = System.currentTimeMillis()
-                                } else {
-                                    playerConnection.player.seekTo(it)
-                                }
-                                position = it
-                            }
-                            sliderPosition = null
-                        },
-                        thumb = { Spacer(modifier = Modifier.size(0.dp)) },
-                        track = { sliderState ->
-                            PlayerSliderTrack(
-                                sliderState = sliderState,
-                                colors = PlayerSliderColors.getSliderColors(textButtonColor, playerBackground, useDarkTheme),
-                            )
-                        },
-                        modifier = Modifier.padding(horizontal = PlayerHorizontalPadding),
-                    )
-                }
+            val sliderColors = PlayerSliderColors.getSliderColors(textButtonColor, playerBackground, useDarkTheme)
+            val sliderValue = (sliderPosition ?: effectivePosition).toFloat()
+            val sliderValueRange = 0f..(if (duration == C.TIME_UNSET) 0f else duration.toFloat())
+            val onSliderValueChange: (Float) -> Unit = {
+                sliderPosition = it.toLong()
             }
+            val onSliderValueChangeFinished: () -> Unit = {
+                sliderPosition?.let {
+                    if (isCasting) {
+                        castHandler?.seekTo(it)
+                        lastManualSeekTime = System.currentTimeMillis()
+                    } else {
+                        playerConnection.player.seekTo(it)
+                    }
+                    position = it
+                }
+                sliderPosition = null
+            }
+
+            Slider(
+                value = sliderValue,
+                valueRange = sliderValueRange,
+                onValueChange = onSliderValueChange,
+                onValueChangeFinished = onSliderValueChangeFinished,
+                thumb = { Spacer(modifier = Modifier.size(0.dp)) },
+                track = { sliderState ->
+                    PlayerSliderTrack(
+                        sliderState = sliderState,
+                        colors = sliderColors,
+                        style = sliderStyle,
+                        trackHeight = 3.dp,
+                    )
+                },
+                modifier = Modifier.padding(horizontal = PlayerHorizontalPadding),
+            )
 
             Spacer(Modifier.height(4.dp))
 

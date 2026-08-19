@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Mixora Project (C) 2026
  * Licensed under GPL-3.0 | See git history for contributors
  */
@@ -15,7 +15,7 @@ import com.pokerlanka.mixora.constants.PlayerBackgroundStyle
 /**
  * Player slider color configuration for consistent styling across all slider types
  * 
- * This object provides standardized color schemes for Default, Squiggly, and Slim sliders
+ * This object provides standardized color schemes for Slim, Ball, and Line sliders
  * used in the music player interface, ensuring visual consistency and proper contrast.
  */
 object PlayerSliderColors {
