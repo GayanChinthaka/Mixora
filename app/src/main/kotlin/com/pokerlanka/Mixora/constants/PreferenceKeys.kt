@@ -167,7 +167,6 @@ val EnableSongCacheKey = booleanPreferencesKey("enableSongCache")
 
 val PauseListenHistoryKey = booleanPreferencesKey("pauseListenHistory")
 val PauseSearchHistoryKey = booleanPreferencesKey("pauseSearchHistory")
-val DisableScreenshotKey = booleanPreferencesKey("disableScreenshot")
 
 // Stream sources — which innertube clients are used for stream resolution (Settings → Stream sources).
 val StreamSourceWebRemixKey = booleanPreferencesKey("streamSourceWebRemix")

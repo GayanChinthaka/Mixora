@@ -136,7 +136,6 @@ import com.pokerlanka.innertube.models.WatchEndpoint
 import com.pokerlanka.mixora.constants.AppBarHeight
 import com.pokerlanka.mixora.constants.DarkModeKey
 import com.pokerlanka.mixora.constants.DefaultOpenTabKey
-import com.pokerlanka.mixora.constants.DisableScreenshotKey
 import com.pokerlanka.mixora.constants.DynamicThemeKey
 import com.pokerlanka.mixora.constants.ExperimentalLyricsKey
 import com.pokerlanka.mixora.constants.LastSeenVersionKey
@@ -358,22 +357,6 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         window.decorView.layoutDirection = View.LAYOUT_DIRECTION_LTR
         WindowCompat.setDecorFitsSystemWindows(window, false)
-
-        lifecycleScope.launch {
-            dataStore.data
-                .map { it[DisableScreenshotKey] ?: false }
-                .distinctUntilChanged()
-                .collectLatest {
-                    if (it) {
-                        window.setFlags(
-                            WindowManager.LayoutParams.FLAG_SECURE,
-                            WindowManager.LayoutParams.FLAG_SECURE,
-                        )
-                    } else {
-                        window.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
-                    }
-                }
-        }
 
         // Defer migration and version tracking to avoid blocking first frame
         lifecycleScope.launch(Dispatchers.IO) {

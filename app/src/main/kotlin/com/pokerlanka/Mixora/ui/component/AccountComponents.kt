@@ -85,6 +85,7 @@ fun TokenEditorDialog(
         """.trimIndent()
 
     TextFieldDialog(
+        title = { Text("Advanced Login") },
         initialTextFieldValue = TextFieldValue(text),
         onDone = { data ->
             data.split("\n").forEach {

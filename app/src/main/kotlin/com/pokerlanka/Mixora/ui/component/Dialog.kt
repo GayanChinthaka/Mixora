@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Mixora Project (C) 2026
  * Licensed under GPL-3.0 | See git history for contributors
  */
@@ -149,7 +149,7 @@ fun DefaultDialog(
 @Composable
 fun AccountSettingsDialog(
     onDismiss: () -> Unit,
-    latestVersionName: String,
+    latestVersionName: String = "",
 ) {
     val navController = LocalNavController.current
     Dialog(
@@ -184,7 +184,6 @@ fun AccountSettingsDialog(
                 AccountSettings(
                     navController = navController,
                     onClose = onDismiss,
-                    latestVersionName = latestVersionName,
                 )
             }
         }
@@ -359,7 +358,7 @@ fun TextFieldDialog(
         },
     ) {
         Column(
-            modifier = Modifier.weight(weight = 1f, fill = false),
+            modifier = Modifier.fillMaxWidth(),
         ) {
             if (textFields != null) {
                 textFields.forEachIndexed { index, (label, value) ->

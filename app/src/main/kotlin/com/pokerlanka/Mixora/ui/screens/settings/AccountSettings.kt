@@ -87,7 +87,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import coil3.compose.AsyncImage
 import com.pokerlanka.innertube.utils.parseCookieString
-import com.pokerlanka.mixora.BuildConfig
 import com.pokerlanka.mixora.LocalPlayerAwareWindowInsets
 import com.pokerlanka.mixora.R
 import com.pokerlanka.mixora.constants.AccountChannelHandleKey
@@ -123,7 +122,7 @@ private data class SavedAccountCollection(
 fun AccountSettings(
     navController: NavController,
     onClose: () -> Unit = { navController.navigateUp() },
-    latestVersionName: String,
+    latestVersionName: String = "",
 ) {
     val context = LocalContext.current
     val scrollBehavior = appBarScrollBehavior()
@@ -274,13 +273,8 @@ fun AccountSettings(
                                 navController.navigate("login")
                             }
                         },
-                        onSecondaryAction = {
-                            if (isLoggedIn) {
-                                onInnerTubeCookieChange("")
-                            } else {
-                                showTokenEditor = true
-                            }
-                        },
+                        onSecondaryAction = { showTokenEditor = true },
+                        onLogout = { onInnerTubeCookieChange("") },
                         onOpenAccountSwitcher = { showAccountSwitcher = true },
                     )
                 }
@@ -323,7 +317,7 @@ fun AccountSettings(
                             subtitle = "Manage external service integrations",
                             onClick = { navController.navigate("settings/integrations") },
                             index = 0,
-                            count = 3,
+                            count = 2,
                         )
                         
                         ExpressiveActionRow(
@@ -332,16 +326,7 @@ fun AccountSettings(
                             subtitle = "Personalized recommendations and search",
                             onClick = { navController.navigate("settings/ai_integration") },
                             index = 1,
-                            count = 3,
-                        )
-
-                        ExpressiveActionRow(
-                            icon = painterResource(R.drawable.group),
-                            title = stringResource(R.string.music_together),
-                            subtitle = "Listen together in real-time with friends",
-                            onClick = { navController.navigate("settings/music_together") },
-                            index = 2,
-                            count = 3,
+                            count = 2,
                         )
                     }
                 }
@@ -354,23 +339,11 @@ fun AccountSettings(
                             subtitle = "Manage your data and privacy settings",
                             onClick = { navController.navigate("settings/privacy") },
                             index = 0,
-                            count = 2,
-                        )
-
-                        ExpressiveActionRow(
-                            icon = painterResource(R.drawable.key),
-                            title = "Advanced Login",
-                            subtitle = "Manual cookie and token management",
-                            onClick = { showTokenEditor = true },
-                            index = 1,
-                            count = 2,
+                            count = 1,
                         )
                     }
                 }
 
-                item {
-                    VersionStamp()
-                }
             }
         }
     }
@@ -421,6 +394,7 @@ private fun AccountSummaryCard(
     accountSwitcherEnabled: Boolean,
     onPrimaryAction: () -> Unit,
     onSecondaryAction: () -> Unit,
+    onLogout: () -> Unit = {},
     onOpenAccountSwitcher: () -> Unit,
 ) {
     Card(
@@ -566,21 +540,26 @@ private fun AccountSummaryCard(
                     },
                 )
 
-                TextButton(
-                    onClick = onSecondaryAction,
-                    colors =
-                        ButtonDefaults.textButtonColors(
-                            contentColor =
-                                if (isLoggedIn) {
-                                    MaterialTheme.colorScheme.error
-                                } else {
-                                    MaterialTheme.colorScheme.primary
-                                },
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    TextButton(
+                        onClick = onSecondaryAction,
+                        colors = ButtonDefaults.textButtonColors(
+                            contentColor = MaterialTheme.colorScheme.primary
                         ),
-                ) {
-                    Text(
-                        text = if (isLoggedIn) stringResource(R.string.action_logout) else "Advanced Login",
-                    )
+                    ) {
+                        Text(text = "Advanced Login")
+                    }
+
+                    if (isLoggedIn) {
+                        TextButton(
+                            onClick = onLogout,
+                            colors = ButtonDefaults.textButtonColors(
+                                contentColor = MaterialTheme.colorScheme.error
+                            ),
+                        ) {
+                            Text(text = stringResource(R.string.action_logout))
+                        }
+                    }
                 }
             }
         }
@@ -933,26 +912,4 @@ private fun ExpressiveRowIcon(
     }
 }
 
-@Composable
-private fun VersionStamp() {
-    Column(
-        modifier =
-            Modifier
-                .fillMaxWidth()
-                .padding(top = 8.dp, bottom = 12.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(2.dp),
-    ) {
-        Text(
-            text = stringResource(R.string.app_name),
-            style = MaterialTheme.typography.labelMedium,
-            fontWeight = FontWeight.SemiBold,
-            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.60f),
-        )
-        Text(
-            text = "v${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})",
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.40f),
-        )
-    }
-}
+

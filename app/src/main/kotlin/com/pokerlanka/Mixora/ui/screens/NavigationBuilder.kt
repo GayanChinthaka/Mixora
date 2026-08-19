@@ -384,8 +384,7 @@ fun NavGraphBuilder.navigationBuilder(
 
     composable("settings/account") {
         AccountSettings(
-            navController = navController,
-            latestVersionName = latestVersionName
+            navController = navController
         )
     }
 

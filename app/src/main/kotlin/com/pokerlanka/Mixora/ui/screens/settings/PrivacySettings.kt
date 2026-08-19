@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Mixora Project (C) 2026
  * Licensed under GPL-3.0 | See git history for contributors
  */
@@ -35,7 +35,6 @@ import androidx.navigation.NavController
 import com.pokerlanka.mixora.LocalDatabase
 import com.pokerlanka.mixora.LocalPlayerAwareWindowInsets
 import com.pokerlanka.mixora.R
-import com.pokerlanka.mixora.constants.DisableScreenshotKey
 import com.pokerlanka.mixora.constants.PauseListenHistoryKey
 import com.pokerlanka.mixora.constants.PauseSearchHistoryKey
 import com.pokerlanka.mixora.ui.component.DefaultDialog
@@ -57,10 +56,6 @@ fun PrivacySettings(
     )
     val (pauseSearchHistory, onPauseSearchHistoryChange) = rememberPreference(
         key = PauseSearchHistoryKey,
-        defaultValue = false
-    )
-    val (disableScreenshot, onDisableScreenshotChange) = rememberPreference(
-        key = DisableScreenshotKey,
         defaultValue = false
     )
 
@@ -216,34 +211,6 @@ fun PrivacySettings(
             )
         )
 
-        Spacer(modifier = Modifier.height(27.dp))
-
-        Material3SettingsGroup(
-            title = stringResource(R.string.misc),
-            items = listOf(
-                Material3SettingsItem(
-                    icon = painterResource(R.drawable.screenshot),
-                    title = { Text(stringResource(R.string.disable_screenshot)) },
-                    description = { Text(stringResource(R.string.disable_screenshot_desc)) },
-                    trailingContent = {
-                        Switch(
-                            checked = disableScreenshot,
-                            onCheckedChange = onDisableScreenshotChange,
-                            thumbContent = {
-                                Icon(
-                                    painter = painterResource(
-                                        id = if (disableScreenshot) R.drawable.check else R.drawable.close
-                                    ),
-                                    contentDescription = null,
-                                    modifier = Modifier.size(androidx.compose.material3.SwitchDefaults.IconSize)
-                                )
-                            }
-                        )
-                    },
-                    onClick = { onDisableScreenshotChange(!disableScreenshot) }
-                )
-            )
-        )
         Spacer(modifier = Modifier.height(16.dp))
     }
 
