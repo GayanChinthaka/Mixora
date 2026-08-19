@@ -134,8 +134,10 @@ import com.pokerlanka.innertube.YouTube
 import com.pokerlanka.innertube.models.SongItem
 import com.pokerlanka.innertube.models.WatchEndpoint
 import com.pokerlanka.mixora.constants.AppBarHeight
+import com.pokerlanka.mixora.constants.CustomThemeColorKey
 import com.pokerlanka.mixora.constants.DarkModeKey
 import com.pokerlanka.mixora.constants.DefaultOpenTabKey
+import com.pokerlanka.mixora.constants.DisableAnimationsKey
 import com.pokerlanka.mixora.constants.DynamicThemeKey
 import com.pokerlanka.mixora.constants.ExperimentalLyricsKey
 import com.pokerlanka.mixora.constants.LastSeenVersionKey
@@ -149,6 +151,7 @@ import com.pokerlanka.mixora.constants.PauseSearchHistoryKey
 import com.pokerlanka.mixora.constants.PreferredLyricsProvider
 import com.pokerlanka.mixora.constants.PreferredLyricsProviderKey
 import com.pokerlanka.mixora.constants.PureBlackKey
+import com.pokerlanka.mixora.constants.RandomThemeOnStartupKey
 import com.pokerlanka.mixora.constants.SYSTEM_DEFAULT
 import com.pokerlanka.mixora.constants.SelectedThemeColorKey
 import com.pokerlanka.mixora.constants.SimpMusicMigrationDoneKey
@@ -163,6 +166,9 @@ import com.pokerlanka.mixora.models.toMediaMetadata
 import com.pokerlanka.mixora.playback.DownloadUtil
 import com.pokerlanka.mixora.playback.MusicService
 import com.pokerlanka.mixora.playback.MusicService.MusicBinder
+import com.pokerlanka.mixora.ui.theme.ThemePalettes
+import com.pokerlanka.mixora.ui.theme.ThemeSeedPaletteCodec
+import com.pokerlanka.mixora.ui.theme.toSeedPalette
 import com.pokerlanka.mixora.playback.PlayerConnection
 import com.pokerlanka.mixora.playback.queues.YouTubeQueue
 import com.pokerlanka.mixora.ui.component.AppNavigationBar
@@ -447,22 +453,43 @@ class MainActivity : ComponentActivity() {
         val (selectedThemeColorInt) = rememberPreference(SelectedThemeColorKey, defaultValue = DefaultThemeColor.toArgb())
         val selectedThemeColor = Color(selectedThemeColorInt)
 
+        val (customThemeColor, onCustomThemeColorChange) = rememberPreference(CustomThemeColorKey, defaultValue = ThemePalettes.Default.id)
+        val (randomThemeOnStartup) = rememberPreference(RandomThemeOnStartupKey, defaultValue = false)
+        val disableAnimations by rememberPreference(DisableAnimationsKey, defaultValue = false)
+
+        LaunchedEffect(Unit) {
+            if (randomThemeOnStartup && !enableDynamicTheme) {
+                val randomPalette = ThemePalettes.getRandomPalette()
+                onCustomThemeColorChange(randomPalette.id)
+            }
+        }
+
+        val currentSeedPalette = remember(customThemeColor, enableDynamicTheme) {
+            if (!enableDynamicTheme) {
+                ThemeSeedPaletteCodec.decodeFromPreference(customThemeColor)
+                    ?: ThemePalettes.findById(customThemeColor)?.toSeedPalette()
+                    ?: ThemePalettes.findByPrimaryColor(customThemeColor)?.toSeedPalette()
+            } else {
+                null
+            }
+        }
+
         var themeColor by rememberSaveable(stateSaver = ColorSaver) {
-            mutableStateOf(selectedThemeColor)
+            mutableStateOf(currentSeedPalette?.primary ?: selectedThemeColor)
         }
 
         val themeColorCache = remember { mutableMapOf<String, Color>() }
 
-        LaunchedEffect(selectedThemeColor) {
+        LaunchedEffect(selectedThemeColor, currentSeedPalette) {
             if (!enableDynamicTheme) {
-                themeColor = selectedThemeColor
+                themeColor = currentSeedPalette?.primary ?: selectedThemeColor
             }
         }
 
-        LaunchedEffect(playerConnection, enableDynamicTheme, selectedThemeColor) {
+        LaunchedEffect(playerConnection, enableDynamicTheme, selectedThemeColor, currentSeedPalette) {
             val playerConnection = playerConnection
             if (!enableDynamicTheme || playerConnection == null) {
-                themeColor = selectedThemeColor
+                themeColor = currentSeedPalette?.primary ?: selectedThemeColor
                 return@LaunchedEffect
             }
 
@@ -500,7 +527,7 @@ class MainActivity : ComponentActivity() {
                             }
                         }
                     } else {
-                        themeColor = selectedThemeColor
+                        themeColor = currentSeedPalette?.primary ?: selectedThemeColor
                     }
                 }
         }
@@ -509,6 +536,8 @@ class MainActivity : ComponentActivity() {
             darkTheme = useDarkTheme,
             pureBlack = pureBlack,
             themeColor = themeColor,
+            seedPalette = currentSeedPalette,
+            disableAnimations = disableAnimations,
         ) {
             val currentDensity = LocalDensity.current
             val windowInfo = LocalWindowInfo.current

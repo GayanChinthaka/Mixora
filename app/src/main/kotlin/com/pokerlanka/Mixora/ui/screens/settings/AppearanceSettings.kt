@@ -58,6 +58,8 @@ import com.pokerlanka.mixora.LocalPlayerAwareWindowInsets
 import com.pokerlanka.mixora.R
 import com.pokerlanka.mixora.constants.ChipSortTypeKey
 import com.pokerlanka.mixora.constants.CropAlbumArtKey
+import com.pokerlanka.mixora.constants.CustomThemeColorKey
+import com.pokerlanka.mixora.constants.DarkModeKey
 import com.pokerlanka.mixora.constants.DefaultOpenTabKey
 import com.pokerlanka.mixora.constants.DensityScale
 import com.pokerlanka.mixora.constants.DensityScaleKey
@@ -65,6 +67,9 @@ import com.pokerlanka.mixora.constants.DynamicThemeKey
 import com.pokerlanka.mixora.constants.EnableHighRefreshRateKey
 import com.pokerlanka.mixora.constants.EnableLandscapeScalingKey
 import com.pokerlanka.mixora.constants.ExperimentalLyricsKey
+import com.pokerlanka.mixora.ui.theme.ThemePalettes
+import com.pokerlanka.mixora.ui.theme.ThemeSeedPaletteCodec
+import com.pokerlanka.mixora.ui.theme.toThemePalette
 import com.pokerlanka.mixora.constants.GridItemSize
 import com.pokerlanka.mixora.constants.GridItemsSizeKey
 import com.pokerlanka.mixora.constants.HidePlayerThumbnailKey
@@ -126,6 +131,16 @@ fun AppearanceSettings(
     activity: Activity,
     snackbarHostState: SnackbarHostState,
 ) {
+    val (darkMode) =
+        rememberEnumPreference(
+            DarkModeKey,
+            defaultValue = DarkMode.AUTO,
+        )
+    val (customThemeColor) =
+        rememberPreference(
+            CustomThemeColorKey,
+            defaultValue = ThemePalettes.Default.id,
+        )
     val (defaultOpenTab, onDefaultOpenTabChange) =
         rememberEnumPreference(
             DefaultOpenTabKey,
@@ -595,15 +610,43 @@ fun AppearanceSettings(
             .verticalScroll(rememberScrollState())
             .padding(horizontal = 16.dp),
     ) {
+        val themeModeDesc =
+            when (darkMode) {
+                DarkMode.AUTO -> stringResource(R.string.theme_system_default)
+                DarkMode.ON -> stringResource(R.string.theme_dark)
+                DarkMode.OFF -> stringResource(R.string.theme_light)
+            }
+
+        val paletteName =
+            remember(customThemeColor) {
+                val custom = ThemeSeedPaletteCodec.decodeFromPreference(customThemeColor)?.toThemePalette()
+                val palette =
+                    custom
+                        ?: ThemePalettes.findById(customThemeColor)
+                        ?: ThemePalettes.findByPrimaryColor(customThemeColor)
+                        ?: ThemePalettes.Default
+                if (palette.id.startsWith("custom") || palette.id.startsWith("random_") || customThemeColor.startsWith("seedPalette:")) {
+                    ThemeSeedPaletteCodec.extractNameFromPreference(customThemeColor) ?: context.getString(R.string.palette_custom)
+                } else {
+                    context.getString(palette.nameResId)
+                }
+            }
+
         Material3SettingsGroup(
             title = stringResource(R.string.theme),
             items =
                 listOf(
                     Material3SettingsItem(
-                        icon = painterResource(R.drawable.palette),
+                        icon = painterResource(R.drawable.dark_mode),
                         title = { Text(stringResource(R.string.theme)) },
-                        description = { Text(stringResource(R.string.theme_desc)) },
+                        description = { Text(themeModeDesc) },
                         onClick = { navController.navigate("settings/appearance/theme") },
+                    ),
+                    Material3SettingsItem(
+                        icon = painterResource(R.drawable.format_paint),
+                        title = { Text(stringResource(R.string.color_palette)) },
+                        description = { Text(paletteName) },
+                        onClick = { navController.navigate("settings/appearance/palette_picker") },
                     ),
                 ),
         )

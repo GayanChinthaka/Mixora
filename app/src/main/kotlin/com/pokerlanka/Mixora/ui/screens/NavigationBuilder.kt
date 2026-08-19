@@ -52,6 +52,7 @@ import com.pokerlanka.mixora.ui.screens.settings.DarkMode
 import com.pokerlanka.mixora.ui.screens.settings.InternetSettings
 import com.pokerlanka.mixora.ui.screens.settings.LyricsSettings
 import com.pokerlanka.mixora.ui.screens.settings.MusicTogetherScreen
+import com.pokerlanka.mixora.ui.screens.settings.PalettePickerScreen
 import com.pokerlanka.mixora.ui.screens.settings.PlayerSettings
 import com.pokerlanka.mixora.ui.screens.settings.PoTokenGenerationScreen
 import com.pokerlanka.mixora.ui.screens.settings.PrivacySettings
@@ -346,6 +347,14 @@ fun NavGraphBuilder.navigationBuilder(
 
     composable("settings/appearance/theme") {
         ThemeScreen(navController)
+    }
+
+    composable("settings/appearance/palette_picker") {
+        PalettePickerScreen(navController)
+    }
+
+    composable("settings/appearance/skin") {
+        PalettePickerScreen(navController)
     }
 
     composable("settings/content") {
