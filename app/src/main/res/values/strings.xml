@@ -463,6 +463,7 @@
     <string name="theme_system_default">System default</string>
     <string name="theme_dark">Dark</string>
     <string name="theme_light">Light</string>
+    <string name="dark_mode">Dark mode</string>
     <string name="theme_mode_desc">Choose between system, dark, or light appearance</string>
     <string name="color_palette_desc">Choose or create a customized color palette</string>
     <string name="customize_theme_colors">Customize theme colors &amp; accents</string>
@@ -486,6 +487,7 @@
     <string name="disable_blur_desc">Reduces GPU usage and improves performance on low-end devices</string>
     <string name="disable_animations">Disable animations</string>
     <string name="disable_animations_desc">Turn off UI animations for higher performance</string>
+    <string name="blur_and_animation">Blur &amp; Animation</string>
     <string name="force_high_refresh_rate">Force high refresh rate</string>
     <string name="max_supported_refresh_rate">Force the display to use its maximum supported refresh rate</string>
     <string name="primary_seed">Primary</string>

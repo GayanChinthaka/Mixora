@@ -107,6 +107,7 @@ import kotlin.math.absoluteValue
 import kotlin.math.roundToInt
 import com.pokerlanka.mixora.ui.component.Icon as MIcon
 import androidx.compose.ui.draw.blur
+import com.pokerlanka.mixora.constants.DisableBlurKey
 import com.pokerlanka.mixora.constants.MiniPlayerBackgroundStyle
 import com.pokerlanka.mixora.constants.MiniPlayerBackgroundStyleKey
 import androidx.compose.runtime.LaunchedEffect
@@ -203,6 +204,7 @@ private fun NewMiniPlayer(
     // Swipe settings
     val swipeSensitivity by rememberPreference(SwipeSensitivityKey, 0.73f)
     val swipeThumbnail by rememberPreference(SwipeThumbnailKey, true)
+    val (disableBlur) = rememberPreference(DisableBlurKey, false)
 
     val layoutDirection = LocalLayoutDirection.current
     val coroutineScope = rememberCoroutineScope()
@@ -382,7 +384,7 @@ private fun NewMiniPlayer(
                                 contentScale = ContentScale.Crop,
                                 modifier = Modifier
                                     .fillMaxSize()
-                                    .blur(60.dp),
+                                    .let { if (disableBlur) it else it.blur(60.dp) },
                             )
                             Box(
                                 Modifier

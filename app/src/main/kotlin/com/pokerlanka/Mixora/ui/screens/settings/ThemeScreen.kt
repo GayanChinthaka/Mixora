@@ -5,9 +5,6 @@
 
 package com.pokerlanka.mixora.ui.screens.settings
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -20,7 +17,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -30,8 +26,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.RadioButton
-import androidx.compose.material3.RadioButtonDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
@@ -50,13 +44,10 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.pokerlanka.mixora.LocalPlayerAwareWindowInsets
 import com.pokerlanka.mixora.R
 import com.pokerlanka.mixora.constants.DarkModeKey
 import com.pokerlanka.mixora.constants.DisableAnimationsKey
 import com.pokerlanka.mixora.constants.DisableBlurKey
-import com.pokerlanka.mixora.constants.DynamicThemeKey
-import com.pokerlanka.mixora.constants.EnableHighRefreshRateKey
 import com.pokerlanka.mixora.constants.PureBlackKey
 import com.pokerlanka.mixora.ui.component.Material3SettingsGroup
 import com.pokerlanka.mixora.ui.component.Material3SettingsItem
@@ -86,12 +77,6 @@ fun ThemeScreen(
             defaultValue = false,
         )
 
-    val (dynamicTheme, onDynamicThemeChange) =
-        rememberPreference(
-            DynamicThemeKey,
-            defaultValue = true,
-        )
-
     val (disableBlur, onDisableBlurChange) =
         rememberPreference(
             DisableBlurKey,
@@ -101,12 +86,6 @@ fun ThemeScreen(
     val (disableAnimations, onDisableAnimationsChange) =
         rememberPreference(
             DisableAnimationsKey,
-            defaultValue = false,
-        )
-
-    val (forceHighRefreshRate, onForceHighRefreshRateChange) =
-        rememberPreference(
-            EnableHighRefreshRateKey,
             defaultValue = false,
         )
 
@@ -174,31 +153,12 @@ fun ThemeScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Appearance & Effects Group
-            Material3SettingsGroup(
-                title = stringResource(R.string.theme_colors),
-                items =
-                    listOfNotNull(
-                        Material3SettingsItem(
-                            icon = painterResource(R.drawable.palette),
-                            title = { Text(stringResource(R.string.enable_dynamic_theme)) },
-                            description = { Text(stringResource(R.string.dynamic_theme_desc)) },
-                            trailingContent = {
-                                Switch(
-                                    checked = dynamicTheme,
-                                    onCheckedChange = onDynamicThemeChange,
-                                    thumbContent = {
-                                        Icon(
-                                            painter = painterResource(if (dynamicTheme) R.drawable.check else R.drawable.close),
-                                            contentDescription = null,
-                                            modifier = Modifier.size(SwitchDefaults.IconSize),
-                                        )
-                                    },
-                                )
-                            },
-                            onClick = { onDynamicThemeChange(!dynamicTheme) },
-                        ),
-                        if (isDarkThemeActive) {
+            // Pure Black option if Dark Mode active
+            if (isDarkThemeActive) {
+                Material3SettingsGroup(
+                    title = stringResource(R.string.dark_mode),
+                    items =
+                        listOf(
                             Material3SettingsItem(
                                 icon = painterResource(R.drawable.contrast),
                                 title = { Text(stringResource(R.string.pure_black)) },
@@ -217,8 +177,18 @@ fun ThemeScreen(
                                     )
                                 },
                                 onClick = { onPureBlackChange(!pureBlack) },
-                            )
-                        } else null,
+                            ),
+                        ),
+                )
+
+                Spacer(modifier = Modifier.height(20.dp))
+            }
+
+            // Blur & Animation Group
+            Material3SettingsGroup(
+                title = stringResource(R.string.blur_and_animation),
+                items =
+                    listOf(
                         Material3SettingsItem(
                             icon = painterResource(R.drawable.blur_off),
                             title = { Text(stringResource(R.string.disable_blur)) },
@@ -256,25 +226,6 @@ fun ThemeScreen(
                                 )
                             },
                             onClick = { onDisableAnimationsChange(!disableAnimations) },
-                        ),
-                        Material3SettingsItem(
-                            icon = painterResource(R.drawable.speed),
-                            title = { Text(stringResource(R.string.force_high_refresh_rate)) },
-                            description = { Text(stringResource(R.string.max_supported_refresh_rate)) },
-                            trailingContent = {
-                                Switch(
-                                    checked = forceHighRefreshRate,
-                                    onCheckedChange = onForceHighRefreshRateChange,
-                                    thumbContent = {
-                                        Icon(
-                                            painter = painterResource(if (forceHighRefreshRate) R.drawable.check else R.drawable.close),
-                                            contentDescription = null,
-                                            modifier = Modifier.size(SwitchDefaults.IconSize),
-                                        )
-                                    },
-                                )
-                            },
-                            onClick = { onForceHighRefreshRateChange(!forceHighRefreshRate) },
                         ),
                     ),
             )

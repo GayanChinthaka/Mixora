@@ -64,7 +64,6 @@ import com.pokerlanka.mixora.constants.DefaultOpenTabKey
 import com.pokerlanka.mixora.constants.DensityScale
 import com.pokerlanka.mixora.constants.DensityScaleKey
 import com.pokerlanka.mixora.constants.DynamicThemeKey
-import com.pokerlanka.mixora.constants.EnableHighRefreshRateKey
 import com.pokerlanka.mixora.constants.EnableLandscapeScalingKey
 import com.pokerlanka.mixora.constants.ExperimentalLyricsKey
 import com.pokerlanka.mixora.ui.theme.ThemePalettes

@@ -151,7 +151,6 @@ import com.pokerlanka.mixora.constants.PauseSearchHistoryKey
 import com.pokerlanka.mixora.constants.PreferredLyricsProvider
 import com.pokerlanka.mixora.constants.PreferredLyricsProviderKey
 import com.pokerlanka.mixora.constants.PureBlackKey
-import com.pokerlanka.mixora.constants.RandomThemeOnStartupKey
 import com.pokerlanka.mixora.constants.SYSTEM_DEFAULT
 import com.pokerlanka.mixora.constants.SelectedThemeColorKey
 import com.pokerlanka.mixora.constants.SimpMusicMigrationDoneKey
@@ -420,19 +419,6 @@ class MainActivity : ComponentActivity() {
     ) {
         val enableDynamicTheme by rememberPreference(DynamicThemeKey, defaultValue = true)
 
-        LaunchedEffect(Unit) {
-            val window = this@MainActivity.window
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                val layoutParams = window.attributes
-                layoutParams.preferredDisplayModeId = 0
-                window.attributes = layoutParams
-            } else {
-                val params = window.attributes
-                params.preferredRefreshRate = 0f
-                window.attributes = params
-            }
-        }
-
         val darkTheme by rememberEnumPreference(DarkModeKey, defaultValue = DarkMode.AUTO)
         val isSystemInDarkTheme = isSystemInDarkTheme()
         val useDarkTheme =
@@ -453,16 +439,8 @@ class MainActivity : ComponentActivity() {
         val (selectedThemeColorInt) = rememberPreference(SelectedThemeColorKey, defaultValue = DefaultThemeColor.toArgb())
         val selectedThemeColor = Color(selectedThemeColorInt)
 
-        val (customThemeColor, onCustomThemeColorChange) = rememberPreference(CustomThemeColorKey, defaultValue = ThemePalettes.Default.id)
-        val (randomThemeOnStartup) = rememberPreference(RandomThemeOnStartupKey, defaultValue = false)
+        val (customThemeColor) = rememberPreference(CustomThemeColorKey, defaultValue = ThemePalettes.Default.id)
         val disableAnimations by rememberPreference(DisableAnimationsKey, defaultValue = false)
-
-        LaunchedEffect(Unit) {
-            if (randomThemeOnStartup && !enableDynamicTheme) {
-                val randomPalette = ThemePalettes.getRandomPalette()
-                onCustomThemeColorChange(randomPalette.id)
-            }
-        }
 
         val currentSeedPalette = remember(customThemeColor, enableDynamicTheme) {
             if (!enableDynamicTheme) {

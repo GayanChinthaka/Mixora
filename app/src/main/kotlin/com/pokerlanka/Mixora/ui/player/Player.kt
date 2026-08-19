@@ -143,6 +143,7 @@ import com.pokerlanka.mixora.LocalPlayerConnection
 import com.pokerlanka.mixora.R
 import com.pokerlanka.mixora.constants.CropAlbumArtKey
 import com.pokerlanka.mixora.constants.DarkModeKey
+import com.pokerlanka.mixora.constants.DisableBlurKey
 import com.pokerlanka.mixora.constants.HidePlayerThumbnailKey
 import com.pokerlanka.mixora.constants.HideStatusBarOnFullscreenKey
 import com.pokerlanka.mixora.constants.KeepScreenOn
@@ -249,6 +250,7 @@ fun BottomSheetPlayer(
 
     val isPlaying by playerConnection.isPlaying.collectAsState()
     val isKeepScreenOn by rememberPreference(KeepScreenOn, false)
+    val (disableBlur) = rememberPreference(DisableBlurKey, false)
     val keepScreenOn = isPlaying && isKeepScreenOn
 
     DisposableEffect(playerBackground, state.isExpanded, useDarkTheme, keepScreenOn, isFullScreen, hideStatusBarOnFullscreen) {
@@ -849,7 +851,7 @@ fun BottomSheetPlayer(
                                         modifier =
                                             Modifier
                                                 .fillMaxSize()
-                                                .blur(if (useDarkTheme) 150.dp else 100.dp),
+                                                .let { if (disableBlur) it else it.blur(if (useDarkTheme) 150.dp else 100.dp) },
                                     )
                                     Box(
                                         modifier =
