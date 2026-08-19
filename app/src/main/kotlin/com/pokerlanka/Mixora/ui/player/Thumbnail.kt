@@ -79,7 +79,6 @@ import com.pokerlanka.mixora.constants.HidePlayerThumbnailKey
 import com.pokerlanka.mixora.constants.PlayerBackgroundStyle
 import com.pokerlanka.mixora.constants.PlayerBackgroundStyleKey
 import com.pokerlanka.mixora.constants.PlayerHorizontalPadding
-import com.pokerlanka.mixora.constants.SeekExtraSeconds
 import com.pokerlanka.mixora.constants.SwipeThumbnailKey
 import com.pokerlanka.mixora.constants.ThumbnailCornerRadius
 import com.pokerlanka.mixora.ui.component.CastButton
@@ -516,10 +515,6 @@ private fun ThumbnailItem(
     currentMediaThumbnail: String? = null,
     modifier: Modifier = Modifier,
 ) {
-    val incrementalSeekSkipEnabled by rememberPreference(SeekExtraSeconds, defaultValue = false)
-    var skipMultiplier by remember { mutableIntStateOf(1) }
-    var lastTapTime by remember { mutableLongStateOf(0L) }
-
     Box(
         modifier = modifier
             .then(
@@ -560,26 +555,17 @@ private fun ThumbnailItem(
                     onDoubleTap = { offset ->
                         val currentPosition = playerConnection.player.currentPosition
                         val duration = playerConnection.player.duration
-
-                        val now = System.currentTimeMillis()
-                        if (incrementalSeekSkipEnabled && now - lastTapTime < 1000) {
-                            skipMultiplier++
-                        } else {
-                            skipMultiplier = 1
-                        }
-                        lastTapTime = now
-
-                        val skipAmount = 5000 * skipMultiplier
+                        val skipAmount = 5000L
 
                         val isLeftSide = (layoutDirection == LayoutDirection.Ltr && offset.x < size.width / 2) ||
                                 (layoutDirection == LayoutDirection.Rtl && offset.x > size.width / 2)
 
                         if (isLeftSide) {
                             playerConnection.player.seekTo((currentPosition - skipAmount).coerceAtLeast(0))
-                            onSeek(context.getString(R.string.seek_backward_dynamic, skipAmount / 1000), true)
+                            onSeek(context.getString(R.string.seek_backward_dynamic, 5), true)
                         } else {
                             playerConnection.player.seekTo((currentPosition + skipAmount).coerceAtMost(duration))
-                            onSeek(context.getString(R.string.seek_forward_dynamic, skipAmount / 1000), true)
+                            onSeek(context.getString(R.string.seek_forward_dynamic, 5), true)
                         }
                     }
                 )

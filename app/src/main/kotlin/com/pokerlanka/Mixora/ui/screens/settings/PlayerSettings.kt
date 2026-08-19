@@ -1,13 +1,15 @@
-﻿/**
+/**
  * Mixora Project (C) 2026
  * Licensed under GPL-3.0 | See git history for contributors
  */
 
 package com.pokerlanka.mixora.ui.screens.settings
 
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
@@ -16,8 +18,10 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
@@ -31,6 +35,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.pokerlanka.mixora.BuildConfig
@@ -61,7 +66,6 @@ import com.pokerlanka.mixora.constants.PersistentShuffleAcrossQueuesKey
 import com.pokerlanka.mixora.constants.PreventDuplicateTracksInQueueKey
 import com.pokerlanka.mixora.constants.RememberShuffleAndRepeatKey
 import com.pokerlanka.mixora.constants.ResumeOnBluetoothConnectKey
-import com.pokerlanka.mixora.constants.SeekExtraSeconds
 import com.pokerlanka.mixora.constants.ShufflePlaylistFirstKey
 import com.pokerlanka.mixora.constants.SimilarContent
 import com.pokerlanka.mixora.constants.SkipSilenceInstantKey
@@ -90,7 +94,7 @@ import com.pokerlanka.mixora.constants.SleepTimerFadeOutKey
 import com.pokerlanka.mixora.constants.SleepTimerStopAfterCurrentSongKey
 import com.pokerlanka.mixora.ui.utils.getLoudnessLevelLabel
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun PlayerSettings(
     navController: NavController
@@ -151,11 +155,6 @@ fun PlayerSettings(
     val (enableGoogleCast, onEnableGoogleCastChange) = rememberPreference(
         key = EnableGoogleCastKey,
         defaultValue = true
-    )
-
-    val (seekExtraSeconds, onSeekExtraSeconds) = rememberPreference(
-        SeekExtraSeconds,
-        defaultValue = false
     )
 
     val (autoLoadMore, onAutoLoadMoreChange) = rememberPreference(
@@ -328,11 +327,29 @@ fun PlayerSettings(
                         description = {
                             Column {
                                 Text(pluralStringResource(R.plurals.seconds, crossfadeDuration.toInt(), crossfadeDuration.toInt()))
+                                val crossfadeSliderInteractionSource = remember { MutableInteractionSource() }
                                 Slider(
                                     value = crossfadeDuration,
                                     onValueChange = onCrossfadeDurationChange,
                                     valueRange = 1f..15f,
-                                    steps = 14
+                                    steps = 14,
+                                    modifier = Modifier.fillMaxWidth(),
+                                    interactionSource = crossfadeSliderInteractionSource,
+                                    thumb = {
+                                        SliderDefaults.Thumb(
+                                            interactionSource = crossfadeSliderInteractionSource,
+                                            isVertical = false,
+                                            thumbSize = DpSize(4.dp, 20.dp)
+                                        )
+                                    },
+                                    track = { sliderState ->
+                                        SliderDefaults.Track(
+                                            sliderState = sliderState,
+                                            modifier = Modifier.height(6.dp),
+                                            thumbTrackGapSize = 3.dp,
+                                            trackCornerSize = 3.dp
+                                        )
+                                    }
                                 )
                             }
                         }
@@ -364,11 +381,31 @@ fun PlayerSettings(
                     title = { Text(stringResource(R.string.history_duration)) },
                     description = {
                         Column {
-                            Text(historyDuration.roundToInt().toString())
+                            Text(stringResource(R.string.history_duration_desc))
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(pluralStringResource(R.plurals.seconds, historyDuration.roundToInt(), historyDuration.roundToInt()))
+                            val historySliderInteractionSource = remember { MutableInteractionSource() }
                             Slider(
                                 value = historyDuration,
                                 onValueChange = onHistoryDurationChange,
-                                valueRange = 1f..100f
+                                valueRange = 1f..100f,
+                                modifier = Modifier.fillMaxWidth(),
+                                interactionSource = historySliderInteractionSource,
+                                thumb = {
+                                    SliderDefaults.Thumb(
+                                        interactionSource = historySliderInteractionSource,
+                                        isVertical = false,
+                                        thumbSize = DpSize(4.dp, 20.dp)
+                                    )
+                                },
+                                track = { sliderState ->
+                                    SliderDefaults.Track(
+                                        sliderState = sliderState,
+                                        modifier = Modifier.height(6.dp),
+                                        thumbTrackGapSize = 3.dp,
+                                        trackCornerSize = 3.dp
+                                    )
+                                }
                             )
                         }
                     }
@@ -545,27 +582,6 @@ fun PlayerSettings(
                         onClick = { onEnableGoogleCastChange(!enableGoogleCast) }
                     ))
                 }
-                add(Material3SettingsItem(
-                    icon = painterResource(R.drawable.arrow_forward),
-                    title = { Text(stringResource(R.string.seek_seconds_addup)) },
-                    description = { Text(stringResource(R.string.seek_seconds_addup_description)) },
-                    trailingContent = {
-                        Switch(
-                            checked = seekExtraSeconds,
-                            onCheckedChange = onSeekExtraSeconds,
-                            thumbContent = {
-                                Icon(
-                                    painter = painterResource(
-                                        id = if (seekExtraSeconds) R.drawable.check else R.drawable.close
-                                    ),
-                                    contentDescription = null,
-                                    modifier = Modifier.size(SwitchDefaults.IconSize)
-                                )
-                            }
-                        )
-                    },
-                    onClick = { onSeekExtraSeconds(!seekExtraSeconds) }
-                ))
             }
         )
 

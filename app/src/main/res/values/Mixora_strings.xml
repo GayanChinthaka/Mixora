@@ -85,8 +85,6 @@
 
     <string name="seek_forward_dynamic">+%1$d seconds forward</string>
     <string name="seek_backward_dynamic">-%1$d seconds backward</string>
-    <string name="seek_seconds_addup">Progressive seek</string>
-    <string name="seek_seconds_addup_description">When enabled, adds 5 extra seconds incrementally with each seek</string>
 
     <string name="similar_content">Similar content</string>
 
@@ -259,6 +257,7 @@
     <string name="past_year">Past year</string>
     <string name="top_length">My Top list length</string>
     <string name="history_duration">History duration</string>
+    <string name="history_duration_desc">Minimum playback time before a song is added to history and stats.</string>
     <string name="information">Information</string>
     <string name="description">Description</string>
     <string name="views">Views</string>
