@@ -317,16 +317,7 @@ fun AccountSettings(
                             subtitle = "Manage external service integrations",
                             onClick = { navController.navigate("settings/integrations") },
                             index = 0,
-                            count = 2,
-                        )
-                        
-                        ExpressiveActionRow(
-                            icon = painterResource(R.drawable.discover_tune),
-                            title = "AI Integration",
-                            subtitle = "Personalized recommendations and search",
-                            onClick = { navController.navigate("settings/ai_integration") },
-                            index = 1,
-                            count = 2,
+                            count = 1,
                         )
                     }
                 }

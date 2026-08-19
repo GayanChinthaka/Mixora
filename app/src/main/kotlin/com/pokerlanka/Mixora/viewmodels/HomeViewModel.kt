@@ -49,6 +49,7 @@ import com.pokerlanka.mixora.extensions.filterVideoSongs
 import com.pokerlanka.mixora.extensions.toEnum
 import com.pokerlanka.mixora.models.SimilarRecommendation
 import com.pokerlanka.mixora.ui.screens.wrapped.WrappedAudioService
+import com.pokerlanka.mixora.ui.screens.wrapped.WrappedConstants
 import com.pokerlanka.mixora.ui.screens.wrapped.WrappedManager
 import com.pokerlanka.mixora.utils.SavedAccount
 import com.pokerlanka.mixora.utils.SyncUtils
@@ -288,12 +289,19 @@ class HomeViewModel @Inject constructor(
     private val _accountChannelsState = MutableStateFlow<AccountChannelsState>(AccountChannelsState.Empty)
     val accountChannelsState: StateFlow<AccountChannelsState> = _accountChannelsState.asStateFlow()
 
-	val showWrappedCard: StateFlow<Boolean> = context.dataStore.data.map { prefs ->
+    // Close of the year Wrapped summarises; tracks WrappedConstants.YEAR so the window
+    // moves on its own when the Wrapped year is bumped.
+    private val targetDate: LocalDate = LocalDate.of(WrappedConstants.YEAR, 12, 31)
+
+    val showWrappedCard: StateFlow<Boolean> = context.dataStore.data.map { prefs ->
         val showWrappedPref = prefs[ShowWrappedCardKey] ?: false
         val seen = prefs[WrappedSeenKey] ?: false
-        val isBeforeDate = LocalDate.now().isBefore(LocalDate.of(2026, 2, 1))
+        val today = LocalDate.now()
+        val threeMonthsAgo = today.minusMonths(3)
+        // Card lives for the three months following targetDate.
+        val isWithinLastThreeMonths = targetDate.isAfter(threeMonthsAgo) && !targetDate.isAfter(today)
 
-        isBeforeDate && (!seen || showWrappedPref)
+        isWithinLastThreeMonths && (!seen || showWrappedPref)
     }.stateIn(viewModelScope, SharingStarted.Lazily, false)
 
     val wrappedSeen: StateFlow<Boolean> = context.dataStore.data.map { prefs ->

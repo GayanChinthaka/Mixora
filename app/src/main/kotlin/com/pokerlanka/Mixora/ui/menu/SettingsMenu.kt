@@ -177,14 +177,6 @@ fun SettingsMenu(
                             }
                         ),
                         Material3SettingsItem(
-                            icon = painterResource(R.drawable.discover_tune),
-                            title = { Text("AI Integration") },
-                            onClick = {
-                                onDismiss()
-                                navController.navigate("settings/ai_integration")
-                            }
-                        ),
-                        Material3SettingsItem(
                             icon = painterResource(R.drawable.security),
                             title = { Text(stringResource(R.string.privacy)) },
                             onClick = {

@@ -242,26 +242,6 @@ val QueueEditLockKey = booleanPreferencesKey("queueEditLock")
 val ShowWrappedCardKey = booleanPreferencesKey("show_wrapped_card")
 val WrappedSeenKey = booleanPreferencesKey("wrapped_seen")
 val LastSeenVersionKey = stringPreferencesKey("lastSeenVersion")
-val AiProviderKey = stringPreferencesKey("ai_provider")
-val AiCustomEndpointKey = stringPreferencesKey("ai_custom_endpoint")
-val AiApiKeyKey = stringPreferencesKey("ai_api_key")
-val AiApiValidationStatusKey = stringPreferencesKey("ai_api_validation_status")
-val AiSelectedModelKey = stringPreferencesKey("ai_selected_model")
-val AiCustomModelKey = stringPreferencesKey("ai_custom_model")
-
-enum class AiProvider {
-    CHATGPT,
-    GEMINI,
-    OPENROUTER,
-    CUSTOM,
-    NONE,
-}
-
-enum class AiApiValidationStatus {
-    UNKNOWN,
-    SUCCESS,
-    FAILED,
-}
 val RandomizeHomeOrderKey = booleanPreferencesKey("randomizeHomeOrder")
 
 val ShowLikedPlaylistKey = booleanPreferencesKey("show_liked_playlist")
