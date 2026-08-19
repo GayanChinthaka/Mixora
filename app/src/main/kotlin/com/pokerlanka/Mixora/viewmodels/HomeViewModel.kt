@@ -36,9 +36,7 @@ import com.pokerlanka.mixora.constants.HideYoutubeShortsKey
 import com.pokerlanka.mixora.constants.InnerTubeCookieKey
 import com.pokerlanka.mixora.constants.QuickPicks
 import com.pokerlanka.mixora.constants.QuickPicksKey
-import com.pokerlanka.mixora.constants.ShowWrappedCardKey
 import com.pokerlanka.mixora.constants.VisitorDataKey
-import com.pokerlanka.mixora.constants.WrappedSeenKey
 import com.pokerlanka.mixora.constants.YtmSyncKey
 import com.pokerlanka.mixora.db.MusicDatabase
 import com.pokerlanka.mixora.db.entities.Album
@@ -48,9 +46,6 @@ import com.pokerlanka.mixora.db.entities.SpeedDialItem
 import com.pokerlanka.mixora.extensions.filterVideoSongs
 import com.pokerlanka.mixora.extensions.toEnum
 import com.pokerlanka.mixora.models.SimilarRecommendation
-import com.pokerlanka.mixora.ui.screens.wrapped.WrappedAudioService
-import com.pokerlanka.mixora.ui.screens.wrapped.WrappedConstants
-import com.pokerlanka.mixora.ui.screens.wrapped.WrappedManager
 import com.pokerlanka.mixora.utils.SavedAccount
 import com.pokerlanka.mixora.utils.SyncUtils
 import com.pokerlanka.mixora.utils.dataStore
@@ -71,7 +66,6 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import timber.log.Timber
-import java.time.LocalDate
 import java.time.LocalDateTime
 import javax.inject.Inject
 import kotlin.random.Random
@@ -114,8 +108,6 @@ class HomeViewModel @Inject constructor(
     @ApplicationContext val context: Context,
     val database: MusicDatabase,
     val syncUtils: SyncUtils,
-    val wrappedManager: WrappedManager,
-    private val wrappedAudioService: WrappedAudioService,
 ) : ViewModel() {
     val isRefreshing = MutableStateFlow(false)
     val isLoading = MutableStateFlow(false)
@@ -289,25 +281,6 @@ class HomeViewModel @Inject constructor(
     private val _accountChannelsState = MutableStateFlow<AccountChannelsState>(AccountChannelsState.Empty)
     val accountChannelsState: StateFlow<AccountChannelsState> = _accountChannelsState.asStateFlow()
 
-    // Close of the year Wrapped summarises; tracks WrappedConstants.YEAR so the window
-    // moves on its own when the Wrapped year is bumped.
-    private val targetDate: LocalDate = LocalDate.of(WrappedConstants.YEAR, 12, 31)
-
-    val showWrappedCard: StateFlow<Boolean> = context.dataStore.data.map { prefs ->
-        val showWrappedPref = prefs[ShowWrappedCardKey] ?: false
-        val seen = prefs[WrappedSeenKey] ?: false
-        val today = LocalDate.now()
-        val threeMonthsAgo = today.minusMonths(3)
-        // Card lives for the three months following targetDate.
-        val isWithinLastThreeMonths = targetDate.isAfter(threeMonthsAgo) && !targetDate.isAfter(today)
-
-        isWithinLastThreeMonths && (!seen || showWrappedPref)
-    }.stateIn(viewModelScope, SharingStarted.Lazily, false)
-
-    val wrappedSeen: StateFlow<Boolean> = context.dataStore.data.map { prefs ->
-        prefs[WrappedSeenKey] ?: false
-    }.stateIn(viewModelScope, SharingStarted.Lazily, false)
-
     fun togglePin(item: YTItem) {
         viewModelScope.launch(Dispatchers.IO) {
             val speedDialItem = SpeedDialItem.fromYTItem(item)
@@ -320,13 +293,6 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    fun markWrappedAsSeen() {
-        viewModelScope.launch(Dispatchers.IO) {
-            context.safeDataStoreEdit {
-                it[WrappedSeenKey] = true
-            }
-        }
-    }
     // Track last processed cookie to avoid unnecessary updates
     private var lastProcessedCookie: String? = null
     // Track if we're currently processing account data
@@ -790,34 +756,10 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    override fun onCleared() {
-        super.onCleared()
-        wrappedManager.dispose()
-    }
-
     init {
         // Run sync in separate coroutine with cooldown to avoid blocking UI
         viewModelScope.launch(Dispatchers.IO) {
             syncUtils.tryAutoSync()
-        }
-
-        // Prepare wrapped data in background
-        viewModelScope.launch(Dispatchers.IO) {
-            showWrappedCard.collect { shouldShow ->
-                if (shouldShow && !wrappedManager.state.value.isDataReady) {
-                    try {
-                        wrappedManager.prepare()
-                        val state = wrappedManager.state.first { it.isDataReady }
-                        val trackMap = state.trackMap
-                        if (trackMap.isNotEmpty()) {
-                            val firstTrackId = trackMap.entries.first().value
-                            wrappedAudioService.prepareTrack(firstTrackId)
-                        }
-                    } catch (e: Exception) {
-                        reportException(e)
-                    }
-                }
-            }
         }
 
         // Listen for cookie changes and reload account data

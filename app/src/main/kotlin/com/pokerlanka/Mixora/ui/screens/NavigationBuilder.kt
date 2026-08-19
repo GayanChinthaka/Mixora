@@ -64,7 +64,6 @@ import com.pokerlanka.mixora.ui.screens.settings.UpdateScreen
 import com.pokerlanka.mixora.ui.screens.settings.integrations.IntegrationScreen
 import com.pokerlanka.mixora.ui.screens.settings.integrations.LastFMSettings
 
-import com.pokerlanka.mixora.ui.screens.wrapped.WrappedScreen
 import com.pokerlanka.mixora.utils.rememberEnumPreference
 import com.pokerlanka.mixora.utils.rememberPreference
 
@@ -417,10 +416,6 @@ fun NavGraphBuilder.navigationBuilder(
 
     composable("login") {
         LoginScreen(navController)
-    }
-
-    composable("wrapped") {
-        WrappedScreen()
     }
 
     composable("equalizer") {

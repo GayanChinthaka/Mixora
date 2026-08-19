@@ -6,7 +6,6 @@
     <string name="charts">Charts</string>
     <string name="mixes">Mixes</string>
     <string name="back_button_desc">Back</string>
-    <string name="album_cover_desc">Album cover</string>
     <string name="top_music_videos">Top music videos</string>
     <string name="trending">Trending</string>
     <string name="parsed_from_link">Parsed from link</string>
@@ -158,7 +157,6 @@
     <string name="shuffle_playlist_first_desc">When shuffling, play all songs from the current playlist or album before moving to similar content</string>
     <string name="prevent_duplicate_tracks_in_queue">Prevent duplicate tracks in queue</string>
     <string name="prevent_duplicate_tracks_in_queue_desc">When adding a track that\'s already in the queue, it will be moved from its previous position rather than added again</string>
-    <string name="show_wrapped_card">Show Wrapped card</string>
     <string name="skip_silence_desc">Fast-forward through silent parts of songs</string>
     <string name="skip_silence_instant">Instantly skip silence</string>
     <string name="skip_silence_instant_desc">Jump ahead during silent moments instead of speeding up playback</string>
@@ -458,41 +456,6 @@
     <string name="karaoke">Karaoke</string>
     <string name="apple_music_style">Apple Music</string>
     <string name="album_art_for">Album art for %s</string>
-    <string name="wrapped_total_albums_title">You\'ve listened to</string>
-    <string name="wrapped_total_albums_subtitle">unique albums!</string>
-    <string name="wrapped_top_album_title">Your top album is</string>
-    <string name="wrapped_playlist_ready">Your personal playlist is ready!</string>
-    <string name="wrapped_top_5_albums_title">Your top 5 albums</string>
-    <string name="wrapped_album_listening_time">You\'ve listened to this album for %d minutes!</string>
-    <string name="wrapped_album_listening_time_minutes">%d minutes</string>
-    <string name="wrapped_no_data">No data available</string>
-    <string name="wrapped_top_5_artists_title">Your top artists of the year</string>
-    <string name="wrapped_artist_listening_time">%d minutes</string>
-    <string name="wrapped_top_5_songs_title">Your top songs of the year</string>
-    <string name="wrapped_top_song_album_art_content_description">Album art</string>
-    <string name="wrapped_top_artist_title">Your top artist of the year is</string>
-    <string name="wrapped_top_artist_image_content_description">Top artist image</string>
-    <string name="wrapped_top_artist_listening_time">You\'ve listened to them for %d minutes!</string>
-    <string name="wrapped_top_song_title">Your most played song is</string>
-    <string name="wrapped_top_song_listening_time">You\'ve listened for %d minutes!</string>
-    <string name="wrapped_total_artists_title">You\'ve listened to</string>
-    <string name="wrapped_total_artists_subtitle">unique artists!</string>
-    <string name="wrapped_total_songs_title">You\'ve listened to</string>
-    <string name="wrapped_total_songs_subtitle">unique songs!</string>
-    <string name="wrapped_intro_title">Mixora</string>
-    <string name="wrapped_intro_subtitle">it\'s time to see what you\'ve been listening to all this year…</string>
-    <string name="wrapped_intro_button">let\'s go!</string>
-    <string name="wrapped_logo_content_description">Mixora Logo</string>
-    <string name="wrapped_year">2025</string>
-    <string name="wrapped_ready_title">YOUR WRAPPED IS READY!</string>
-    <string name="wrapped_ready_subtitle">Time to see what you loved all this year…</string>
-    <string name="wrapped_thank_you">Thank you for listening!</string>
-    <string name="wrapped_special_thanks">Special thanks to MO Agamy for creating Mixora</string>
-    <string name="wrapped_close">Close Wrapped</string>
-    <string name="wrapped_playlist_title">Your %s Wrapped</string>
-    <string name="wrapped_create_playlist">Create playlist</string>
-    <string name="wrapped_playlist_saved">Playlist saved</string>
-
     <!-- Equalizer UI -->
     <plurals name="profiles_count">
         <item quantity="one">%d profile</item>
@@ -533,7 +496,6 @@
     <string name="wizard_save_profiles">Save Profiles</string>
 
     <!-- Hardcoded strings -->
-    <string name="found_in_settings_content">Found in Settings &gt; Content</string>
     <string name="your_daily_discover">Your daily discover</string>
     <string name="plays">plays</string>
     <string name="casting_to">Casting to %s</string>
