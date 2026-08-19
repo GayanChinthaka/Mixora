@@ -74,8 +74,10 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -91,13 +93,13 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.pokerlanka.mixora.LocalPlayerAwareWindowInsets
 import com.pokerlanka.mixora.LocalPlayerConnection
 import com.pokerlanka.mixora.R
-import com.pokerlanka.mixora.together.TogetherLink
 import com.pokerlanka.mixora.ui.component.IconButton as MixoraIconButton
 import com.pokerlanka.mixora.viewmodels.MusicTogetherActivityLogItemUiModel
 import com.pokerlanka.mixora.viewmodels.MusicTogetherActivityLogUiModels
@@ -246,6 +248,8 @@ private fun MusicTogetherContent(
     useSupportingPane: Boolean,
     viewModel: MusicTogetherViewModel,
 ) {
+    var selectedSetupTab by rememberSaveable { mutableIntStateOf(0) } // 0: Host, 1: Join
+
     if (useSupportingPane) {
         Row(
             modifier = Modifier
@@ -270,17 +274,42 @@ private fun MusicTogetherContent(
                         onLeave = viewModel::leaveSession,
                     )
                 }
-                item(contentType = "playback") {
-                    PlaybackCard(playback = model.playback)
-                }
-                if (model.host.visible) {
-                    item(contentType = "host") {
-                        HostControlsCard(host = model.host, viewModel = viewModel)
+                if (model.isInSession) {
+                    item(contentType = "playback") {
+                        PlaybackCard(playback = model.playback)
                     }
-                }
-                if (!model.status.active) {
-                    item(contentType = "join") {
-                        JoinControlsCard(join = model.join, viewModel = viewModel)
+                    if (model.isHostRole) {
+                        item(contentType = "room_settings") {
+                            RoomSettingsCard(host = model.host, viewModel = viewModel)
+                        }
+                    }
+                } else {
+                    item(contentType = "setup_selector") {
+                        SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
+                            SegmentedButton(
+                                selected = selectedSetupTab == 0,
+                                onClick = { selectedSetupTab = 0 },
+                                shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2),
+                            ) {
+                                Text(text = stringResource(R.string.together_host_section))
+                            }
+                            SegmentedButton(
+                                selected = selectedSetupTab == 1,
+                                onClick = { selectedSetupTab = 1 },
+                                shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2),
+                            ) {
+                                Text(text = stringResource(R.string.together_join_section))
+                            }
+                        }
+                    }
+                    if (selectedSetupTab == 0) {
+                        item(contentType = "host_controls") {
+                            HostControlsCard(host = model.host, viewModel = viewModel)
+                        }
+                    } else {
+                        item(contentType = "join_controls") {
+                            JoinControlsCard(join = model.join, viewModel = viewModel)
+                        }
                     }
                 }
             }
@@ -292,11 +321,13 @@ private fun MusicTogetherContent(
                     .widthIn(max = 480.dp),
                 verticalArrangement = Arrangement.spacedBy(Spacing.sm),
             ) {
-                ParticipantsCard(
-                    participants = model.participants,
-                    viewModel = viewModel,
-                    modifier = Modifier.fillMaxWidth(),
-                )
+                if (model.isInSession) {
+                    ParticipantsCard(
+                        participants = model.participants,
+                        viewModel = viewModel,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                }
                 ActivityLogCard(
                     log = model.activityLog,
                     modifier = Modifier
@@ -323,25 +354,50 @@ private fun MusicTogetherContent(
                     onLeave = viewModel::leaveSession,
                 )
             }
-            item(contentType = "playback") {
-                PlaybackCard(playback = model.playback)
-            }
-            if (model.host.visible) {
-                item(contentType = "host") {
-                    HostControlsCard(host = model.host, viewModel = viewModel)
+            if (model.isInSession) {
+                item(contentType = "playback") {
+                    PlaybackCard(playback = model.playback)
                 }
-            }
-            if (!model.status.active) {
-                item(contentType = "join") {
-                    JoinControlsCard(join = model.join, viewModel = viewModel)
+                if (model.isHostRole) {
+                    item(contentType = "room_settings") {
+                        RoomSettingsCard(host = model.host, viewModel = viewModel)
+                    }
                 }
-            }
-            item(contentType = "participants") {
-                ParticipantsCard(
-                    participants = model.participants,
-                    viewModel = viewModel,
-                    modifier = Modifier.fillMaxWidth(),
-                )
+                item(contentType = "participants") {
+                    ParticipantsCard(
+                        participants = model.participants,
+                        viewModel = viewModel,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                }
+            } else {
+                item(contentType = "setup_selector") {
+                    SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
+                        SegmentedButton(
+                            selected = selectedSetupTab == 0,
+                            onClick = { selectedSetupTab = 0 },
+                            shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2),
+                        ) {
+                            Text(text = stringResource(R.string.together_host_section))
+                        }
+                        SegmentedButton(
+                            selected = selectedSetupTab == 1,
+                            onClick = { selectedSetupTab = 1 },
+                            shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2),
+                        ) {
+                            Text(text = stringResource(R.string.together_join_section))
+                        }
+                    }
+                }
+                if (selectedSetupTab == 0) {
+                    item(contentType = "host_controls") {
+                        HostControlsCard(host = model.host, viewModel = viewModel)
+                    }
+                } else {
+                    item(contentType = "join_controls") {
+                        JoinControlsCard(join = model.join, viewModel = viewModel)
+                    }
+                }
             }
             item(contentType = "activity_log") {
                 ActivityLogCard(
@@ -446,7 +502,6 @@ private fun SessionShareCard(
     onCopy: (Int, String) -> Unit,
     onShare: (String) -> Unit,
 ) {
-    val isShortCode = sessionShare.value.length == 6 && sessionShare.value.all { it.isDigit() }
     Surface(
         modifier = Modifier.fillMaxWidth(),
         shape = MaterialTheme.shapes.large,
@@ -457,36 +512,27 @@ private fun SessionShareCard(
             verticalArrangement = Arrangement.spacedBy(Spacing.xs),
         ) {
             Text(
-                text = stringResource(sessionShare.labelResId),
+                text = stringResource(R.string.together_session_code),
                 style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.SemiBold,
             )
-            if (isShortCode) {
-                Surface(
-                    shape = RoundedCornerShape(12.dp),
-                    color = MaterialTheme.colorScheme.primaryContainer,
-                    modifier = Modifier.padding(vertical = 4.dp),
-                ) {
-                    Text(
-                        text = sessionShare.value,
-                        style = MaterialTheme.typography.headlineLarge,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onPrimaryContainer,
-                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                    )
-                }
-            } else {
+            Surface(
+                shape = RoundedCornerShape(12.dp),
+                color = MaterialTheme.colorScheme.primaryContainer,
+                modifier = Modifier.padding(vertical = 4.dp),
+            ) {
                 Text(
-                    text = sessionShare.value,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = sessionShare.maxLines,
-                    overflow = TextOverflow.Ellipsis,
+                    text = sessionShare.code,
+                    style = MaterialTheme.typography.headlineLarge,
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = 4.sp,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp),
                 )
             }
             Row(horizontalArrangement = Arrangement.spacedBy(Spacing.xs)) {
                 FilledTonalButton(
-                    onClick = { onCopy(sessionShare.labelResId, sessionShare.value) },
+                    onClick = { onCopy(R.string.together_session_code, sessionShare.code) },
                 ) {
                     Icon(
                         painter = painterResource(R.drawable.content_copy),
@@ -494,10 +540,10 @@ private fun SessionShareCard(
                         modifier = Modifier.size(16.dp),
                     )
                     Spacer(Modifier.width(Spacing.xs))
-                    Text(text = if (isShortCode) "Copy Code" else stringResource(R.string.together_copy_link))
+                    Text(text = stringResource(R.string.together_copy_code))
                 }
                 TextButton(
-                    onClick = { onShare(sessionShare.value) },
+                    onClick = { onShare("Join my Mixora session with code: ${sessionShare.code}") },
                 ) {
                     Icon(
                         painter = painterResource(R.drawable.share),
@@ -505,13 +551,12 @@ private fun SessionShareCard(
                         modifier = Modifier.size(16.dp),
                     )
                     Spacer(Modifier.width(Spacing.xs))
-                    Text(text = if (isShortCode) "Share Code" else stringResource(R.string.together_share_link))
+                    Text(text = stringResource(R.string.together_share_code))
                 }
             }
         }
     }
 }
-
 
 @Composable
 private fun PlaybackCard(playback: MusicTogetherPlaybackUiModel) {
@@ -562,6 +607,45 @@ private fun PlaybackCard(playback: MusicTogetherPlaybackUiModel) {
 }
 
 @Composable
+private fun RoomSettingsCard(
+    host: MusicTogetherHostUiModel,
+    viewModel: MusicTogetherViewModel,
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.extraLarge,
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
+    ) {
+        Column(
+            modifier = Modifier.padding(Spacing.sm),
+            verticalArrangement = Arrangement.spacedBy(Spacing.xs),
+        ) {
+            Text(
+                text = stringResource(R.string.together_settings),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+            )
+
+            ToggleRow(
+                titleResId = R.string.together_allow_guests_add,
+                checked = host.allowGuestsToAddTracks,
+                onCheckedChange = viewModel::setAllowGuestsToAddTracks,
+            )
+            ToggleRow(
+                titleResId = R.string.together_allow_guests_control,
+                checked = host.allowGuestsToControlPlayback,
+                onCheckedChange = viewModel::setAllowGuestsToControlPlayback,
+            )
+            ToggleRow(
+                titleResId = R.string.together_require_approval,
+                checked = host.requireHostApprovalToJoin,
+                onCheckedChange = viewModel::setRequireHostApprovalToJoin,
+            )
+        }
+    }
+}
+
+@Composable
 private fun HostControlsCard(
     host: MusicTogetherHostUiModel,
     viewModel: MusicTogetherViewModel,
@@ -580,37 +664,12 @@ private fun HostControlsCard(
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
             )
-            
-            SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
-                SegmentedButton(
-                    selected = !host.onlineMode,
-                    onClick = { viewModel.setHostOnlineMode(false) },
-                    shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2),
-                ) {
-                    Text(text = stringResource(R.string.together_lan))
-                }
-                SegmentedButton(
-                    selected = host.onlineMode,
-                    onClick = { viewModel.setHostOnlineMode(true) },
-                    shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2),
-                ) {
-                    Text(text = stringResource(R.string.together_online))
-                }
-            }
 
             ListItem(
                 headlineContent = { Text(stringResource(R.string.together_display_name)) },
                 supportingContent = { Text(host.displayName) },
                 modifier = Modifier.clickable { viewModel.openDisplayNameDialog() },
             )
-            
-            if (!host.onlineMode) {
-                ListItem(
-                    headlineContent = { Text(stringResource(R.string.together_port)) },
-                    supportingContent = { Text(host.port.toString()) },
-                    modifier = Modifier.clickable { viewModel.openPortDialog() },
-                )
-            }
 
             ToggleRow(
                 titleResId = R.string.together_allow_guests_add,
@@ -666,23 +725,6 @@ private fun JoinControlsCard(
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
             )
-
-            SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
-                SegmentedButton(
-                    selected = !join.onlineMode,
-                    onClick = { viewModel.setJoinOnlineMode(false) },
-                    shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2),
-                ) {
-                    Text(text = stringResource(R.string.together_lan))
-                }
-                SegmentedButton(
-                    selected = join.onlineMode,
-                    onClick = { viewModel.setJoinOnlineMode(true) },
-                    shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2),
-                ) {
-                    Text(text = stringResource(R.string.together_online))
-                }
-            }
 
             ListItem(
                 headlineContent = { Text(text = if (join.input.isBlank()) stringResource(join.hintResId) else join.input) },
@@ -935,35 +977,6 @@ private fun MusicTogetherDialogs(
             )
         }
 
-        is MusicTogetherDialogUiState.Port -> {
-            var text by remember { mutableStateOf(dialog.initialValue) }
-            AlertDialog(
-                onDismissRequest = viewModel::dismissDialog,
-                title = { Text(stringResource(R.string.together_port)) },
-                text = {
-                    OutlinedTextField(
-                        value = text,
-                        onValueChange = { text = it },
-                        singleLine = true,
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    )
-                },
-                confirmButton = {
-                    TextButton(onClick = {
-                        viewModel.submitPort(text)
-                        viewModel.dismissDialog()
-                    }) {
-                        Text(stringResource(R.string.save))
-                    }
-                },
-                dismissButton = {
-                    TextButton(onClick = viewModel::dismissDialog) {
-                        Text(stringResource(R.string.dismiss))
-                    }
-                },
-            )
-        }
-
         is MusicTogetherDialogUiState.Join -> {
             var text by remember { mutableStateOf(dialog.initialValue) }
             AlertDialog(
@@ -972,10 +985,15 @@ private fun MusicTogetherDialogs(
                 text = {
                     OutlinedTextField(
                         value = text,
-                        onValueChange = { text = it },
+                        onValueChange = {
+                            val digits = it.filter { char -> char.isDigit() }
+                            if (digits.length <= 6) {
+                                text = digits
+                            }
+                        },
                         placeholder = { Text(stringResource(dialog.placeholderResId)) },
-                        singleLine = false,
-                        maxLines = 4,
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     )
                 },
                 confirmButton = {

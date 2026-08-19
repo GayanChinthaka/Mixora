@@ -19,9 +19,8 @@ import kotlinx.coroutines.flow.map
 import com.pokerlanka.mixora.R
 import com.pokerlanka.mixora.constants.TogetherAllowGuestsToAddTracksKey
 import com.pokerlanka.mixora.constants.TogetherAllowGuestsToControlPlaybackKey
-import com.pokerlanka.mixora.constants.TogetherDefaultPortKey
 import com.pokerlanka.mixora.constants.TogetherDisplayNameKey
-import com.pokerlanka.mixora.constants.TogetherLastJoinLinkKey
+import com.pokerlanka.mixora.constants.TogetherLastJoinCodeKey
 import com.pokerlanka.mixora.constants.TogetherRequireHostApprovalToJoinKey
 import com.pokerlanka.mixora.constants.TogetherWelcomeShownKey
 import com.pokerlanka.mixora.playback.MusicService
@@ -29,18 +28,12 @@ import com.pokerlanka.mixora.utils.dataStore
 import javax.inject.Inject
 import javax.inject.Singleton
 
-enum class MusicTogetherConnectionMode {
-    LAN,
-    ONLINE,
-}
-
 data class MusicTogetherPreferences(
     val displayName: String,
-    val port: Int,
     val allowGuestsToAddTracks: Boolean,
     val allowGuestsToControlPlayback: Boolean,
     val requireHostApprovalToJoin: Boolean,
-    val lastJoinLink: String,
+    val lastJoinCode: String,
     val welcomeShown: Boolean,
 )
 
@@ -65,11 +58,10 @@ class MusicTogetherRepository
                             preferences[TogetherDisplayNameKey]
                                 ?: Build.MODEL?.takeIf { it.isNotBlank() }
                                 ?: context.getString(R.string.app_name),
-                        port = preferences[TogetherDefaultPortKey] ?: 42117,
                         allowGuestsToAddTracks = preferences[TogetherAllowGuestsToAddTracksKey] ?: true,
                         allowGuestsToControlPlayback = preferences[TogetherAllowGuestsToControlPlaybackKey] ?: false,
                         requireHostApprovalToJoin = preferences[TogetherRequireHostApprovalToJoinKey] ?: false,
-                        lastJoinLink = preferences[TogetherLastJoinLinkKey] ?: "",
+                        lastJoinCode = preferences[TogetherLastJoinCodeKey] ?: "",
                         welcomeShown = preferences[TogetherWelcomeShownKey] ?: false,
                     )
                 }.distinctUntilChanged()
@@ -87,12 +79,6 @@ class MusicTogetherRepository
         suspend fun setDisplayName(displayName: String) {
             context.dataStore.edit { preferences ->
                 preferences[TogetherDisplayNameKey] = displayName
-            }
-        }
-
-        suspend fun setPort(port: Int) {
-            context.dataStore.edit { preferences ->
-                preferences[TogetherDefaultPortKey] = port
             }
         }
 
@@ -114,9 +100,9 @@ class MusicTogetherRepository
             }
         }
 
-        suspend fun setLastJoinLink(value: String) {
+        suspend fun setLastJoinCode(value: String) {
             context.dataStore.edit { preferences ->
-                preferences[TogetherLastJoinLinkKey] = value
+                preferences[TogetherLastJoinCodeKey] = value
             }
         }
 
@@ -127,39 +113,33 @@ class MusicTogetherRepository
         }
 
         fun startSession(
-            mode: MusicTogetherConnectionMode,
             displayName: String,
-            port: Int,
             settings: TogetherRoomSettings,
         ) {
             val service = serviceFlow.value ?: return
-            when (mode) {
-                MusicTogetherConnectionMode.LAN -> {
-                    service.startTogetherHost(
-                        port = port,
-                        displayName = displayName,
-                        settings = settings,
-                    )
-                }
-
-                MusicTogetherConnectionMode.ONLINE -> {
-                    service.startTogetherOnlineHost(
-                        displayName = displayName,
-                        settings = settings,
-                    )
-                }
-            }
+            service.startTogetherHost(
+                displayName = displayName,
+                settings = settings,
+            )
         }
 
-        fun joinSession(
-            mode: MusicTogetherConnectionMode,
-            rawInput: String,
+        suspend fun joinSession(
+            code: String,
             displayName: String,
         ) {
             val service = serviceFlow.value ?: return
-            when (mode) {
-                MusicTogetherConnectionMode.LAN -> service.joinTogether(rawInput, displayName)
-                MusicTogetherConnectionMode.ONLINE -> service.joinTogetherOnline(rawInput, displayName)
+            val cleanCode = code.replace("\\s+".toRegex(), "").trim()
+            if (cleanCode.length != 6 || !cleanCode.all { it.isDigit() }) {
+                service.setTogetherError("Please enter a valid 6-digit room code")
+                return
+            }
+
+            service.setTogetherJoining(cleanCode)
+            val joinInfo = TogetherLanDiscovery.resolveCode(context, cleanCode)
+            if (joinInfo != null) {
+                service.joinTogether(joinInfo, displayName)
+            } else {
+                service.setTogetherError("Room '$cleanCode' not found on local Wi-Fi. Ensure both devices are connected to the same Wi-Fi network.")
             }
         }
 

@@ -43,10 +43,6 @@ class UpdateMusicTogetherPreferencesUseCase
             repository.setDisplayName(displayName)
         }
 
-        suspend fun setPort(port: Int) {
-            repository.setPort(port)
-        }
-
         suspend fun setAllowGuestsToAddTracks(value: Boolean) {
             repository.setAllowGuestsToAddTracks(value)
         }
@@ -59,8 +55,8 @@ class UpdateMusicTogetherPreferencesUseCase
             repository.setRequireHostApprovalToJoin(value)
         }
 
-        suspend fun setLastJoinLink(value: String) {
-            repository.setLastJoinLink(value)
+        suspend fun setLastJoinCode(value: String) {
+            repository.setLastJoinCode(value)
         }
 
         suspend fun setWelcomeShown(value: Boolean) {
@@ -74,27 +70,21 @@ class MusicTogetherSessionActionsUseCase
         private val repository: MusicTogetherRepository,
     ) {
         fun startSession(
-            mode: MusicTogetherConnectionMode,
             displayName: String,
-            port: Int,
             settings: TogetherRoomSettings,
         ) {
             repository.startSession(
-                mode = mode,
                 displayName = displayName,
-                port = port,
                 settings = settings,
             )
         }
 
-        fun joinSession(
-            mode: MusicTogetherConnectionMode,
-            rawInput: String,
+        suspend fun joinSession(
+            code: String,
             displayName: String,
         ) {
             repository.joinSession(
-                mode = mode,
-                rawInput = rawInput,
+                code = code,
                 displayName = displayName,
             )
         }

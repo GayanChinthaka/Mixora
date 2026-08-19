@@ -60,31 +60,37 @@ sealed class TogetherRole {
     data object Guest : TogetherRole()
 }
 
+@Serializable
+@Immutable
+data class TogetherRoomInfo(
+    val sessionId: String,
+    val sessionKey: String,
+    val code: String,
+    val hostDisplayName: String,
+)
+
+data class TogetherJoinInfo(
+    val host: String,
+    val port: Int,
+    val sessionId: String,
+    val sessionKey: String,
+) {
+    fun toWebSocketUrl(): String = "ws://$host:$port/together"
+}
+
 @Immutable
 sealed class TogetherSessionState {
     data object Idle : TogetherSessionState()
 
     data class Hosting(
         val sessionId: String,
-        val joinLink: String,
-        val localAddressHint: String?,
+        val code: String,
         val port: Int,
         val settings: TogetherRoomSettings,
         val roomState: TogetherRoomState?,
     ) : TogetherSessionState()
 
-    data class HostingOnline(
-        val sessionId: String,
-        val code: String,
-        val settings: TogetherRoomSettings,
-        val roomState: TogetherRoomState?,
-    ) : TogetherSessionState()
-
     data class Joining(
-        val joinLink: String,
-    ) : TogetherSessionState()
-
-    data class JoiningOnline(
         val code: String,
     ) : TogetherSessionState()
 
@@ -105,11 +111,9 @@ val TogetherSessionState.isConnectedToSession: Boolean
     get() =
         when (this) {
             is TogetherSessionState.Hosting -> roomState != null
-            is TogetherSessionState.HostingOnline -> roomState != null
             is TogetherSessionState.Joined -> true
             TogetherSessionState.Idle,
             is TogetherSessionState.Joining,
-            is TogetherSessionState.JoiningOnline,
             is TogetherSessionState.Error,
             -> false
         }

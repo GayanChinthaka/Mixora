@@ -5,10 +5,13 @@
 
 package com.pokerlanka.mixora.together
 
+import io.ktor.server.application.call
 import io.ktor.server.application.install
 import io.ktor.server.cio.CIO
 import io.ktor.server.engine.EmbeddedServer
 import io.ktor.server.engine.embeddedServer
+import io.ktor.server.response.respondText
+import io.ktor.server.routing.get
 import io.ktor.server.routing.routing
 import io.ktor.server.websocket.WebSockets
 import io.ktor.server.websocket.webSocket
@@ -66,7 +69,8 @@ sealed interface TogetherServerEvent {
 class TogetherServer(
     private val scope: CoroutineScope,
     val sessionId: String,
-    private val sessionKey: String,
+    val sessionKey: String,
+    val code: String,
     private val hostDisplayName: String,
     initialSettings: TogetherRoomSettings,
     private val hostParticipantId: String = "host",
@@ -102,6 +106,19 @@ class TogetherServer(
                 embeddedServer(CIO, port = port, host = "0.0.0.0") {
                     install(WebSockets)
                     routing {
+                        get("/together/info") {
+                            val info =
+                                TogetherRoomInfo(
+                                    sessionId = sessionId,
+                                    sessionKey = sessionKey,
+                                    code = code,
+                                    hostDisplayName = hostDisplayName,
+                                )
+                            call.respondText(
+                                text = TogetherJson.encodeToString(TogetherRoomInfo.serializer(), info),
+                                contentType = io.ktor.http.ContentType.Application.Json,
+                            )
+                        }
                         webSocket("/together") {
                             handleClient()
                         }

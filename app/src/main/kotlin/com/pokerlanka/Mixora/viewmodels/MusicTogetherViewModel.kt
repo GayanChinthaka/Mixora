@@ -30,12 +30,10 @@ import kotlinx.coroutines.withContext
 import com.pokerlanka.mixora.R
 import com.pokerlanka.mixora.playback.MusicService
 import com.pokerlanka.mixora.together.AttachMusicTogetherServiceUseCase
-import com.pokerlanka.mixora.together.MusicTogetherConnectionMode
 import com.pokerlanka.mixora.together.MusicTogetherPreferences
 import com.pokerlanka.mixora.together.MusicTogetherSessionActionsUseCase
 import com.pokerlanka.mixora.together.MusicTogetherSnapshot
 import com.pokerlanka.mixora.together.ObserveMusicTogetherStateUseCase
-import com.pokerlanka.mixora.together.TogetherLink
 import com.pokerlanka.mixora.together.TogetherRole
 import com.pokerlanka.mixora.together.TogetherRoomSettings
 import com.pokerlanka.mixora.together.TogetherRoomState
@@ -72,6 +70,8 @@ data class MusicTogetherUiModel(
     val join: MusicTogetherJoinUiModel,
     val participants: MusicTogetherParticipantUiModels,
     val activityLog: MusicTogetherActivityLogUiModels,
+    val isInSession: Boolean,
+    val isHostRole: Boolean,
 )
 
 @Immutable
@@ -82,14 +82,9 @@ sealed interface MusicTogetherDialogUiState {
         val initialValue: String,
     ) : MusicTogetherDialogUiState
 
-    data class Port(
-        val initialValue: String,
-    ) : MusicTogetherDialogUiState
-
     data class Join(
         val initialValue: String,
         @StringRes val placeholderResId: Int,
-        val onlineMode: Boolean,
     ) : MusicTogetherDialogUiState
 
     data class KickParticipant(
@@ -122,9 +117,7 @@ data class MusicTogetherStatusUiModel(
 
 @Immutable
 data class MusicTogetherSessionShareUiModel(
-    @StringRes val labelResId: Int,
-    val value: String,
-    val maxLines: Int,
+    val code: String,
 )
 
 @Immutable
@@ -140,9 +133,7 @@ data class MusicTogetherPlaybackUiModel(
 
 @Immutable
 data class MusicTogetherHostUiModel(
-    val onlineMode: Boolean,
     val displayName: String,
-    val port: Int,
     val allowGuestsToAddTracks: Boolean,
     val allowGuestsToControlPlayback: Boolean,
     val requireHostApprovalToJoin: Boolean,
@@ -153,7 +144,6 @@ data class MusicTogetherHostUiModel(
 
 @Immutable
 data class MusicTogetherJoinUiModel(
-    val onlineMode: Boolean,
     val input: String,
     @StringRes val hintResId: Int,
     val canJoin: Boolean,
@@ -229,8 +219,6 @@ class MusicTogetherViewModel
         private val updatePreferences: UpdateMusicTogetherPreferencesUseCase,
         private val sessionActions: MusicTogetherSessionActionsUseCase,
     ) : ViewModel() {
-        private val hostModeOnline = MutableStateFlow(false)
-        private val joinModeOnline = MutableStateFlow(false)
         private val dialog = MutableStateFlow<MusicTogetherDialogUiState>(MusicTogetherDialogUiState.None)
         private val welcomeDismissedThisSession = MutableStateFlow(false)
         private val welcomeDontShowAgain = MutableStateFlow(true)
@@ -246,8 +234,6 @@ class MusicTogetherViewModel
 
         private data class StateInputs(
             val snapshot: MusicTogetherSnapshot,
-            val hostOnline: Boolean,
-            val joinOnline: Boolean,
             val dialogState: MusicTogetherDialogUiState,
             val welcomeDismissed: Boolean,
         )
@@ -261,11 +247,10 @@ class MusicTogetherViewModel
                             preferences =
                                 MusicTogetherPreferences(
                                     displayName = "",
-                                    port = 42117,
                                     allowGuestsToAddTracks = true,
                                     allowGuestsToControlPlayback = false,
                                     requireHostApprovalToJoin = false,
-                                    lastJoinLink = "",
+                                    lastJoinCode = "",
                                     welcomeShown = false,
                                 ),
                             sessionState = TogetherSessionState.Error(message = throwable.message.orEmpty()),
@@ -276,15 +261,11 @@ class MusicTogetherViewModel
         val state: StateFlow<MusicTogetherScreenState> =
             combine(
                 snapshots,
-                hostModeOnline,
-                joinModeOnline,
                 dialog,
                 welcomeDismissedThisSession,
-            ) { snapshot, hostOnline, joinOnline, dialogState, welcomeDismissed ->
+            ) { snapshot, dialogState, welcomeDismissed ->
                 StateInputs(
                     snapshot = snapshot,
-                    hostOnline = hostOnline,
-                    joinOnline = joinOnline,
                     dialogState = dialogState,
                     welcomeDismissed = welcomeDismissed,
                 )
@@ -293,8 +274,6 @@ class MusicTogetherViewModel
                     val screenState: MusicTogetherScreenState =
                         MusicTogetherScreenState.Success(
                             stateInputs.snapshot.toUiModel(
-                                hostOnline = stateInputs.hostOnline,
-                                joinOnline = stateInputs.joinOnline,
                                 dialogState = stateInputs.dialogState,
                                 welcomeDismissed = stateInputs.welcomeDismissed,
                                 dontShowAgain = dontShowAgain,
@@ -358,18 +337,6 @@ class MusicTogetherViewModel
             }
         }
 
-        fun openPortDialog() {
-            val model = successModel() ?: return
-            dialog.value = MusicTogetherDialogUiState.Port(model.host.port.toString())
-        }
-
-        fun submitPort(value: String) {
-            val port = value.trim().toIntOrNull()?.takeIf { it in 1..65535 } ?: return
-            viewModelScope.launch(Dispatchers.IO) {
-                updatePreferences.setPort(port)
-            }
-        }
-
         fun openJoinDialog() {
             val model = successModel() ?: return
             if (model.join.disabled || model.join.joining || model.join.joined || model.join.waitingApproval) return
@@ -377,34 +344,26 @@ class MusicTogetherViewModel
                 MusicTogetherDialogUiState.Join(
                     initialValue = model.join.input,
                     placeholderResId = model.join.hintResId,
-                    onlineMode = model.join.onlineMode,
                 )
         }
 
         fun submitJoinInput(value: String) {
             val model = successModel() ?: return
-            val trimmed = value.trim()
+            val trimmed = value.replace("\\s+".toRegex(), "").trim()
             if (trimmed.isBlank()) return
             viewModelScope.launch(Dispatchers.IO) {
-                updatePreferences.setLastJoinLink(trimmed)
+                updatePreferences.setLastJoinCode(trimmed)
             }
-            sessionActions.joinSession(
-                mode = if (model.join.onlineMode) MusicTogetherConnectionMode.ONLINE else MusicTogetherConnectionMode.LAN,
-                rawInput = trimmed,
-                displayName = model.host.displayName,
-            )
+            viewModelScope.launch {
+                sessionActions.joinSession(
+                    code = trimmed,
+                    displayName = model.host.displayName,
+                )
+            }
         }
 
         fun dismissDialog() {
             dialog.value = MusicTogetherDialogUiState.None
-        }
-
-        fun setHostOnlineMode(value: Boolean) {
-            hostModeOnline.value = value
-        }
-
-        fun setJoinOnlineMode(value: Boolean) {
-            joinModeOnline.value = value
         }
 
         fun setAllowGuestsToAddTracks(value: Boolean) {
@@ -432,9 +391,7 @@ class MusicTogetherViewModel
             val model = successModel() ?: return
             if (!model.host.startEnabled) return
             sessionActions.startSession(
-                mode = if (model.host.onlineMode) MusicTogetherConnectionMode.ONLINE else MusicTogetherConnectionMode.LAN,
                 displayName = model.host.displayName,
-                port = model.host.port,
                 settings =
                     TogetherRoomSettings(
                         allowGuestsToAddTracks = model.host.allowGuestsToAddTracks,
@@ -489,22 +446,26 @@ class MusicTogetherViewModel
             dialog.value = MusicTogetherDialogUiState.BanParticipant(participant.id, participant.name)
         }
 
-        fun confirmTransferHost(participantId: String) {
-            dismissDialog()
-            sessionActions.transferHostOwnership(participantId)
-        }
-
         fun confirmKickParticipant(participantId: String) {
-            dismissDialog()
             sessionActions.kickParticipant(participantId)
+            dismissDialog()
         }
 
         fun confirmBanParticipant(participantId: String) {
-            dismissDialog()
             sessionActions.banParticipant(participantId)
+            dismissDialog()
         }
 
-        private fun successModel(): MusicTogetherUiModel? = (state.value as? MusicTogetherScreenState.Success)?.model
+        fun confirmTransferHost(participantId: String) {
+            sessionActions.transferHostOwnership(participantId)
+            dismissDialog()
+        }
+
+        private fun successModel(): MusicTogetherUiModel? =
+            when (val current = state.value) {
+                is MusicTogetherScreenState.Success -> current.model
+                else -> null
+            }
 
         private fun pushSettingsToActiveSession(
             addTracks: Boolean? = null,
@@ -512,7 +473,7 @@ class MusicTogetherViewModel
             approval: Boolean? = null,
         ) {
             val model = successModel() ?: return
-            if (!model.status.active || !model.host.visible) return
+            if (!model.status.active || !model.isHostRole) return
             sessionActions.updateSettings(
                 TogetherRoomSettings(
                     allowGuestsToAddTracks = addTracks ?: model.host.allowGuestsToAddTracks,
@@ -523,8 +484,6 @@ class MusicTogetherViewModel
         }
 
         private fun MusicTogetherSnapshot.toUiModel(
-            hostOnline: Boolean,
-            joinOnline: Boolean,
             dialogState: MusicTogetherDialogUiState,
             welcomeDismissed: Boolean,
             dontShowAgain: Boolean,
@@ -532,24 +491,15 @@ class MusicTogetherViewModel
         ): MusicTogetherUiModel {
             val state = sessionState
             val roomState = state.roomStateOrNull()
-            val isHosting = state is TogetherSessionState.Hosting || state is TogetherSessionState.HostingOnline
-            val isJoining = state is TogetherSessionState.Joining || state is TogetherSessionState.JoiningOnline
+            val isHosting = state is TogetherSessionState.Hosting
+            val isJoining = state is TogetherSessionState.Joining
             val isHostRole =
                 when (state) {
-                    is TogetherSessionState.Hosting,
-                    is TogetherSessionState.HostingOnline,
-                    -> true
-
+                    is TogetherSessionState.Hosting -> true
                     is TogetherSessionState.Joined -> state.role is TogetherRole.Host
-
                     else -> false
                 }
-            val isCreatingSessionLoading =
-                when (state) {
-                    is TogetherSessionState.Hosting -> state.roomState == null
-                    is TogetherSessionState.HostingOnline -> state.roomState == null
-                    else -> false
-                }
+            val isCreatingSessionLoading = false
             val isJoinedAsGuest = state is TogetherSessionState.Joined && state.role is TogetherRole.Guest
             val isWaitingApproval =
                 state is TogetherSessionState.Joined &&
@@ -559,35 +509,18 @@ class MusicTogetherViewModel
                         ?.isPending == true
             val isJoinedAsAcceptedGuest = isJoinedAsGuest && !isWaitingApproval
             val disableJoinUi = isHostRole || isCreatingSessionLoading || isJoinedAsGuest
-            val active = state.isConnectedToSession
+            val active = isHosting || state is TogetherSessionState.Joined
+
             val status =
                 MusicTogetherStatusUiModel(
                     titleResId = R.string.together_status,
                     stateLabelResId =
                         when (state) {
-                            TogetherSessionState.Idle -> {
-                                R.string.together_idle
-                            }
-
-                            is TogetherSessionState.Hosting,
-                            is TogetherSessionState.HostingOnline,
-                            -> {
-                                R.string.together_hosting
-                            }
-
-                            is TogetherSessionState.Joining,
-                            is TogetherSessionState.JoiningOnline,
-                            -> {
-                                R.string.together_joining
-                            }
-
-                            is TogetherSessionState.Joined -> {
-                                if (isWaitingApproval) R.string.together_pending_approval else R.string.together_connected
-                            }
-
-                            is TogetherSessionState.Error -> {
-                                R.string.together_error_state
-                            }
+                            TogetherSessionState.Idle -> R.string.together_idle
+                            is TogetherSessionState.Hosting -> R.string.together_hosting
+                            is TogetherSessionState.Joining -> R.string.together_joining
+                            is TogetherSessionState.Joined -> if (isWaitingApproval) R.string.together_pending_approval else R.string.together_connected
+                            is TogetherSessionState.Error -> R.string.together_error_state
                         },
                     errorMessage = (state as? TogetherSessionState.Error)?.message,
                     iconResId = if (state is TogetherSessionState.Error) R.drawable.error else R.drawable.fire,
@@ -601,17 +534,7 @@ class MusicTogetherViewModel
                 when (state) {
                     is TogetherSessionState.Hosting -> {
                         MusicTogetherSessionShareUiModel(
-                            labelResId = R.string.together_session_link,
-                            value = state.joinLink,
-                            maxLines = 3,
-                        )
-                    }
-
-                    is TogetherSessionState.HostingOnline -> {
-                        MusicTogetherSessionShareUiModel(
-                            labelResId = R.string.together_session_code,
-                            value = state.code,
-                            maxLines = 1,
+                            code = state.code,
                         )
                     }
 
@@ -640,9 +563,7 @@ class MusicTogetherViewModel
 
             val hostUi =
                 MusicTogetherHostUiModel(
-                    onlineMode = hostOnline,
                     displayName = preferences.displayName,
-                    port = preferences.port,
                     allowGuestsToAddTracks = preferences.allowGuestsToAddTracks,
                     allowGuestsToControlPlayback = preferences.allowGuestsToControlPlayback,
                     requireHostApprovalToJoin = preferences.requireHostApprovalToJoin,
@@ -653,10 +574,9 @@ class MusicTogetherViewModel
 
             val joinUi =
                 MusicTogetherJoinUiModel(
-                    onlineMode = joinOnline,
-                    input = preferences.lastJoinLink,
-                    hintResId = if (joinOnline) R.string.together_join_code_hint else R.string.together_join_link_hint,
-                    canJoin = !disableJoinUi && !isJoining && preferences.lastJoinLink.isNotBlank(),
+                    input = preferences.lastJoinCode,
+                    hintResId = R.string.together_join_code_hint,
+                    canJoin = !disableJoinUi && !isJoining && preferences.lastJoinCode.isNotBlank(),
                     disabled = disableJoinUi,
                     joined = isJoinedAsAcceptedGuest,
                     waitingApproval = isWaitingApproval,
@@ -677,6 +597,8 @@ class MusicTogetherViewModel
                     )
                 } ?: emptyList()
 
+            val isInSession = isHosting || isJoining || state is TogetherSessionState.Joined
+
             return MusicTogetherUiModel(
                 showWelcomeDialog = !preferences.welcomeShown && !welcomeDismissed,
                 welcomeDontShowAgain = dontShowAgain,
@@ -688,6 +610,8 @@ class MusicTogetherViewModel
                 join = joinUi,
                 participants = MusicTogetherParticipantUiModels(participantsList),
                 activityLog = log,
+                isInSession = isInSession,
+                isHostRole = isHostRole,
             )
         }
 
@@ -715,10 +639,7 @@ class MusicTogetherViewModel
                         iconResId = R.drawable.fire,
                         messageResId =
                             when (sessionState) {
-                                is TogetherSessionState.Joining,
-                                is TogetherSessionState.JoiningOnline,
-                                -> R.string.together_activity_joining_session
-
+                                is TogetherSessionState.Joining -> R.string.together_activity_joining_session
                                 else -> R.string.together_activity_session_started
                             },
                         args = emptyList(),
@@ -860,15 +781,8 @@ class MusicTogetherViewModel
         private fun TogetherSessionState.sessionIdOrNull(): String? =
             when (this) {
                 is TogetherSessionState.Hosting -> sessionId
-
-                is TogetherSessionState.HostingOnline -> sessionId
-
                 is TogetherSessionState.Joined -> sessionId
-
-                is TogetherSessionState.Joining -> TogetherLink.decode(joinLink)?.sessionId
-
-                is TogetherSessionState.JoiningOnline -> code
-
+                is TogetherSessionState.Joining -> null
                 is TogetherSessionState.Error,
                 TogetherSessionState.Idle,
                 -> null
@@ -877,7 +791,6 @@ class MusicTogetherViewModel
         private fun TogetherSessionState.roomStateOrNull(): TogetherRoomState? =
             when (this) {
                 is TogetherSessionState.Hosting -> roomState
-                is TogetherSessionState.HostingOnline -> roomState
                 is TogetherSessionState.Joined -> roomState
                 else -> null
             }
