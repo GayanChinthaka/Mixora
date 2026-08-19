@@ -415,6 +415,7 @@
     <string name="password">Password</string>
 
     <!-- Last.fm -->
+    <string name="scrobbling">Scrobbling</string>
     <string name="lastfm_integration">Last.fm integration</string>
     <string name="enable_scrobbling">Enable scrobbling</string>
     <string name="lastfm_now_playing">Send Now Playing status</string>

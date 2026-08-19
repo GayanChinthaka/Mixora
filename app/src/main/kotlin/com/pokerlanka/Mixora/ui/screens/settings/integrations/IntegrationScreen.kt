@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Mixora Project (C) 2026
  * Licensed under GPL-3.0 | See git history for contributors
  */
@@ -39,7 +39,7 @@ fun IntegrationScreen(
             .padding(horizontal = 16.dp),
     ) {
         IntegrationCard(
-            title = stringResource(R.string.general),
+            title = stringResource(R.string.scrobbling),
             items = listOf(
                 IntegrationCardItem(
                     icon = painterResource(R.drawable.music_note),
