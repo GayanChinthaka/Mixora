@@ -13,25 +13,27 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -46,6 +48,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -71,14 +74,17 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.materialkolor.PaletteStyle
 import com.materialkolor.dynamicColorScheme
+import com.pokerlanka.mixora.LocalPlayerAwareWindowInsets
 import com.pokerlanka.mixora.R
 import com.pokerlanka.mixora.constants.CustomThemeColorKey
+import com.pokerlanka.mixora.constants.DarkModeKey
 import com.pokerlanka.mixora.constants.DynamicThemeKey
 import com.pokerlanka.mixora.constants.SelectedThemeColorKey
 import com.pokerlanka.mixora.ui.theme.ThemePalette
 import com.pokerlanka.mixora.ui.theme.ThemePalettes
 import com.pokerlanka.mixora.ui.theme.ThemeSeedPalette
 import com.pokerlanka.mixora.ui.theme.toSeedPalette
+import com.pokerlanka.mixora.utils.rememberEnumPreference
 import com.pokerlanka.mixora.utils.rememberPreference
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -104,6 +110,17 @@ fun PalettePickerScreen(
             defaultValue = true,
         )
 
+    val (darkMode) =
+        rememberEnumPreference(
+            DarkModeKey,
+            defaultValue = DarkMode.AUTO,
+        )
+    val isSystemDark = isSystemInDarkTheme()
+    val isAppDarkTheme =
+        remember(darkMode, isSystemDark) {
+            if (darkMode == DarkMode.AUTO) isSystemDark else darkMode == DarkMode.ON
+        }
+
     val selectedPalette =
         remember(customThemeColor) {
             ThemePalettes.findById(customThemeColor)
@@ -113,11 +130,40 @@ fun PalettePickerScreen(
 
     val selectedSeedPalette = remember(selectedPalette) { selectedPalette.toSeedPalette() }
 
+    // Dynamic color values when Dynamic Theme is enabled
+    val currentThemePrimary = MaterialTheme.colorScheme.primary
+    val currentThemeSecondary = MaterialTheme.colorScheme.secondary
+    val currentThemeTertiary = MaterialTheme.colorScheme.tertiary
+    val currentThemeNeutral = MaterialTheme.colorScheme.surfaceTint
+
+    val effectiveSeedPalette =
+        remember(dynamicThemeEnabled, selectedSeedPalette, currentThemePrimary, currentThemeSecondary, currentThemeTertiary, currentThemeNeutral) {
+            if (dynamicThemeEnabled) {
+                ThemeSeedPalette(
+                    primary = currentThemePrimary,
+                    secondary = currentThemeSecondary,
+                    tertiary = currentThemeTertiary,
+                    neutral = currentThemeNeutral,
+                )
+            } else {
+                selectedSeedPalette
+            }
+        }
+
+    val effectivePaletteName =
+        if (dynamicThemeEnabled) {
+            stringResource(R.string.palette_dynamic)
+        } else {
+            stringResource(selectedPalette.nameResId)
+        }
+
     fun selectPalette(palette: ThemePalette) {
         if (dynamicThemeEnabled) return
         onCustomThemeColorChange(palette.id)
         onSelectedThemeColorChange(palette.primary.toArgb())
     }
+
+    val playerAwareInsets = LocalPlayerAwareWindowInsets.current
 
     Scaffold(
         topBar = {
@@ -135,130 +181,131 @@ fun PalettePickerScreen(
             )
         },
     ) { innerPadding ->
-        Column(
+        val palettes = ThemePalettes.allPalettes
+
+        LazyVerticalGrid(
+            columns = GridCells.Fixed(2),
             modifier =
                 Modifier
                     .fillMaxSize()
-                    .padding(innerPadding)
-                    .verticalScroll(rememberScrollState())
-                    .padding(horizontal = 16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
+                    .padding(top = innerPadding.calculateTopPadding()),
+            contentPadding =
+                PaddingValues(
+                    start = 16.dp,
+                    end = 16.dp,
+                    top = 8.dp,
+                    bottom = playerAwareInsets.asPaddingValues().calculateBottomPadding() + 24.dp,
+                ),
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
-            Spacer(modifier = Modifier.height(8.dp))
+            // Header Item 1: Live Mini Player Preview Card
+            item(span = { GridItemSpan(maxLineSpan) }) {
+                LiveMiniPlayerPreviewCard(
+                    palette = effectiveSeedPalette,
+                    paletteName = effectivePaletteName,
+                    isAppDarkTheme = isAppDarkTheme,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
 
-            // Dynamic Mini Player Preview Card
-            LiveMiniPlayerPreviewCard(
-                palette = selectedSeedPalette,
-                paletteName = stringResource(selectedPalette.nameResId),
-                modifier = Modifier.fillMaxWidth(),
-            )
+            // Header Item 2: Dynamic Theme Toggle Card
+            item(span = { GridItemSpan(maxLineSpan) }) {
+                Card(
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(top = 8.dp)
+                            .clip(RoundedCornerShape(18.dp))
+                            .clickable { onDynamicThemeChange(!dynamicThemeEnabled) },
+                    shape = RoundedCornerShape(18.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh),
+                    border = if (dynamicThemeEnabled) BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)) else null,
+                ) {
+                    Row(
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                    ) {
+                        Column(modifier = Modifier.weight(1f).padding(end = 12.dp)) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    painter = painterResource(R.drawable.palette),
+                                    contentDescription = null,
+                                    tint = if (dynamicThemeEnabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.size(20.dp),
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = stringResource(R.string.enable_dynamic_theme),
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.SemiBold,
+                                )
+                            }
 
-            Spacer(modifier = Modifier.height(18.dp))
+                            Spacer(modifier = Modifier.height(4.dp))
 
-            // Dynamic Theme Toggle Card
-            Card(
-                modifier =
-                    Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(18.dp))
-                        .clickable { onDynamicThemeChange(!dynamicThemeEnabled) },
-                shape = RoundedCornerShape(18.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh),
-                border = if (dynamicThemeEnabled) BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)) else null,
-            ) {
+                            Text(
+                                text = stringResource(R.string.dynamic_theme_desc),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+
+                        Switch(
+                            checked = dynamicThemeEnabled,
+                            onCheckedChange = onDynamicThemeChange,
+                            thumbContent = {
+                                Icon(
+                                    painter = painterResource(if (dynamicThemeEnabled) R.drawable.check else R.drawable.close),
+                                    contentDescription = null,
+                                    modifier = Modifier.size(SwitchDefaults.IconSize),
+                                )
+                            },
+                        )
+                    }
+                }
+            }
+
+            // Header Item 3: Title Row ("Color Palette", Presets Count)
+            item(span = { GridItemSpan(maxLineSpan) }) {
                 Row(
                     modifier =
                         Modifier
                             .fillMaxWidth()
-                            .padding(16.dp),
+                            .padding(top = 10.dp, bottom = 4.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween,
                 ) {
-                    Column(modifier = Modifier.weight(1f).padding(end = 12.dp)) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(
-                                painter = painterResource(R.drawable.palette),
-                                contentDescription = null,
-                                tint = if (dynamicThemeEnabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.size(20.dp),
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                text = stringResource(R.string.enable_dynamic_theme),
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.SemiBold,
-                            )
-                        }
+                    Text(
+                        text = stringResource(R.string.color_palette),
+                        style = MaterialTheme.typography.titleMedium,
+                        color = if (dynamicThemeEnabled) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(start = 4.dp),
+                    )
 
-                        Spacer(modifier = Modifier.height(4.dp))
-
-                        Text(
-                            text = stringResource(R.string.dynamic_theme_desc),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
-
-                    Switch(
-                        checked = dynamicThemeEnabled,
-                        onCheckedChange = onDynamicThemeChange,
-                        thumbContent = {
-                            Icon(
-                                painter = painterResource(if (dynamicThemeEnabled) R.drawable.check else R.drawable.close),
-                                contentDescription = null,
-                                modifier = Modifier.size(SwitchDefaults.IconSize),
-                            )
-                        },
+                    Text(
+                        text = "${palettes.size} Presets",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(20.dp))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween,
-            ) {
-                Text(
-                    text = stringResource(R.string.color_palette),
-                    style = MaterialTheme.typography.titleMedium,
-                    color = if (dynamicThemeEnabled) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.primary,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(start = 4.dp),
+            // Grid Items: 60+ Curated Palettes
+            items(palettes, key = { it.id }) { item ->
+                val isSelected = (!dynamicThemeEnabled && selectedPalette.id == item.id)
+                PaletteItemCard(
+                    palette = item,
+                    isSelected = isSelected,
+                    enabled = !dynamicThemeEnabled,
+                    modifier = Modifier.alpha(if (dynamicThemeEnabled) 0.45f else 1f),
+                    onClick = { selectPalette(item) },
                 )
-
-                Text(
-                    text = "${ThemePalettes.allPalettes.size} Presets",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // Palettes Grid (Disabled / Dimmed when Dynamic Theme is active)
-            val palettes = ThemePalettes.allPalettes
-            LazyVerticalGrid(
-                columns = GridCells.Fixed(2),
-                modifier =
-                    Modifier
-                        .height(580.dp)
-                        .alpha(if (dynamicThemeEnabled) 0.45f else 1f),
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
-                verticalArrangement = Arrangement.spacedBy(10.dp),
-                contentPadding = PaddingValues(bottom = 32.dp),
-                userScrollEnabled = true,
-            ) {
-                items(palettes, key = { it.id }) { item ->
-                    val isSelected = (selectedPalette.id == item.id)
-                    PaletteItemCard(
-                        palette = item,
-                        isSelected = isSelected,
-                        enabled = !dynamicThemeEnabled,
-                        onClick = { selectPalette(item) },
-                    )
-                }
             }
         }
     }
@@ -268,9 +315,14 @@ fun PalettePickerScreen(
 private fun LiveMiniPlayerPreviewCard(
     palette: ThemeSeedPalette,
     paletteName: String,
+    isAppDarkTheme: Boolean,
     modifier: Modifier = Modifier,
 ) {
-    var previewDarkMode by rememberSaveable { mutableStateOf(true) }
+    var previewDarkMode by rememberSaveable { mutableStateOf(isAppDarkTheme) }
+
+    LaunchedEffect(isAppDarkTheme) {
+        previewDarkMode = isAppDarkTheme
+    }
 
     val previewColorScheme =
         remember(palette, previewDarkMode) {
