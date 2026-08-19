@@ -176,8 +176,6 @@ import com.pokerlanka.mixora.lyrics.LyricsHelper
 import com.pokerlanka.mixora.models.PersistPlayerState
 import com.pokerlanka.mixora.models.PersistQueue
 import com.pokerlanka.mixora.models.toMediaMetadata
-import com.pokerlanka.mixora.playback.alarm.MusicAlarmScheduler
-import com.pokerlanka.mixora.playback.alarm.MusicAlarmStore
 import com.pokerlanka.mixora.playback.audio.SilenceDetectorAudioProcessor
 import com.pokerlanka.mixora.playback.queues.EmptyQueue
 import com.pokerlanka.mixora.playback.queues.ListQueue
@@ -4185,10 +4183,6 @@ class MusicService :
         }
 
         when (intent?.action) {
-            ACTION_ALARM_TRIGGER -> {
-                handleAlarmTrigger(intent)
-            }
-
             MusicWidgetReceiver.ACTION_PLAY_PAUSE -> {
                 if (player.isPlaying) player.pause() else player.play()
                 updateWidgetUI(player.isPlaying)
@@ -4327,95 +4321,7 @@ class MusicService :
         }
     }
 
-    private fun handleAlarmTrigger(intent: Intent) {
-        scope.launch(Dispatchers.IO) {
-            try {
-                MusicAlarmScheduler.scheduleFromPreferences(this@MusicService)
-            } catch (t: Throwable) {
-                Timber.tag(TAG).e(t, "Failed to reschedule alarms after trigger")
-            }
-        }
-        val playlistId = intent.getStringExtra(EXTRA_ALARM_PLAYLIST_ID).orEmpty()
-        val alarmId = intent.getStringExtra(EXTRA_ALARM_ID).orEmpty()
-        if (playlistId.isBlank()) {
-            if (alarmId.isNotBlank()) {
-                scope.launch(Dispatchers.IO) {
-                    try {
-                        val alarms = MusicAlarmStore.load(this@MusicService)
-                        val updated =
-                            alarms.map { alarm ->
-                                if (alarm.id == alarmId) alarm.copy(enabled = false, nextTriggerAt = -1L) else alarm
-                            }
-                        MusicAlarmScheduler.scheduleAll(this@MusicService, updated)
-                    } catch (t: Throwable) {
-                        Timber.tag(TAG).e(t, "Failed to disable alarm with invalid playlist")
-                    }
-                }
-            }
-            return
-        }
-        val randomSong = intent.getBooleanExtra(EXTRA_ALARM_RANDOM_SONG, false)
-        scope.launch {
-            try {
-                val playlistSongs =
-                    withContext(Dispatchers.IO) {
-                        database.playlistSongs(playlistId).first()
-                    }
-                if (playlistSongs.isEmpty()) {
-                    if (alarmId.isNotBlank()) {
-                        withContext(Dispatchers.IO) {
-                            val alarms = MusicAlarmStore.load(this@MusicService)
-                            val updated =
-                                alarms.map { alarm ->
-                                    if (alarm.id == alarmId) alarm.copy(enabled = false, nextTriggerAt = -1L) else alarm
-                                }
-                            MusicAlarmScheduler.scheduleAll(this@MusicService, updated)
-                        }
-                    }
-                    return@launch
-                }
-                val items = playlistSongs.map { it.song.toMediaItem() }
-                val playlistName =
-                    withContext(Dispatchers.IO) {
-                        database
-                            .playlist(playlistId)
-                            .first()
-                            ?.playlist
-                            ?.name
-                    }
-                withContext(Dispatchers.IO) {
-                    MusicAlarmScheduler.scheduleFromPreferences(this@MusicService)
-                }
 
-                val alarmItems =
-                    if (randomSong) {
-                        val firstIndex = Random.nextInt(items.size)
-                        buildList(items.size) {
-                            add(items[firstIndex])
-                            items.forEachIndexed { index, item ->
-                                if (index != firstIndex) add(item)
-                            }
-                        }
-                    } else {
-                        items
-                    }
-
-                player.stop()
-                player.clearMediaItems()
-                playQueue(
-                    ListQueue(
-                        title = playlistName,
-                        items = alarmItems,
-                        startIndex = 0,
-                        position = 0L,
-                    ),
-                    playWhenReady = true,
-                )
-            } catch (t: Throwable) {
-                Timber.tag(TAG).e(t, "Failed to start alarm playback")
-            }
-        }
-    }
 
     private fun handleForegroundServiceStartNotAllowed(error: Throwable?) {
         if (error != null) {
@@ -4795,11 +4701,6 @@ class MusicService :
     }
 
     companion object {
-        const val ACTION_ALARM_TRIGGER = "com.pokerlanka.mixora.action.ALARM_TRIGGER"
-        const val EXTRA_ALARM_ID = "extra_alarm_id"
-        const val EXTRA_ALARM_PLAYLIST_ID = "extra_alarm_playlist_id"
-        const val EXTRA_ALARM_RANDOM_SONG = "extra_alarm_random_song"
-
         const val ROOT = "root"
         const val SONG = "song"
         const val ARTIST = "artist"
