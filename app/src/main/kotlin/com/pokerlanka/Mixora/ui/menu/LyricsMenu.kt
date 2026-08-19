@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Mixora Project (C) 2026
  * Licensed under GPL-3.0 | See git history for contributors
  */
@@ -75,8 +75,11 @@ import com.pokerlanka.mixora.ui.component.NewAction
 import com.pokerlanka.mixora.ui.component.NewActionGrid
 import com.pokerlanka.mixora.ui.component.TextFieldDialog
 import com.pokerlanka.mixora.viewmodels.LyricsMenuViewModel
+import com.pokerlanka.mixora.constants.AiProvider
+import com.pokerlanka.mixora.constants.AiProviderKey
 import com.pokerlanka.mixora.constants.RespectAgentPositioningKey
 import com.pokerlanka.mixora.constants.ShowIntervalIndicatorKey
+import com.pokerlanka.mixora.utils.rememberEnumPreference
 import com.pokerlanka.mixora.utils.rememberPreference
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -91,6 +94,8 @@ fun LyricsMenu(
 ) {
     val context = LocalContext.current
     val database = LocalDatabase.current
+    val aiProvider by rememberEnumPreference(AiProviderKey, AiProvider.NONE)
+    val isAiTranslating by viewModel.isAiTranslating.collectAsStateWithLifecycle()
     
     var respectAgentPositioning by rememberPreference(RespectAgentPositioningKey, true)
     var showIntervalIndicator by rememberPreference(ShowIntervalIndicatorKey, true)
@@ -547,6 +552,41 @@ fun LyricsMenu(
                             }
                         )
                     )
+
+                    if (aiProvider != AiProvider.NONE) {
+                        add(
+                            Material3MenuItemData(
+                                title = { Text(stringResource(R.string.ai_translation_menu)) },
+                                icon = {
+                                    Icon(
+                                        painter = painterResource(R.drawable.auto_awesome),
+                                        contentDescription = null,
+                                    )
+                                },
+                                trailingContent = {
+                                    if (isAiTranslating) {
+                                        CircularProgressIndicator(
+                                            modifier = Modifier.size(20.dp),
+                                            strokeWidth = 2.dp,
+                                        )
+                                    }
+                                },
+                                onClick = {
+                                    val currentLyrics = lyricsProvider()?.lyrics.orEmpty()
+                                    if (!isAiTranslating && currentLyrics.isNotBlank()) {
+                                        viewModel.translateLyricsWithAi(
+                                            mediaMetadata = mediaMetadataProvider(),
+                                            lyrics = currentLyrics,
+                                            targetLanguage = "ENGLISH",
+                                            onComplete = {
+                                                onDismiss()
+                                            },
+                                        )
+                                    }
+                                }
+                            )
+                        )
+                    }
                     
                     add(
                         Material3MenuItemData(

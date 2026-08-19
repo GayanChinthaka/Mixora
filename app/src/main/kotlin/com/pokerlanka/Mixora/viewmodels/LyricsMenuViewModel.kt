@@ -1,27 +1,40 @@
-﻿/**
+/**
  * Mixora Project (C) 2026
  * Licensed under GPL-3.0 | See git history for contributors
  */
 
 package com.pokerlanka.mixora.viewmodels
 
+import android.content.Context
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.pokerlanka.mixora.ai.AiLyricsTranslator
+import com.pokerlanka.mixora.ai.AiServiceConfig
+import com.pokerlanka.mixora.constants.AiApiKeyKey
+import com.pokerlanka.mixora.constants.AiCustomEndpointKey
+import com.pokerlanka.mixora.constants.AiCustomModelKey
+import com.pokerlanka.mixora.constants.AiProvider
+import com.pokerlanka.mixora.constants.AiProviderKey
+import com.pokerlanka.mixora.constants.AiSelectedModelKey
 import com.pokerlanka.mixora.db.MusicDatabase
 import com.pokerlanka.mixora.db.entities.LyricsEntity
 import com.pokerlanka.mixora.db.entities.Song
+import com.pokerlanka.mixora.extensions.toEnum
 import com.pokerlanka.mixora.lyrics.LyricsHelper
 import com.pokerlanka.mixora.lyrics.LyricsResult
 import com.pokerlanka.mixora.models.MediaMetadata
 import com.pokerlanka.mixora.utils.NetworkConnectivityObserver
+import com.pokerlanka.mixora.utils.dataStore
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -31,6 +44,7 @@ import javax.inject.Inject
 class LyricsMenuViewModel
 @Inject
 constructor(
+    @ApplicationContext private val context: Context,
     private val lyricsHelper: LyricsHelper,
     val database: MusicDatabase,
     private val networkConnectivity: NetworkConnectivityObserver,
@@ -38,6 +52,8 @@ constructor(
     private var job: Job? = null
     val results = MutableStateFlow(emptyList<LyricsResult>())
     val isLoading = MutableStateFlow(false)
+    val isAiTranslating = MutableStateFlow(false)
+    private var aiTranslationJob: Job? = null
 
     private val _isNetworkAvailable = MutableStateFlow(false)
     val isNetworkAvailable: StateFlow<Boolean> = _isNetworkAvailable.asStateFlow()
@@ -101,5 +117,49 @@ constructor(
                 }
             upsert(LyricsEntity(mediaMetadata.id, lyricsWithProvider.lyrics, lyricsWithProvider.provider))
         }
+    }
+
+    fun translateLyricsWithAi(
+        mediaMetadata: MediaMetadata,
+        lyrics: String,
+        targetLanguage: String,
+        onComplete: (String) -> Unit,
+    ) {
+        if (isAiTranslating.value || lyrics.isBlank()) return
+        aiTranslationJob =
+            viewModelScope.launch(Dispatchers.IO) {
+                isAiTranslating.value = true
+                try {
+                    val prefs = context.dataStore.data.first()
+                    val provider = prefs[AiProviderKey].toEnum(AiProvider.NONE)
+                    val translatedLyrics =
+                        AiLyricsTranslator().translate(
+                            config =
+                                AiServiceConfig(
+                                    provider = provider,
+                                    apiKey = prefs[AiApiKeyKey].orEmpty(),
+                                    customEndpoint = prefs[AiCustomEndpointKey].orEmpty(),
+                                    model =
+                                        if (provider == AiProvider.CUSTOM) {
+                                            prefs[AiCustomModelKey].orEmpty()
+                                        } else {
+                                            prefs[AiSelectedModelKey].orEmpty()
+                                        },
+                                ),
+                            lyrics = lyrics,
+                            targetLanguage = targetLanguage.ifBlank { "ENGLISH" },
+                        )
+                    if (translatedLyrics.isNotBlank()) {
+                        database.query {
+                            upsert(LyricsEntity(mediaMetadata.id, translatedLyrics, "AI Translation"))
+                        }
+                        onComplete(translatedLyrics)
+                    }
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                } finally {
+                    isAiTranslating.value = false
+                }
+            }
     }
 }
