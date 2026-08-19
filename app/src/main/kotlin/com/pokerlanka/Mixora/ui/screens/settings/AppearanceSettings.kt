@@ -102,10 +102,6 @@ import com.pokerlanka.mixora.constants.ShowUploadedPlaylistKey
 import com.pokerlanka.mixora.constants.SliderStyle
 import com.pokerlanka.mixora.constants.SliderStyleKey
 import com.pokerlanka.mixora.constants.SlimNavBarKey
-import com.pokerlanka.mixora.constants.SwipeSensitivityKey
-import com.pokerlanka.mixora.constants.SwipeThumbnailKey
-import com.pokerlanka.mixora.constants.SwipeToRemoveSongKey
-import com.pokerlanka.mixora.constants.SwipeToSongKey
 import com.pokerlanka.mixora.constants.UseNewMiniPlayerDesignKey
 import com.pokerlanka.mixora.constants.UseNewPlayerDesignKey
 import com.pokerlanka.mixora.ui.component.DefaultDialog
@@ -150,16 +146,6 @@ fun AppearanceSettings(
             SliderStyleKey,
             defaultValue = SliderStyle.SLIM,
         )
-    val (swipeThumbnail, onSwipeThumbnailChange) =
-        rememberPreference(
-            SwipeThumbnailKey,
-            defaultValue = true,
-        )
-    val (swipeSensitivity, onSwipeSensitivityChange) =
-        rememberPreference(
-            SwipeSensitivityKey,
-            defaultValue = 0.73f,
-        )
     val (gridItemSize, onGridItemSizeChange) =
         rememberEnumPreference(
             GridItemsSizeKey,
@@ -191,18 +177,6 @@ fun AppearanceSettings(
         }
         showRestartDialog = true
     }
-
-    val (swipeToSong, onSwipeToSongChange) =
-        rememberPreference(
-            SwipeToSongKey,
-            defaultValue = false,
-        )
-
-    val (swipeToRemoveSong, onSwipeToRemoveSongChange) =
-        rememberPreference(
-            SwipeToRemoveSongKey,
-            defaultValue = false,
-        )
 
     val (showLikedPlaylist, onShowLikedPlaylistChange) =
         rememberPreference(
@@ -644,115 +618,8 @@ fun AppearanceSettings(
                         },
                         onClick = { showSliderOptionDialog = true },
                     ),
-                    Material3SettingsItem(
-                        icon = painterResource(R.drawable.swipe),
-                        title = { Text(stringResource(R.string.enable_swipe_thumbnail)) },
-                        trailingContent = {
-                            Switch(
-                                checked = swipeThumbnail,
-                                onCheckedChange = onSwipeThumbnailChange,
-                                thumbContent = {
-                                    Icon(
-                                        painter =
-                                            painterResource(
-                                                id = if (swipeThumbnail) R.drawable.check else R.drawable.close,
-                                            ),
-                                        contentDescription = null,
-                                        modifier = Modifier.size(SwitchDefaults.IconSize),
-                                    )
-                                },
-                            )
-                        },
-                        onClick = { onSwipeThumbnailChange(!swipeThumbnail) },
-                    ),
-                ) +
-                    if (swipeThumbnail) {
-                        listOf(
-                            Material3SettingsItem(
-                                icon = painterResource(R.drawable.tune),
-                                title = { Text(stringResource(R.string.swipe_sensitivity)) },
-                                description = {
-                                    Text(
-                                        stringResource(
-                                            R.string.sensitivity_percentage,
-                                            (swipeSensitivity * 100).roundToInt(),
-                                        ),
-                                    )
-                                },
-                                onClick = { showSensitivityDialog = true },
-                            ),
-                        )
-                    } else {
-                        emptyList()
-                    },
+                ),
         )
-
-        if (showSensitivityDialog) {
-            var tempSensitivity by remember { mutableFloatStateOf(swipeSensitivity) }
-
-            DefaultDialog(
-                onDismiss = {
-                    tempSensitivity = swipeSensitivity
-                    showSensitivityDialog = false
-                },
-                buttons = {
-                    TextButton(
-                        onClick = {
-                            tempSensitivity = 0.73f
-                        },
-                    ) {
-                        Text(stringResource(R.string.reset))
-                    }
-
-                    Spacer(modifier = Modifier.weight(1f))
-
-                    TextButton(
-                        onClick = {
-                            tempSensitivity = swipeSensitivity
-                            showSensitivityDialog = false
-                        },
-                    ) {
-                        Text(stringResource(android.R.string.cancel))
-                    }
-                    TextButton(
-                        onClick = {
-                            onSwipeSensitivityChange(tempSensitivity)
-                            showSensitivityDialog = false
-                        },
-                    ) {
-                        Text(stringResource(android.R.string.ok))
-                    }
-                },
-            ) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier.padding(16.dp),
-                ) {
-                    Text(
-                        text = stringResource(R.string.swipe_sensitivity),
-                        style = MaterialTheme.typography.headlineSmall,
-                        modifier = Modifier.padding(bottom = 16.dp),
-                    )
-
-                    Text(
-                        text =
-                            stringResource(
-                                R.string.sensitivity_percentage,
-                                (tempSensitivity * 100).roundToInt(),
-                            ),
-                        style = MaterialTheme.typography.bodyLarge,
-                        modifier = Modifier.padding(bottom = 16.dp),
-                    )
-
-                    Slider(
-                        value = tempSensitivity,
-                        onValueChange = { tempSensitivity = it },
-                        valueRange = 0f..1f,
-                        modifier = Modifier.fillMaxWidth(),
-                    )
-                }
-            }
-        }
 
         Spacer(modifier = Modifier.height(27.dp))
 
@@ -790,48 +657,6 @@ fun AppearanceSettings(
                             )
                         },
                         onClick = { showDefaultChipDialog = true },
-                    ),
-                    Material3SettingsItem(
-                        icon = painterResource(R.drawable.swipe),
-                        title = { Text(stringResource(R.string.swipe_song_to_add)) },
-                        trailingContent = {
-                            Switch(
-                                checked = swipeToSong,
-                                onCheckedChange = onSwipeToSongChange,
-                                thumbContent = {
-                                    Icon(
-                                        painter =
-                                            painterResource(
-                                                id = if (swipeToSong) R.drawable.check else R.drawable.close,
-                                            ),
-                                        contentDescription = null,
-                                        modifier = Modifier.size(SwitchDefaults.IconSize),
-                                    )
-                                },
-                            )
-                        },
-                        onClick = { onSwipeToSongChange(!swipeToSong) },
-                    ),
-                    Material3SettingsItem(
-                        icon = painterResource(R.drawable.swipe),
-                        title = { Text(stringResource(R.string.swipe_song_to_remove)) },
-                        trailingContent = {
-                            Switch(
-                                checked = swipeToRemoveSong,
-                                onCheckedChange = onSwipeToRemoveSongChange,
-                                thumbContent = {
-                                    Icon(
-                                        painter =
-                                            painterResource(
-                                                id = if (swipeToRemoveSong) R.drawable.check else R.drawable.close,
-                                            ),
-                                        contentDescription = null,
-                                        modifier = Modifier.size(SwitchDefaults.IconSize),
-                                    )
-                                },
-                            )
-                        },
-                        onClick = { onSwipeToRemoveSongChange(!swipeToRemoveSong) },
                     ),
                     Material3SettingsItem(
                         icon = painterResource(R.drawable.nav_bar),

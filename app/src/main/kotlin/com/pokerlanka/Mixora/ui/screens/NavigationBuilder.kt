@@ -49,6 +49,7 @@ import com.pokerlanka.mixora.ui.screens.settings.AppearanceSettings
 import com.pokerlanka.mixora.ui.screens.settings.BackupAndRestore
 import com.pokerlanka.mixora.ui.screens.settings.ContentSettings
 import com.pokerlanka.mixora.ui.screens.settings.DarkMode
+import com.pokerlanka.mixora.ui.screens.settings.GestureSettings
 import com.pokerlanka.mixora.ui.screens.settings.InternetSettings
 import com.pokerlanka.mixora.ui.screens.settings.LyricsSettings
 import com.pokerlanka.mixora.ui.screens.settings.MusicTogetherScreen
@@ -367,6 +368,14 @@ fun NavGraphBuilder.navigationBuilder(
 
     composable("settings/player") {
         PlayerSettings(navController)
+    }
+
+    composable("settings/gestures") {
+        GestureSettings(navController)
+    }
+
+    composable("settings/gesture") {
+        GestureSettings(navController)
     }
 
     composable("settings/lyrics") {

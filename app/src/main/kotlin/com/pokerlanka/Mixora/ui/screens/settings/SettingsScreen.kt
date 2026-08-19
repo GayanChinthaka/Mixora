@@ -139,6 +139,12 @@ fun SettingsScreen(
                             onClick = { navController.navigate("settings/player") }
                         ),
                         Material3SettingsItem(
+                            icon = painterResource(R.drawable.swipe),
+                            title = { Text(stringResource(R.string.gestures)) },
+                            description = { Text(stringResource(R.string.gestures_desc)) },
+                            onClick = { navController.navigate("settings/gestures") }
+                        ),
+                        Material3SettingsItem(
                             icon = painterResource(R.drawable.lyrics),
                             title = { Text(stringResource(R.string.lyrics)) },
                             description = { Text("Lyrics providers and display options") },

@@ -105,6 +105,10 @@
     <string name="restart">Restart</string>
     <string name="restart_required">Restart required!</string>
     <string name="density_restart_message">The display density change will take effect after restarting the app. Restart now?</string>
+    <string name="gestures">Gestures</string>
+    <string name="gestures_desc">Swipe gestures and touch controls</string>
+    <string name="player_gestures">Player</string>
+    <string name="list_gestures">Song list</string>
     <string name="enable_swipe_thumbnail">Enable swipe to change song</string>
     <string name="swipe_song_to_add">Swipe left to add the song to the queue, or right to play it next</string>
     <string name="swipe_song_to_remove">Swipe to remove the song from the playlist</string>
