@@ -213,14 +213,6 @@ fun SettingsScreen(
                                 onClick = { navController.navigate("settings/internet") }
                             )
                         )
-                        add(
-                            Material3SettingsItem(
-                                icon = painterResource(R.drawable.key),
-                                title = { Text("PO Token Generation") },
-                                description = { Text("YouTube Proof of Origin token settings") },
-                                onClick = { navController.navigate("settings/po_token_generation") }
-                            )
-                        )
                         if (isAndroid12OrLater) {
                             add(
                                 Material3SettingsItem(

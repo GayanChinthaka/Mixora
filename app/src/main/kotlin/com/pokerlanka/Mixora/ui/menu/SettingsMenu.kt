@@ -310,14 +310,6 @@ fun SettingsMenu(
                             }
                         ),
                         Material3SettingsItem(
-                            icon = painterResource(R.drawable.key),
-                            title = { Text("PO Token Generation") },
-                            onClick = {
-                                onDismiss()
-                                navController.navigate("settings/po_token_generation")
-                            }
-                        ),
-                        Material3SettingsItem(
                             icon = painterResource(R.drawable.update),
                             title = { Text("Updates") },
                             onClick = {
