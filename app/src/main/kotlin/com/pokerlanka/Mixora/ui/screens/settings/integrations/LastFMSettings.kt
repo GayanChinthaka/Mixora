@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Mixora Project (C) 2026
  * Licensed under GPL-3.0 | See git history for contributors
  */
@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.only
@@ -26,6 +27,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
@@ -127,74 +129,27 @@ fun LastFMSettings(
         var tempUsername by rememberSaveable { mutableStateOf("") }
         var tempPassword by rememberSaveable { mutableStateOf("") }
 
-        AlertDialog(
-            properties = DialogProperties(usePlatformDefaultWidth = false),
-            onDismissRequest = {
+        DefaultDialog(
+            onDismiss = {
                 if (!isLoggingIn) {
                     showLoginDialog = false
                     loginError = null
                 }
             },
             title = { Text(stringResource(R.string.login)) },
-            text = {
-                Column(
-                    modifier = Modifier
-                        .verticalScroll(rememberScrollState()),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    OutlinedTextField(
-                        value = tempUsername,
-                        onValueChange = {
-                            tempUsername = it
+            buttons = {
+                TextButton(
+                    onClick = {
+                        if (!isLoggingIn) {
+                            showLoginDialog = false
                             loginError = null
-                        },
-                        label = { Text(stringResource(R.string.username)) },
-                        singleLine = true,
-                        enabled = !isLoggingIn,
-                    )
-                    OutlinedTextField(
-                        value = tempPassword,
-                        onValueChange = {
-                            tempPassword = it
-                            loginError = null
-                        },
-                        label = { Text(stringResource(R.string.password)) },
-                        singleLine = true,
-                        visualTransformation = PasswordVisualTransformation(),
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                        enabled = !isLoggingIn,
-                    )
-
-                    // Show error message if login failed
-                    loginError?.let { error ->
-                        Text(
-                            text = error,
-                            color = MaterialTheme.colorScheme.error,
-                            style = MaterialTheme.typography.bodySmall,
-                            modifier = Modifier.padding(top = 8.dp)
-                        )
-                    }
-
-                    // Show loading indicator
-                    if (isLoggingIn) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.Center,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(16.dp)
-                            )
-                            Spacer(modifier = Modifier.size(8.dp))
-                            Text(
-                                text = stringResource(R.string.logging_in),
-                                style = MaterialTheme.typography.bodySmall
-                            )
                         }
-                    }
+                    },
+                    enabled = !isLoggingIn
+                ) {
+                    Text(stringResource(R.string.cancel))
                 }
-            },
-            confirmButton = {
+                Spacer(modifier = Modifier.size(8.dp))
                 TextButton(
                     onClick = {
                         if (tempUsername.isBlank() || tempPassword.isBlank()) {
@@ -254,142 +209,70 @@ fun LastFMSettings(
                 ) {
                     Text(stringResource(R.string.login))
                 }
-            },
-            dismissButton = {
-                TextButton(
-                    onClick = {
-                        if (!isLoggingIn) {
-                            showLoginDialog = false
-                            loginError = null
-                        }
+            }
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 8.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                OutlinedTextField(
+                    value = tempUsername,
+                    onValueChange = {
+                        tempUsername = it
+                        loginError = null
                     },
-                    enabled = !isLoggingIn
-                ) {
-                    Text(stringResource(R.string.cancel))
+                    label = { Text(stringResource(R.string.username)) },
+                    singleLine = true,
+                    enabled = !isLoggingIn,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                OutlinedTextField(
+                    value = tempPassword,
+                    onValueChange = {
+                        tempPassword = it
+                        loginError = null
+                    },
+                    label = { Text(stringResource(R.string.password)) },
+                    singleLine = true,
+                    visualTransformation = PasswordVisualTransformation(),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                    enabled = !isLoggingIn,
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                // Show error message if login failed
+                loginError?.let { error ->
+                    Text(
+                        text = error,
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.padding(top = 4.dp)
+                    )
+                }
+
+                // Show loading indicator
+                if (isLoggingIn) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.size(8.dp))
+                        Text(
+                            text = stringResource(R.string.logging_in),
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    }
                 }
             }
-        )
+        }
     }
 
-    Column(
-        modifier = Modifier
-            .windowInsetsPadding(
-                LocalPlayerAwareWindowInsets.current.only(
-                    WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom
-                )
-            )
-            .verticalScroll(rememberScrollState())
-            .padding(horizontal = 16.dp)
-    ) {
-        Spacer(
-            Modifier.windowInsetsPadding(
-                LocalPlayerAwareWindowInsets.current.only(
-                    WindowInsetsSides.Top
-                )
-            )
-        )
-
-        // Options section (card-based)
-        Material3SettingsGroup(
-            title = stringResource(R.string.account),
-            items = listOf(
-                Material3SettingsItem(
-                    title = {
-                        Text(
-                            text = if (isLoggedIn) lastfmUsername else stringResource(R.string.not_logged_in),
-                            modifier = Modifier.alpha(if (isLoggedIn) 1f else 0.5f),
-                        )
-                    },
-                    trailingContent = {
-                        if (isLoggedIn) {
-                            OutlinedButton(onClick = {
-                                lastfmSession = ""
-                                lastfmUsername = ""
-                            }) {
-                                Text(stringResource(R.string.action_logout))
-                            }
-                        } else {
-                            OutlinedButton(onClick = { showLoginDialog = true }) {
-                                Text(stringResource(R.string.action_login))
-                            }
-                        }
-                    },
-                    icon = painterResource(R.drawable.music_note)
-                ),
-            )
-        )
-
-        Spacer(Modifier.height(8.dp))
-
-        Material3SettingsGroup(
-            title = stringResource(R.string.options),
-            items = listOf(
-                Material3SettingsItem(
-                    title = { Text(stringResource(R.string.enable_scrobbling)) },
-                    trailingContent = {
-                        Switch(
-                            checked = lastfmScrobbling,
-                            onCheckedChange = onlastfmScrobblingChange,
-                            enabled = isLoggedIn,
-                            thumbContent = {
-                                Icon(
-                                    painter = painterResource(
-                                        id = if (lastfmScrobbling) R.drawable.check else R.drawable.close
-                                    ),
-                                    contentDescription = null,
-                                    modifier = Modifier.size(SwitchDefaults.IconSize),
-                                )
-                            }
-                        )
-                    },
-                    enabled = isLoggedIn,
-                    icon = painterResource(R.drawable.queue_music)
-                ),
-                Material3SettingsItem(
-                    title = { Text(stringResource(R.string.lastfm_now_playing)) },
-                    trailingContent = {
-                        Switch(
-                            checked = useNowPlaying,
-                            onCheckedChange = onUseNowPlayingChange,
-                            enabled = isLoggedIn && lastfmScrobbling,
-                            thumbContent = {
-                                Icon(
-                                    painter = painterResource(
-                                        id = if (useNowPlaying) R.drawable.check else R.drawable.close
-                                    ),
-                                    contentDescription = null,
-                                    modifier = Modifier.size(SwitchDefaults.IconSize),
-                                )
-                            }
-                        )
-                    },
-                    enabled = isLoggedIn && lastfmScrobbling,
-                    icon = painterResource(R.drawable.play)
-                ),
-                Material3SettingsItem(
-                    title = { Text(stringResource(R.string.last_fm_send_likes)) },
-                    description = { stringResource(R.string.last_fm_send_likes_description) },
-                    trailingContent = {
-                        Switch(
-                            checked = useSendLikes,
-                            onCheckedChange = onUseSendLikes,
-                            enabled = isLoggedIn,
-                            thumbContent = {
-                                Icon(
-                                    painter = painterResource(
-                                        id = if (useSendLikes) R.drawable.check else R.drawable.close
-                                    ),
-                                    contentDescription = null,
-                                    modifier = Modifier.size(SwitchDefaults.IconSize),
-                                )
-                            }
-                        )
-                    },
-                    enabled = isLoggedIn,
-                    icon = painterResource(R.drawable.media3_icon_thumb_up_unfilled)
-                )
-            )
-        )
 
         var showMinTrackDurationDialog by rememberSaveable { mutableStateOf(false) }
 
@@ -586,45 +469,165 @@ fun LastFMSettings(
             }
         }
 
-        Spacer(Modifier.height(8.dp))
-
-        Material3SettingsGroup(
-            title = stringResource(R.string.scrobbling_configuration),
-            items = listOf(
-                Material3SettingsItem(
-                    title = { Text(stringResource(R.string.scrobble_min_track_duration)) },
-                    description = { Text(makeTimeString((minTrackDuration * 1000).toLong())) },
-                    onClick = { showMinTrackDurationDialog = true },
-                    icon = painterResource(R.drawable.timer)
-                ),
-                Material3SettingsItem(
-                    title = { Text(stringResource(R.string.scrobble_delay_percent)) },
-                    description = { Text(stringResource(R.string.sensitivity_percentage, (scrobbleDelayPercent * 100).roundToInt())) },
-                    onClick = { showScrobbleDelayPercentDialog = true },
-                    icon = painterResource(R.drawable.timer)
-                ),
-                Material3SettingsItem(
-                    title = { Text(stringResource(R.string.scrobble_delay_minutes)) },
-                    description = { Text(makeTimeString((scrobbleDelaySeconds * 1000).toLong())) },
-                    onClick = { showScrobbleDelaySecondsDialog = true },
-                    icon = painterResource(R.drawable.timer)
-                ),
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text(stringResource(R.string.lastfm_integration)) },
+                navigationIcon = {
+                    IconButton(
+                        onClick = navController::navigateUp,
+                        onLongClick = navController::backToMain,
+                    ) {
+                        Icon(
+                            painterResource(R.drawable.arrow_back),
+                            contentDescription = null,
+                        )
+                    }
+                }
             )
-        )
-    }
-
-    TopAppBar(
-        title = { Text(stringResource(R.string.lastfm_integration)) },
-        navigationIcon = {
-            IconButton(
-                onClick = navController::navigateUp,
-                onLongClick = navController::backToMain,
-            ) {
-                Icon(
-                    painterResource(R.drawable.arrow_back),
-                    contentDescription = null,
-                )
-            }
         }
-    )
+    ) { innerPadding ->
+        Column(
+            modifier = Modifier
+                .padding(innerPadding)
+                .windowInsetsPadding(
+                    LocalPlayerAwareWindowInsets.current.only(
+                        WindowInsetsSides.Horizontal + WindowInsetsSides.Bottom
+                    )
+                )
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 16.dp)
+        ) {
+            // Options section (card-based)
+            Material3SettingsGroup(
+                title = stringResource(R.string.account),
+                items = listOf(
+                    Material3SettingsItem(
+                        title = {
+                            Text(
+                                text = if (isLoggedIn) lastfmUsername else stringResource(R.string.not_logged_in),
+                                modifier = Modifier.alpha(if (isLoggedIn) 1f else 0.5f),
+                            )
+                        },
+                        trailingContent = {
+                            if (isLoggedIn) {
+                                OutlinedButton(onClick = {
+                                    lastfmSession = ""
+                                    lastfmUsername = ""
+                                }) {
+                                    Text(stringResource(R.string.action_logout))
+                                }
+                            } else {
+                                OutlinedButton(onClick = { showLoginDialog = true }) {
+                                    Text(stringResource(R.string.action_login))
+                                }
+                            }
+                        },
+                        icon = painterResource(R.drawable.music_note)
+                    ),
+                )
+            )
+
+            Spacer(Modifier.height(8.dp))
+
+            Material3SettingsGroup(
+                title = stringResource(R.string.options),
+                items = listOf(
+                    Material3SettingsItem(
+                        title = { Text(stringResource(R.string.enable_scrobbling)) },
+                        trailingContent = {
+                            Switch(
+                                checked = lastfmScrobbling,
+                                onCheckedChange = onlastfmScrobblingChange,
+                                enabled = isLoggedIn,
+                                thumbContent = {
+                                    Icon(
+                                        painter = painterResource(
+                                            id = if (lastfmScrobbling) R.drawable.check else R.drawable.close
+                                        ),
+                                        contentDescription = null,
+                                        modifier = Modifier.size(SwitchDefaults.IconSize),
+                                    )
+                                }
+                            )
+                        },
+                        enabled = isLoggedIn,
+                        icon = painterResource(R.drawable.queue_music)
+                    ),
+                    Material3SettingsItem(
+                        title = { Text(stringResource(R.string.lastfm_now_playing)) },
+                        trailingContent = {
+                            Switch(
+                                checked = useNowPlaying,
+                                onCheckedChange = onUseNowPlayingChange,
+                                enabled = isLoggedIn && lastfmScrobbling,
+                                thumbContent = {
+                                    Icon(
+                                        painter = painterResource(
+                                            id = if (useNowPlaying) R.drawable.check else R.drawable.close
+                                        ),
+                                        contentDescription = null,
+                                        modifier = Modifier.size(SwitchDefaults.IconSize),
+                                    )
+                                }
+                            )
+                        },
+                        enabled = isLoggedIn && lastfmScrobbling,
+                        icon = painterResource(R.drawable.play)
+                    ),
+                    Material3SettingsItem(
+                        title = { Text(stringResource(R.string.last_fm_send_likes)) },
+                        description = { Text(stringResource(R.string.last_fm_send_likes_description)) },
+                        trailingContent = {
+                            Switch(
+                                checked = useSendLikes,
+                                onCheckedChange = onUseSendLikes,
+                                enabled = isLoggedIn,
+                                thumbContent = {
+                                    Icon(
+                                        painter = painterResource(
+                                            id = if (useSendLikes) R.drawable.check else R.drawable.close
+                                        ),
+                                        contentDescription = null,
+                                        modifier = Modifier.size(SwitchDefaults.IconSize),
+                                    )
+                                }
+                            )
+                        },
+                        enabled = isLoggedIn,
+                        icon = painterResource(R.drawable.media3_icon_thumb_up_unfilled)
+                    )
+                )
+            )
+
+            Spacer(Modifier.height(8.dp))
+
+            Material3SettingsGroup(
+                title = stringResource(R.string.scrobbling_configuration),
+                items = listOf(
+                    Material3SettingsItem(
+                        title = { Text(stringResource(R.string.scrobble_min_track_duration)) },
+                        description = { Text(makeTimeString((minTrackDuration * 1000).toLong())) },
+                        onClick = { showMinTrackDurationDialog = true },
+                        icon = painterResource(R.drawable.timer)
+                    ),
+                    Material3SettingsItem(
+                        title = { Text(stringResource(R.string.scrobble_delay_percent)) },
+                        description = { Text(stringResource(R.string.sensitivity_percentage, (scrobbleDelayPercent * 100).roundToInt())) },
+                        onClick = { showScrobbleDelayPercentDialog = true },
+                        icon = painterResource(R.drawable.timer)
+                    ),
+                    Material3SettingsItem(
+                        title = { Text(stringResource(R.string.scrobble_delay_minutes)) },
+                        description = { Text(makeTimeString((scrobbleDelaySeconds * 1000).toLong())) },
+                        onClick = { showScrobbleDelaySecondsDialog = true },
+                        icon = painterResource(R.drawable.timer)
+                    ),
+                )
+            )
+
+            Spacer(modifier = Modifier.height(24.dp))
+        }
+    }
 }
