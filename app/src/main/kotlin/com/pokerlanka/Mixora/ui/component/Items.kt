@@ -83,10 +83,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.fastForEachIndexed
 import androidx.compose.ui.zIndex
 import androidx.media3.common.MediaItem
+import androidx.media3.common.Player
 import androidx.media3.exoplayer.offline.Download
 import androidx.media3.exoplayer.offline.Download.STATE_COMPLETED
 import androidx.media3.exoplayer.offline.Download.STATE_DOWNLOADING
 import androidx.media3.exoplayer.offline.Download.STATE_QUEUED
+import kotlinx.coroutines.flow.MutableStateFlow
 import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
 import com.pokerlanka.innertube.YouTube
@@ -539,6 +541,7 @@ fun SongListItem(
     isSelected: Boolean = false,
     isActive: Boolean = false,
     isPlaying: Boolean = false,
+    isLoading: Boolean? = null,
     isSwipeable: Boolean = true,
     trailingContent: @Composable RowScope.() -> Unit = {},
 ) {
@@ -577,6 +580,7 @@ fun SongListItem(
                      isSelected = isSelected,
                      isActive = isActive,
                      isPlaying = isPlaying,
+                     isLoading = isLoading,
                      shape = RoundedCornerShape(ThumbnailCornerRadius),
                      modifier = Modifier.size(ListThumbnailSize)
                  )
@@ -621,6 +625,7 @@ fun SongGridItem(
     },
     isActive: Boolean = false,
     isPlaying: Boolean = false,
+    isLoading: Boolean? = null,
     fillMaxWidth: Boolean = false,
 ) = GridItem(
     title = {
@@ -652,6 +657,7 @@ fun SongGridItem(
             thumbnailUrl = song.song.thumbnailUrl,
             isActive = isActive,
             isPlaying = isPlaying,
+            isLoading = isLoading,
             shape = RoundedCornerShape(ThumbnailCornerRadius),
             modifier = Modifier.size(gridHeight)
         )
@@ -1145,6 +1151,7 @@ fun YouTubeListItem(
     isSelected: Boolean = false,
     isActive: Boolean = false,
     isPlaying: Boolean = false,
+    isLoading: Boolean? = null,
     isSwipeable: Boolean = true,
     trailingContent: @Composable RowScope.() -> Unit = {},
     badges: @Composable RowScope.() -> Unit = {
@@ -1192,6 +1199,7 @@ fun YouTubeListItem(
                     isSelected = isSelected,
                     isActive = isActive,
                     isPlaying = isPlaying,
+                    isLoading = isLoading,
                     shape = if (item is ArtistItem) CircleShape else RoundedCornerShape(ThumbnailCornerRadius),
                     modifier = Modifier.size(ListThumbnailSize)
                 )
@@ -1243,6 +1251,7 @@ fun YouTubeGridItem(
     thumbnailRatio: Float = if (item is SongItem) 16f / 9 else 1f,
     isActive: Boolean = false,
     isPlaying: Boolean = false,
+    isLoading: Boolean? = null,
     fillMaxWidth: Boolean = false,
 ) = GridItem(
     title = {
@@ -1285,6 +1294,7 @@ fun YouTubeGridItem(
             thumbnailUrl = item.thumbnail,
             isActive = isActive,
             isPlaying = isPlaying,
+            isLoading = isLoading,
             shape = if (item is ArtistItem) CircleShape else RoundedCornerShape(ThumbnailCornerRadius),
         )
 
@@ -1454,9 +1464,14 @@ fun ItemThumbnail(
     modifier: Modifier = Modifier,
     albumIndex: Int? = null,
     isSelected: Boolean = false,
-    thumbnailRatio: Float = 1f
+    isLoading: Boolean? = null,
+    thumbnailRatio: Float = 1f,
 ) {
     val cropAlbumArt by rememberPreference(CropAlbumArtKey, false)
+    val playerConnection = LocalPlayerConnection.current
+    val playbackState by (playerConnection?.playbackState ?: remember { MutableStateFlow(Player.STATE_IDLE) }).collectAsStateWithLifecycle()
+    val isActuallyLoading = isLoading ?: (isActive && (playbackState == Player.STATE_BUFFERING || (playbackState == Player.STATE_IDLE && isPlaying)))
+    val isActuallyPlaying = isActive && isPlaying && playbackState == Player.STATE_READY
     
     Box(
         contentAlignment = Alignment.Center,
@@ -1512,7 +1527,8 @@ fun ItemThumbnail(
 
         PlayingIndicatorBox(
             isActive = isActive,
-            playWhenReady = isPlaying,
+            playWhenReady = isActuallyPlaying,
+            isLoading = isActuallyLoading,
             color = if (albumIndex != null) MaterialTheme.colorScheme.onBackground else Color.White,
             modifier = Modifier
                 .fillMaxSize()
@@ -1536,9 +1552,14 @@ fun LocalThumbnail(
     modifier: Modifier = Modifier,
     showCenterPlay: Boolean = false,
     playButtonVisible: Boolean = false,
-    thumbnailRatio: Float = 1f
+    isLoading: Boolean? = null,
+    thumbnailRatio: Float = 1f,
 ) {
     val cropAlbumArt by rememberPreference(CropAlbumArtKey, false)
+    val playerConnection = LocalPlayerConnection.current
+    val playbackState by (playerConnection?.playbackState ?: remember { MutableStateFlow(Player.STATE_IDLE) }).collectAsStateWithLifecycle()
+    val isActuallyLoading = isLoading ?: (isActive && (playbackState == Player.STATE_BUFFERING || (playbackState == Player.STATE_IDLE && isPlaying)))
+    val isActuallyPlaying = isActive && isPlaying && playbackState == Player.STATE_READY
     
     Box(
         contentAlignment = Alignment.Center,
@@ -1569,7 +1590,13 @@ fun LocalThumbnail(
                     .fillMaxSize()
                     .background(Color.Black.copy(alpha = 0.4f), shape)
             ) {
-                if (isPlaying) {
+                if (isActuallyLoading) {
+                    CircularProgressIndicator(
+                        color = Color.White,
+                        strokeWidth = 2.5.dp,
+                        modifier = Modifier.size(24.dp),
+                    )
+                } else if (isActuallyPlaying) {
                     PlayingIndicator(
                         color = Color.White,
                         modifier = Modifier.height(24.dp)

@@ -41,6 +41,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -574,8 +575,23 @@ private fun NewMiniPlayerPlayButton(
                 )
             }
 
-            // Overlay for paused state
-            if (!effectiveIsPlaying || playbackState == Player.STATE_ENDED) {
+            // Overlay for loading or paused state
+            val isBuffering = playbackState == Player.STATE_BUFFERING || (playbackState == Player.STATE_IDLE && effectiveIsPlaying)
+            if (isBuffering) {
+                Box(
+                    contentAlignment = Alignment.Center,
+                    modifier =
+                        Modifier
+                            .fillMaxSize()
+                            .background(Color.Black.copy(alpha = 0.4f), CircleShape),
+                ) {
+                    CircularProgressIndicator(
+                        color = Color.White,
+                        strokeWidth = 2.dp,
+                        modifier = Modifier.size(18.dp),
+                    )
+                }
+            } else if (!effectiveIsPlaying || playbackState == Player.STATE_ENDED) {
                 Box(
                     modifier =
                         Modifier

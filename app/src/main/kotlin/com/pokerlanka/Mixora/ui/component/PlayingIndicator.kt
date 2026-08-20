@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Mixora Project (C) 2026
  * Licensed under GPL-3.0 | See git history for contributors
  */
@@ -17,6 +17,8 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -90,6 +92,7 @@ fun PlayingIndicatorBox(
     modifier: Modifier = Modifier,
     isActive: Boolean,
     playWhenReady: Boolean,
+    isLoading: Boolean = false,
     color: Color = Color.White,
 ) {
     AnimatedVisibility(
@@ -101,7 +104,13 @@ fun PlayingIndicatorBox(
             contentAlignment = Alignment.Center,
             modifier = modifier,
         ) {
-            if (playWhenReady) {
+            if (isLoading) {
+                CircularProgressIndicator(
+                    color = color,
+                    strokeWidth = 2.5.dp,
+                    modifier = Modifier.size(24.dp),
+                )
+            } else if (playWhenReady) {
                 PlayingIndicator(
                     color = color,
                     modifier = Modifier.height(24.dp),
@@ -116,3 +125,4 @@ fun PlayingIndicatorBox(
         }
     }
 }
+

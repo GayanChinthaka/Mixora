@@ -171,6 +171,7 @@ import com.pokerlanka.mixora.ui.component.AppNavigationBar
 import com.pokerlanka.mixora.ui.component.AppNavigationRail
 import com.pokerlanka.mixora.ui.component.BottomSheetMenu
 import com.pokerlanka.mixora.ui.component.BottomSheetPage
+import com.pokerlanka.mixora.ui.component.BottomSheetState
 import com.pokerlanka.mixora.ui.component.LocalBottomSheetPageState
 import com.pokerlanka.mixora.ui.component.LocalMenuState
 import com.pokerlanka.mixora.ui.component.rememberBottomSheetState
@@ -742,10 +743,9 @@ class MainActivity : ComponentActivity() {
                                 reason: Int,
                             ) {
                                 if (reason == Player.MEDIA_ITEM_TRANSITION_REASON_PLAYLIST_CHANGED &&
-                                    mediaItem != null &&
-                                    playerBottomSheetState.isDismissed
+                                    mediaItem != null
                                 ) {
-                                    playerBottomSheetState.collapseSoft()
+                                    playerBottomSheetState.expandSoft()
                                 }
                             }
                         }
@@ -822,6 +822,7 @@ class MainActivity : ComponentActivity() {
                     LocalDownloadUtil provides downloadUtil,
                     LocalShimmerTheme provides ShimmerTheme,
                     LocalSyncUtils provides syncUtils,
+                    LocalPlayerBottomSheetState provides playerBottomSheetState,
                 ) {
                     Scaffold(
                         snackbarHost = { SnackbarHost(snackbarHostState) },
@@ -1371,3 +1372,4 @@ val LocalPlayerAwareWindowInsets = compositionLocalOf<WindowInsets> { error("No 
 val LocalDownloadUtil = staticCompositionLocalOf<DownloadUtil> { error("No DownloadUtil provided") }
 val LocalSyncUtils = staticCompositionLocalOf<SyncUtils> { error("No SyncUtils provided") }
 val LocalIsPlayerExpanded = compositionLocalOf { false }
+val LocalPlayerBottomSheetState = staticCompositionLocalOf<BottomSheetState?> { null }

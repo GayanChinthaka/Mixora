@@ -59,6 +59,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ContainedLoadingIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
@@ -1501,15 +1502,23 @@ fun BottomSheetPlayer(
                                     .size(68.dp)
                                     .focusRequester(focusRequester),
                         ) {
-                            Icon(
-                                painter =
-                                    painterResource(
-                                        if (effectiveIsPlaying) R.drawable.pause else R.drawable.play,
-                                    ),
-                                contentDescription =
-                                    if (effectiveIsPlaying) stringResource(R.string.pause) else stringResource(R.string.play),
-                                modifier = Modifier.size(34.dp),
-                            )
+                            if (playbackState == Player.STATE_BUFFERING || (playbackState == Player.STATE_IDLE && effectiveIsPlaying)) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(32.dp),
+                                    color = iconButtonColor,
+                                    strokeWidth = 3.dp,
+                                )
+                            } else {
+                                Icon(
+                                    painter =
+                                        painterResource(
+                                            if (effectiveIsPlaying && playbackState != STATE_ENDED) R.drawable.pause else R.drawable.play,
+                                        ),
+                                    contentDescription =
+                                        if (effectiveIsPlaying) stringResource(R.string.pause) else stringResource(R.string.play),
+                                    modifier = Modifier.size(34.dp),
+                                )
+                            }
                         }
 
                         // 4. Next Button
