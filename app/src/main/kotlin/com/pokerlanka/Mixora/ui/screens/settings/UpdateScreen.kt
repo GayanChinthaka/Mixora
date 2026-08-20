@@ -164,25 +164,6 @@ fun UpdateScreen(
                             contentDescription = null
                         )
                     }
-                },
-                actions = {
-                    IconButton(
-                        onClick = { checkForUpdates(silent = false) },
-                        onLongClick = {},
-                        enabled = !isChecking
-                    ) {
-                        if (isChecking) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(20.dp),
-                                strokeWidth = 2.dp
-                            )
-                        } else {
-                            Icon(
-                                painter = painterResource(R.drawable.sync),
-                                contentDescription = "Check for updates"
-                            )
-                        }
-                    }
                 }
             )
         }
@@ -273,7 +254,7 @@ fun UpdateScreen(
                         text = if (isUpdateAvailable && latestRelease != null) {
                             "Version ${latestRelease?.tagName} is available (Current: v${BuildConfig.VERSION_NAME})"
                         } else {
-                            "Installed: v${BuildConfig.VERSION_NAME} (build ${BuildConfig.VERSION_CODE})"
+                            "Installed: v${BuildConfig.VERSION_NAME}"
                         },
                         style = MaterialTheme.typography.bodyMedium,
                         color = if (isUpdateAvailable) {
@@ -421,15 +402,6 @@ fun UpdateScreen(
                                     )
                                 }
                             )
-                        }
-                    ),
-                    Material3SettingsItem(
-                        icon = painterResource(R.drawable.github),
-                        title = { Text(stringResource(R.string.view_on_github)) },
-                        description = { Text("Browse release assets and changelogs on GitHub") },
-                        onClick = {
-                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(Updater.GITHUB_RELEASES_URL))
-                            context.startActivity(intent)
                         }
                     )
                 )
