@@ -41,6 +41,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.pokerlanka.mixora.LocalPlayerAwareWindowInsets
 import com.pokerlanka.mixora.R
+import com.pokerlanka.mixora.constants.SwipeMiniPlayerKey
 import com.pokerlanka.mixora.constants.SwipeSensitivityKey
 import com.pokerlanka.mixora.constants.SwipeThumbnailKey
 import com.pokerlanka.mixora.constants.SwipeToRemoveSongKey
@@ -61,6 +62,11 @@ fun GestureSettings(
     val (swipeThumbnail, onSwipeThumbnailChange) =
         rememberPreference(
             SwipeThumbnailKey,
+            defaultValue = true,
+        )
+    val (swipeMiniPlayer, onSwipeMiniPlayerChange) =
+        rememberPreference(
+            SwipeMiniPlayerKey,
             defaultValue = true,
         )
     val (swipeSensitivity, onSwipeSensitivityChange) =
@@ -199,7 +205,7 @@ fun GestureSettings(
                             onClick = { onSwipeThumbnailChange(!swipeThumbnail) },
                         ),
                     ) +
-                        if (swipeThumbnail) {
+                        if (swipeThumbnail || swipeMiniPlayer) {
                             listOf(
                                 Material3SettingsItem(
                                     icon = painterResource(R.drawable.tune),
@@ -218,6 +224,36 @@ fun GestureSettings(
                         } else {
                             emptyList()
                         },
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Material3SettingsGroup(
+                title = stringResource(R.string.mini_player_gestures),
+                items =
+                    listOf(
+                        Material3SettingsItem(
+                            icon = painterResource(R.drawable.swipe),
+                            title = { Text(stringResource(R.string.enable_mini_player_swipe)) },
+                            trailingContent = {
+                                Switch(
+                                    checked = swipeMiniPlayer,
+                                    onCheckedChange = onSwipeMiniPlayerChange,
+                                    thumbContent = {
+                                        Icon(
+                                            painter =
+                                                painterResource(
+                                                    id = if (swipeMiniPlayer) R.drawable.check else R.drawable.close,
+                                                ),
+                                            contentDescription = null,
+                                            modifier = Modifier.size(SwitchDefaults.IconSize),
+                                        )
+                                    },
+                                )
+                            },
+                            onClick = { onSwipeMiniPlayerChange(!swipeMiniPlayer) },
+                        ),
+                    ),
             )
 
             Spacer(modifier = Modifier.height(16.dp))

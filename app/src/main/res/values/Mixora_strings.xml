@@ -106,8 +106,10 @@
     <string name="gestures">Gestures</string>
     <string name="gestures_desc">Swipe gestures and touch controls</string>
     <string name="player_gestures">Player</string>
+    <string name="mini_player_gestures">Mini player</string>
     <string name="list_gestures">Song list</string>
     <string name="enable_swipe_thumbnail">Enable swipe to change song</string>
+    <string name="enable_mini_player_swipe">Enable swipe to change song</string>
     <string name="swipe_song_to_add">Swipe left to add the song to the queue, or right to play it next</string>
     <string name="swipe_song_to_remove">Swipe to remove the song from the playlist</string>
     <string name="lyrics_click_change">Change lyrics on tap</string>
