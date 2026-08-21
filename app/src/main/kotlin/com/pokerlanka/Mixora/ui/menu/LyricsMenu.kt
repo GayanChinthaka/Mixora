@@ -57,10 +57,18 @@ import com.pokerlanka.mixora.ui.component.Material3MenuItemData
 import com.pokerlanka.mixora.ui.component.NewAction
 import com.pokerlanka.mixora.ui.component.NewActionGrid
 import com.pokerlanka.mixora.ui.component.TextFieldDialog
+import com.pokerlanka.mixora.ui.component.RomanizationSetupDialog
 import com.pokerlanka.mixora.viewmodels.LyricsMenuViewModel
 import com.pokerlanka.mixora.constants.LyricsBackgroundStyle
 import com.pokerlanka.mixora.constants.LyricsBackgroundStyleKey
+import com.pokerlanka.mixora.LocalNavController
+import com.pokerlanka.mixora.constants.AiApiKeyKey
+import com.pokerlanka.mixora.constants.AiCustomEndpointKey
+import com.pokerlanka.mixora.constants.AiCustomModelKey
+import com.pokerlanka.mixora.constants.AiProvider
+import com.pokerlanka.mixora.constants.AiProviderKey
 import com.pokerlanka.mixora.constants.AiRomanizationEnabledKey
+import com.pokerlanka.mixora.constants.AiSelectedModelKey
 import com.pokerlanka.mixora.constants.RespectAgentPositioningKey
 import com.pokerlanka.mixora.constants.ShowIntervalIndicatorKey
 import com.pokerlanka.mixora.utils.rememberEnumPreference
@@ -78,6 +86,7 @@ fun LyricsMenu(
 ) {
     val context = LocalContext.current
     val database = LocalDatabase.current
+    val navController = LocalNavController.current
 
     var respectAgentPositioning by rememberPreference(RespectAgentPositioningKey, true)
     var showIntervalIndicator by rememberPreference(ShowIntervalIndicatorKey, true)
@@ -112,6 +121,33 @@ fun LyricsMenu(
     // column instead, which is why the two switches appeared out of sync: each was gating the
     // other, so flipping one alone did nothing.
     var isChecked by rememberPreference(AiRomanizationEnabledKey, defaultValue = false)
+    var showRomanizationSetupDialog by remember { mutableStateOf(false) }
+
+    // Same configured-check as the Lyrics settings screen: without a provider, key and model a
+    // request cannot be made, so the toggle points at AI Integration instead of silently failing.
+    val aiProvider by rememberEnumPreference(AiProviderKey, AiProvider.NONE)
+    val aiApiKey by rememberPreference(AiApiKeyKey, defaultValue = "")
+    val aiCustomEndpoint by rememberPreference(AiCustomEndpointKey, defaultValue = "")
+    val aiSelectedModel by rememberPreference(AiSelectedModelKey, defaultValue = "")
+    val aiCustomModel by rememberPreference(AiCustomModelKey, defaultValue = "")
+    val aiModel = if (aiProvider == AiProvider.CUSTOM) aiCustomModel else aiSelectedModel
+    val aiConfigured =
+        aiProvider != AiProvider.NONE &&
+            aiApiKey.isNotBlank() &&
+            aiModel.isNotBlank() &&
+            (aiProvider != AiProvider.CUSTOM || aiCustomEndpoint.isNotBlank())
+
+    if (showRomanizationSetupDialog) {
+        RomanizationSetupDialog(
+            onDismiss = { showRomanizationSetupDialog = false },
+            onSetUp = {
+                showRomanizationSetupDialog = false
+                onDismiss()
+                navController.navigate("settings/ai_integration")
+            },
+        )
+    }
+
 
     var lyricsOffset by rememberSaveable { mutableIntStateOf(songProvider()?.lyricsOffset ?: 0) }
 
@@ -350,18 +386,29 @@ fun LyricsMenu(
                                 )
                             },
                             onClick = {
-                                isChecked = !isChecked
+                                if (aiConfigured) {
+                                    isChecked = !isChecked
+                                } else {
+                                    showRomanizationSetupDialog = true
+                                }
                             },
                             trailingContent = {
                                 Switch(
-                                    checked = isChecked,
+                                    checked = isChecked && aiConfigured,
+                                    // Deliberately left interactive while unconfigured: a disabled
+                                    // Switch consumes the touch, so onCheckedChange never ran and
+                                    // tapping the switch did nothing at all.
                                     onCheckedChange = { newCheckedState ->
-                                        isChecked = newCheckedState
+                                        if (aiConfigured) {
+                                            isChecked = newCheckedState
+                                        } else {
+                                            showRomanizationSetupDialog = true
+                                        }
                                     },
                                     thumbContent = {
                                         Icon(
                                             painter = painterResource(
-                                                id = if (isChecked) R.drawable.check else R.drawable.close
+                                                id = if (isChecked && aiConfigured) R.drawable.check else R.drawable.close
                                             ),
                                             contentDescription = null,
                                             modifier = Modifier.size(SwitchDefaults.IconSize)

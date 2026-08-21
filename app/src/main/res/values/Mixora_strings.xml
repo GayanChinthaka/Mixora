@@ -809,4 +809,8 @@
     <string name="romanization_clear_cache_desc">Removes stored romanized lyrics. They will be requested again when needed.</string>
     <string name="romanizing_in_progress">Romanizing…</string>
     <string name="lyrics_providers_desc">Enable providers and drag to set the order they are tried in</string>
+    <string name="romanization_requires_ai">Needs an AI provider — tap to set one up</string>
+    <string name="romanization_setup_title">AI provider required</string>
+    <string name="romanization_setup_message">Romanization converts non-Latin lyrics into Latin script using an AI model. Add a provider, API key and model under Account &#8594; AI Integration to turn this on.</string>
+    <string name="romanization_setup_action">Set up</string>
 </resources>

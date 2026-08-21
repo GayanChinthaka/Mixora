@@ -47,7 +47,13 @@ import androidx.navigation.NavController
 import com.pokerlanka.mixora.LocalPlayerAwareWindowInsets
 import com.pokerlanka.mixora.R
 import com.pokerlanka.mixora.constants.EnableBetterLyricsKey
+import com.pokerlanka.mixora.constants.AiApiKeyKey
+import com.pokerlanka.mixora.constants.AiCustomEndpointKey
+import com.pokerlanka.mixora.constants.AiCustomModelKey
+import com.pokerlanka.mixora.constants.AiProvider
+import com.pokerlanka.mixora.constants.AiProviderKey
 import com.pokerlanka.mixora.constants.AiRomanizationEnabledKey
+import com.pokerlanka.mixora.constants.AiSelectedModelKey
 import com.pokerlanka.mixora.constants.EnableKugouKey
 import com.pokerlanka.mixora.constants.EnableLrcLibKey
 import com.pokerlanka.mixora.constants.EnablePaxsenixKey
@@ -69,6 +75,7 @@ import com.pokerlanka.mixora.ui.component.DraggableLyricsProviderList
 import com.pokerlanka.mixora.ui.component.EnumDialog
 import com.pokerlanka.mixora.ui.component.IconButton
 import com.pokerlanka.mixora.ui.component.Material3SettingsGroup
+import com.pokerlanka.mixora.ui.component.RomanizationSetupDialog
 import com.pokerlanka.mixora.ui.component.Material3SettingsItem
 import com.pokerlanka.mixora.ui.utils.backToMain
 import com.pokerlanka.mixora.utils.rememberEnumPreference
@@ -124,6 +131,22 @@ fun LyricsSettings(
     // provider/model live under Settings > Account > AI Integration, so nothing is duplicated here.
     val (aiRomanizationEnabled, onAiRomanizationEnabledChange) =
         rememberPreference(AiRomanizationEnabledKey, defaultValue = false)
+
+    // Mirrors AiServiceConfig.canCallApi plus the model check in AiTextService.complete, so the
+    // switch is offered exactly when a romanization request could actually succeed. Without this
+    // the toggle could be turned on against no provider and then silently do nothing.
+    val aiProvider by rememberEnumPreference(AiProviderKey, AiProvider.NONE)
+    val (aiApiKey, _) = rememberPreference(AiApiKeyKey, defaultValue = "")
+    val (aiCustomEndpoint, _) = rememberPreference(AiCustomEndpointKey, defaultValue = "")
+    val (aiSelectedModel, _) = rememberPreference(AiSelectedModelKey, defaultValue = "")
+    val (aiCustomModel, _) = rememberPreference(AiCustomModelKey, defaultValue = "")
+    val aiModel = if (aiProvider == AiProvider.CUSTOM) aiCustomModel else aiSelectedModel
+    val aiConfigured =
+        aiProvider != AiProvider.NONE &&
+            aiApiKey.isNotBlank() &&
+            aiModel.isNotBlank() &&
+            (aiProvider != AiProvider.CUSTOM || aiCustomEndpoint.isNotBlank())
+    var showRomanizationSetupDialog by rememberSaveable { mutableStateOf(false) }
     val (lyricsTextSize, onLyricsTextSizeChange) = rememberPreference(LyricsTextSizeKey, defaultValue = 36f)
     val (lyricsLineSpacing, onLyricsLineSpacingChange) = rememberPreference(LyricsLineSpacingKey, defaultValue = 1.3f)
 
@@ -143,6 +166,16 @@ fun LyricsSettings(
             "YouTubeSubtitle" to "YouTube Subtitles",
             "YouTube" to "YouTube",
         )
+
+    if (showRomanizationSetupDialog) {
+        RomanizationSetupDialog(
+            onDismiss = { showRomanizationSetupDialog = false },
+            onSetUp = {
+                showRomanizationSetupDialog = false
+                navController.navigate("settings/ai_integration")
+            },
+        )
+    }
 
     if (showProviderDialog) {
         val defaultOrder = LyricsProviderRegistry.getDefaultProviderOrder()
@@ -216,6 +249,9 @@ fun LyricsSettings(
         }
 
         AlertDialog(
+            // Keep the dialog inset from the screen edges; the tall draggable list otherwise
+            // stretches it nearly full width and it stops reading as a dialog.
+            modifier = Modifier.padding(horizontal = 24.dp),
             onDismissRequest = { showProviderDialog = false },
             title = { Text(stringResource(R.string.lyrics_provider_selection)) },
             text = {
@@ -470,16 +506,42 @@ fun LyricsSettings(
                     Material3SettingsItem(
                         icon = painterResource(R.drawable.language_korean_latin),
                         title = { Text(stringResource(R.string.lyrics_romanization)) },
-                        description = { Text(stringResource(R.string.romanization_ai_enable_desc)) },
+                        description = {
+                            Text(
+                                stringResource(
+                                    if (aiConfigured) {
+                                        R.string.romanization_ai_enable_desc
+                                    } else {
+                                        R.string.romanization_requires_ai
+                                    },
+                                ),
+                            )
+                        },
                         trailingContent = {
                             Switch(
-                                checked = aiRomanizationEnabled,
-                                onCheckedChange = onAiRomanizationEnabledChange,
+                                // Shown off while unconfigured even if the preference is on, so the
+                                // control never claims a feature that cannot run. The stored value
+                                // is left alone and takes effect again once a provider is added.
+                                checked = aiRomanizationEnabled && aiConfigured,
+                                // Interactive even while unconfigured; a disabled Switch swallows
+                                // the touch, leaving the control silently dead.
+                                onCheckedChange = { newValue ->
+                                    if (aiConfigured) {
+                                        onAiRomanizationEnabledChange(newValue)
+                                    } else {
+                                        showRomanizationSetupDialog = true
+                                    }
+                                },
                                 thumbContent = {
                                     Icon(
                                         painter =
                                             painterResource(
-                                                id = if (aiRomanizationEnabled) R.drawable.check else R.drawable.close,
+                                                id =
+                                                    if (aiRomanizationEnabled && aiConfigured) {
+                                                        R.drawable.check
+                                                    } else {
+                                                        R.drawable.close
+                                                    },
                                             ),
                                         contentDescription = null,
                                         modifier = Modifier.size(SwitchDefaults.IconSize),
@@ -487,7 +549,13 @@ fun LyricsSettings(
                                 },
                             )
                         },
-                        onClick = { onAiRomanizationEnabledChange(!aiRomanizationEnabled) },
+                        onClick = {
+                            if (aiConfigured) {
+                                onAiRomanizationEnabledChange(!aiRomanizationEnabled)
+                            } else {
+                                showRomanizationSetupDialog = true
+                            }
+                        },
                     )
                 )
             )
