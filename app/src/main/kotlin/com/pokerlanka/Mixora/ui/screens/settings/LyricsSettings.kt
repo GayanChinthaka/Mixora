@@ -131,8 +131,7 @@ fun LyricsSettings(
     var showLyricsTextSizeDialog by remember { mutableStateOf(false) }
     var showLyricsLineSpacingDialog by remember { mutableStateOf(false) }
     var showLyricsPositionDialog by remember { mutableStateOf(false) }
-    var showProviderSelectionDialog by rememberSaveable { mutableStateOf(false) }
-    var showProviderPriorityDialog by rememberSaveable { mutableStateOf(false) }
+    var showProviderDialog by rememberSaveable { mutableStateOf(false) }
 
     val providerDisplayNames =
         mapOf(
@@ -145,249 +144,123 @@ fun LyricsSettings(
             "YouTube" to "YouTube",
         )
 
-    if (showProviderSelectionDialog) {
-        AlertDialog(
-            onDismissRequest = { showProviderSelectionDialog = false },
-            title = { Text(stringResource(R.string.lyrics_provider_selection)) },
-            text = {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .verticalScroll(rememberScrollState()),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Column(
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            Text(stringResource(R.string.enable_lrclib))
-                            Text(
-                                text = stringResource(R.string.enable_lrclib_desc),
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                        Switch(
-                            checked = enableLrclib,
-                            onCheckedChange = onEnableLrclibChange,
-                            thumbContent = {
-                                Icon(
-                                    painter = painterResource(
-                                        id = if (enableLrclib) R.drawable.check else R.drawable.close
-                                    ),
-                                    contentDescription = null,
-                                    modifier = Modifier.size(SwitchDefaults.IconSize)
-                                )
-                            }
-                        )
-                    }
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Column(
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            Text(stringResource(R.string.enable_kugou))
-                            Text(
-                                text = stringResource(R.string.enable_kugou_desc),
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                        Switch(
-                            checked = enableKugou,
-                            onCheckedChange = onEnableKugouChange,
-                            thumbContent = {
-                                Icon(
-                                    painter = painterResource(
-                                        id = if (enableKugou) R.drawable.check else R.drawable.close
-                                    ),
-                                    contentDescription = null,
-                                    modifier = Modifier.size(SwitchDefaults.IconSize)
-                                )
-                            }
-                        )
-                    }
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Column(
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            Text(stringResource(R.string.enable_better_lyrics))
-                            Text(
-                                text = stringResource(R.string.enable_better_lyrics_desc),
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                        Switch(
-                            checked = enableBetterLyrics,
-                            onCheckedChange = onEnableBetterLyricsChange,
-                            thumbContent = {
-                                Icon(
-                                    painter = painterResource(
-                                        id = if (enableBetterLyrics) R.drawable.check else R.drawable.close
-                                    ),
-                                    contentDescription = null,
-                                    modifier = Modifier.size(SwitchDefaults.IconSize)
-                                )
-                            }
-                        )
-                    }
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Column(
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            Text(stringResource(R.string.enable_paxsenix))
-                            Text(
-                                text = stringResource(R.string.enable_paxsenix_desc),
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                        Switch(
-                            checked = enablePaxsenix,
-                            onCheckedChange = onEnablePaxsenixChange,
-                            thumbContent = {
-                                Icon(
-                                    painter = painterResource(
-                                        id = if (enablePaxsenix) R.drawable.check else R.drawable.close
-                                    ),
-                                    contentDescription = null,
-                                    modifier = Modifier.size(SwitchDefaults.IconSize)
-                                )
-                            }
-                        )
-                    }
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Column(
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            Text(stringResource(R.string.enable_lyricsplus))
-                            Text(
-                                text = stringResource(R.string.enable_lyricsplus_desc),
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                        Switch(
-                            checked = enableLyricsPlus,
-                            onCheckedChange = onEnableLyricsPlusChange,
-                            thumbContent = {
-                                Icon(
-                                    painter = painterResource(
-                                        id = if (enableLyricsPlus) R.drawable.check else R.drawable.close
-                                    ),
-                                    contentDescription = null,
-                                    modifier = Modifier.size(SwitchDefaults.IconSize)
-                                )
-                            }
-                        )
-                    }
-                    Column(modifier = Modifier.padding(2.dp)) {
-                        Text(
-                            text = stringResource(R.string.youtube_music_lyrics_note),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-            },
-            confirmButton = {
-                TextButton(
-                    onClick = { showProviderSelectionDialog = false }
-                ) {
-                    Text(stringResource(R.string.close))
-                }
-            }
-        )
-    }
-
-    if (showProviderPriorityDialog) {
-        val currentOrder = LyricsProviderRegistry.deserializeProviderOrder(lyricsProviderOrder)
+    if (showProviderDialog) {
         val defaultOrder = LyricsProviderRegistry.getDefaultProviderOrder()
+        val currentOrder = LyricsProviderRegistry.deserializeProviderOrder(lyricsProviderOrder)
         val normalizedOrder = currentOrder.filter { it in defaultOrder } +
             defaultOrder.filter { it !in currentOrder }
 
-        val enabledProviders = setOf(
-            "LrcLib".takeIf { enableLrclib },
-            "KuGou".takeIf { enableKugou },
-            "BetterLyrics".takeIf { enableBetterLyrics },
-            "Paxsenix".takeIf { enablePaxsenix },
-            "LyricsPlus".takeIf { enableLyricsPlus },
-        ).filterNotNull().toSet()
+        // Only these five have an enable preference. The YouTube providers are always-available
+        // fallbacks with no switch, so they stay out of the list and keep their trailing position
+        // in the saved order (the note under the list explains that).
+        val toggleableProviders = listOf("LrcLib", "KuGou", "BetterLyrics", "Paxsenix", "LyricsPlus")
+
+        val isProviderEnabled: (String) -> Boolean = { id ->
+            when (id) {
+                "LrcLib" -> enableLrclib
+                "KuGou" -> enableKugou
+                "BetterLyrics" -> enableBetterLyrics
+                "Paxsenix" -> enablePaxsenix
+                "LyricsPlus" -> enableLyricsPlus
+                else -> true
+            }
+        }
+        val setProviderEnabled: (String, Boolean) -> Unit = { id, value ->
+            when (id) {
+                "LrcLib" -> onEnableLrclibChange(value)
+                "KuGou" -> onEnableKugouChange(value)
+                "BetterLyrics" -> onEnableBetterLyricsChange(value)
+                "Paxsenix" -> onEnablePaxsenixChange(value)
+                "LyricsPlus" -> onEnableLyricsPlusChange(value)
+                else -> Unit
+            }
+        }
+
+        val providerDescriptions =
+            mapOf(
+                "LrcLib" to stringResource(R.string.enable_lrclib_desc),
+                "KuGou" to stringResource(R.string.enable_kugou_desc),
+                "BetterLyrics" to stringResource(R.string.enable_better_lyrics_desc),
+                "Paxsenix" to stringResource(R.string.enable_paxsenix_desc),
+                "LyricsPlus" to stringResource(R.string.enable_lyricsplus_desc),
+            )
         val lyricsIcon = painterResource(R.drawable.lyrics)
         val draggableItems = remember { mutableStateListOf<DraggableLyricsProviderItem>() }
 
-        LaunchedEffect(normalizedOrder, enableLrclib, enableKugou, enableBetterLyrics, enablePaxsenix, enableLyricsPlus) {
-            val orderedEnabledProviders = normalizedOrder.filter { it in enabledProviders }
+        // Every toggleable provider is listed regardless of state, so the order can be arranged
+        // before one is switched on. The previous priority dialog listed only enabled providers,
+        // which made reordering a disabled provider impossible.
+        LaunchedEffect(
+            normalizedOrder,
+            enableLrclib,
+            enableKugou,
+            enableBetterLyrics,
+            enablePaxsenix,
+            enableLyricsPlus,
+        ) {
+            val ordered = normalizedOrder.filter { it in toggleableProviders } +
+                toggleableProviders.filter { it !in normalizedOrder }
             draggableItems.clear()
             draggableItems.addAll(
-                orderedEnabledProviders.mapNotNull { providerName ->
+                ordered.mapNotNull { providerName ->
                     LyricsProviderRegistry.getProviderByName(providerName) ?: return@mapNotNull null
                     DraggableLyricsProviderItem(
                         id = providerName,
                         name = providerDisplayNames[providerName] ?: providerName,
                         icon = lyricsIcon,
+                        enabled = isProviderEnabled(providerName),
+                        description = providerDescriptions[providerName],
                     )
-                }
+                },
             )
         }
 
         AlertDialog(
-            onDismissRequest = { showProviderPriorityDialog = false },
-            title = { Text(stringResource(R.string.lyrics_provider_priority)) },
+            onDismissRequest = { showProviderDialog = false },
+            title = { Text(stringResource(R.string.lyrics_provider_selection)) },
             text = {
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(300.dp)
+                        .height(420.dp),
                 ) {
                     Text(
                         stringResource(R.string.lyrics_provider_priority_desc),
                         style = MaterialTheme.typography.bodySmall,
                         modifier = Modifier.padding(bottom = 8.dp),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                     DraggableLyricsProviderList(
                         items = draggableItems,
                         onItemsReordered = { reorderedItems ->
-                            val enabledOrder = reorderedItems.map { it.id }
-                            val disabledOrder = normalizedOrder.filter { it !in enabledProviders }
+                            // Providers without a switch keep their existing relative order and
+                            // stay after the toggleable ones, matching the previous behaviour.
+                            val reordered = reorderedItems.map { it.id }
+                            val rest = normalizedOrder.filter { it !in toggleableProviders }
                             onLyricsProviderOrderChange(
-                                LyricsProviderRegistry.serializeProviderOrder(enabledOrder + disabledOrder)
+                                LyricsProviderRegistry.serializeProviderOrder(reordered + rest),
                             )
                         },
+                        onToggle = setProviderEnabled,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .weight(1f)
+                            .weight(1f),
+                    )
+                    Text(
+                        text = stringResource(R.string.youtube_music_lyrics_note),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(top = 8.dp),
                     )
                 }
             },
             confirmButton = {
                 TextButton(
-                    onClick = { showProviderPriorityDialog = false }
+                    onClick = { showProviderDialog = false },
                 ) {
                     Text(stringResource(R.string.close))
                 }
-            }
+            },
         )
     }
 
@@ -591,14 +464,8 @@ fun LyricsSettings(
                     Material3SettingsItem(
                         icon = painterResource(R.drawable.lyrics),
                         title = { Text(stringResource(R.string.lyrics_provider_selection)) },
-                        description = { Text(stringResource(R.string.lyrics_provider_selection_desc)) },
-                        onClick = { showProviderSelectionDialog = true }
-                    ),
-                    Material3SettingsItem(
-                        icon = painterResource(R.drawable.lyrics),
-                        title = { Text(stringResource(R.string.lyrics_provider_priority)) },
-                        description = { Text(stringResource(R.string.lyrics_provider_priority_desc)) },
-                        onClick = { showProviderPriorityDialog = true }
+                        description = { Text(stringResource(R.string.lyrics_providers_desc)) },
+                        onClick = { showProviderDialog = true }
                     ),
                     Material3SettingsItem(
                         icon = painterResource(R.drawable.language_korean_latin),

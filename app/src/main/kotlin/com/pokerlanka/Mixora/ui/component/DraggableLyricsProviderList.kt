@@ -6,6 +6,7 @@
 package com.pokerlanka.mixora.ui.component
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -18,6 +19,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -39,6 +42,8 @@ data class DraggableLyricsProviderItem(
     val id: String,
     val name: String,
     val icon: Painter,
+    val enabled: Boolean = true,
+    val description: String? = null,
 )
 
 @Composable
@@ -46,6 +51,7 @@ fun DraggableLyricsProviderList(
     items: MutableList<DraggableLyricsProviderItem>,
     onItemsReordered: (List<DraggableLyricsProviderItem>) -> Unit,
     modifier: Modifier = Modifier,
+    onToggle: ((String, Boolean) -> Unit)? = null,
 ) {
     val lazyListState = rememberLazyListState()
     var hasDragged by remember { mutableStateOf(false) }
@@ -101,12 +107,44 @@ fun DraggableLyricsProviderList(
                             )
                         }
 
-                        Text(
-                            text = item.name,
-                            style = MaterialTheme.typography.bodyLarge,
-                            overflow = TextOverflow.Ellipsis,
-                            modifier = Modifier.weight(1f),
-                        )
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = item.name,
+                                style = MaterialTheme.typography.bodyLarge,
+                                overflow = TextOverflow.Ellipsis,
+                                color =
+                                    if (item.enabled) {
+                                        MaterialTheme.colorScheme.onSurface
+                                    } else {
+                                        MaterialTheme.colorScheme.onSurfaceVariant
+                                    },
+                            )
+                            item.description?.let { description ->
+                                Text(
+                                    text = description,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    overflow = TextOverflow.Ellipsis,
+                                )
+                            }
+                        }
+
+                        if (onToggle != null) {
+                            Switch(
+                                checked = item.enabled,
+                                onCheckedChange = { onToggle(item.id, it) },
+                                thumbContent = {
+                                    Icon(
+                                        painter =
+                                            painterResource(
+                                                id = if (item.enabled) R.drawable.check else R.drawable.close,
+                                            ),
+                                        contentDescription = null,
+                                        modifier = Modifier.size(SwitchDefaults.IconSize),
+                                    )
+                                },
+                            )
+                        }
                     }
                 }
             }

@@ -808,4 +808,5 @@
     <string name="romanization_clear_cache">Clear romanization cache</string>
     <string name="romanization_clear_cache_desc">Removes stored romanized lyrics. They will be requested again when needed.</string>
     <string name="romanizing_in_progress">Romanizing…</string>
+    <string name="lyrics_providers_desc">Enable providers and drag to set the order they are tried in</string>
 </resources>
