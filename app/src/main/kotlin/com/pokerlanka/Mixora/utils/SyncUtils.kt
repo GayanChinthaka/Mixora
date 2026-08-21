@@ -1,7 +1,8 @@
 ﻿/**
  * Mixora Project (C) 2026
  * OuterTune Project Copyright (C) 2025
- * Licensed under GPL-3.0 | See git history for contributors
+ * Author : Gayan Chinthaka
+ * Company: Pokerlanka
  */
 
 package com.pokerlanka.mixora.utils

@@ -1,6 +1,7 @@
 ﻿/**
  * Mixora Project (C) 2026
- * Licensed under GPL-3.0 | See git history for contributors
+ * Author : Gayan Chinthaka
+ * Company: Pokerlanka
  */
 
 package com.pokerlanka.mixora.viewmodels
