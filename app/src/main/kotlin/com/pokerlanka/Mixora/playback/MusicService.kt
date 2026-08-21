@@ -213,6 +213,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
@@ -302,6 +303,7 @@ class MusicService :
             get() = this@MusicService
     }
 
+    val openPlayerEvent = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
     val togetherSessionState = MutableStateFlow<com.pokerlanka.mixora.together.TogetherSessionState>(com.pokerlanka.mixora.together.TogetherSessionState.Idle)
     private var togetherServer: com.pokerlanka.mixora.together.TogetherServer? = null
     private var togetherClient: com.pokerlanka.mixora.together.TogetherClient? = null
@@ -1912,6 +1914,9 @@ class MusicService :
         playWhenReady: Boolean = true,
         restoringQueue: Boolean = false,
     ) {
+        if (!restoringQueue) {
+            openPlayerEvent.tryEmit(Unit)
+        }
         if (!playerInitialized.value) {
             Timber.tag(TAG).w("playQueue called before player initialization, queuing request")
             scope.launch {

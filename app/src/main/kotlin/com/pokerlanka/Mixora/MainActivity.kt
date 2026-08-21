@@ -733,25 +733,9 @@ class MainActivity : ComponentActivity() {
                     }
                 }
 
-                DisposableEffect(activePlayerConnection, playerBottomSheetState) {
-                    val player = runCatching { activePlayerConnection?.player }.getOrNull()
-                        ?: return@DisposableEffect onDispose { }
-                    val listener =
-                        object : Player.Listener {
-                            override fun onMediaItemTransition(
-                                mediaItem: MediaItem?,
-                                reason: Int,
-                            ) {
-                                if (reason == Player.MEDIA_ITEM_TRANSITION_REASON_PLAYLIST_CHANGED &&
-                                    mediaItem != null
-                                ) {
-                                    playerBottomSheetState.expandSoft()
-                                }
-                            }
-                        }
-                    player.addListener(listener)
-                    onDispose {
-                        player.removeListener(listener)
+                LaunchedEffect(activePlayerConnection) {
+                    activePlayerConnection?.service?.openPlayerEvent?.collectLatest {
+                        playerBottomSheetState.expandSoft()
                     }
                 }
 
