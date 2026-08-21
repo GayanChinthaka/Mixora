@@ -569,4 +569,11 @@
     <string name="palette_candy">Candy</string>
     <string name="palette_rainbow">Rainbow</string>
     <string name="palette_custom">Custom</string>
+
+    <!-- Search discovery landing page -->
+    <string name="search_discovery_explore">Explore</string>
+    <string name="search_discovery_suggestions">Suggestions</string>
+    <string name="search_discovery_songs">Songs you might like</string>
+    <string name="search_discovery_artists">Artists you might like</string>
+    <string name="search_discovery_albums">Top albums</string>
 </resources>

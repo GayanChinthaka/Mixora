@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -20,6 +21,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -38,6 +40,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalFocusManager
@@ -47,6 +50,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
@@ -88,20 +92,15 @@ fun SearchScreen(
     val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
     val lazyListState = rememberLazyListState()
     var isHandlingScrollToTop by remember { mutableStateOf(false) }
+    var isSearchFieldFocused by remember { mutableStateOf(false) }
 
     val scrollToTopCount by savedStateHandle.getStateFlow("scrollToTopCount", 0).collectAsStateWithLifecycle(initialValue = 0)
 
     var lastHandledCount by rememberSaveable { mutableIntStateOf(0) }
-    LaunchedEffect(Unit) {
-        if (!isPlayerExpanded) {
-            kotlinx.coroutines.delay(100)
-            try {
-                focusRequester.requestFocus()
-                keyboardController?.show()
-            } catch (e: Exception) {
-            }
-        }
-    }
+
+    // The tab opens on the discovery page rather than the keyboard, so nothing grabs
+    // focus on entry. Re-tapping the Search tab (scrollToTopCount) still focuses the
+    // field, which is how the user gets to typing.
     LaunchedEffect(scrollToTopCount) {
         if (scrollToTopCount > lastHandledCount) {
             lastHandledCount = scrollToTopCount
@@ -180,8 +179,24 @@ fun SearchScreen(
         topBar = {
             TopAppBar(
                 title = {
+                    Surface(
+                        shape = RoundedCornerShape(28.dp),
+                        color =
+                            if (pureBlack) {
+                                MaterialTheme.colorScheme.surfaceContainerLow
+                            } else {
+                                MaterialTheme.colorScheme.surfaceContainerHigh
+                            },
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .padding(end = 4.dp),
+                    ) {
                     Row(
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .padding(start = 16.dp, end = 4.dp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         BasicTextField(
@@ -190,7 +205,10 @@ fun SearchScreen(
                             modifier =
                                 Modifier
                                     .weight(1f)
-                                    .focusRequester(focusRequester),
+                                    .focusRequester(focusRequester)
+                                    .onFocusChanged { focusState ->
+                                        isSearchFieldFocused = focusState.isFocused
+                                    },
                             textStyle =
                                 TextStyle(
                                     color = MaterialTheme.colorScheme.onSurface,
@@ -261,6 +279,7 @@ fun SearchScreen(
                             }
                         }
                     }
+                    }
                 },
                 navigationIcon = {
                     IconButton(onClick = { navController.navigateUp() }) {
@@ -295,13 +314,19 @@ fun SearchScreen(
                 }
 
                 SearchSource.ONLINE -> {
-                    OnlineSearchScreen(
-                        query = query.text,
-                        onQueryChange = { query = it },
-                        onSearch = onSearchFromSuggestion,
-                        onDismiss = { /* Don't dismiss when searching from suggestions */ },
-                        pureBlack = pureBlack,
-                    )
+                    // Discovery is the resting state; focusing the field brings back the
+                    // search-history list, and typing hands over to live suggestions.
+                    if (query.text.isEmpty() && !isSearchFieldFocused) {
+                        SearchDiscoveryContent(pureBlack = pureBlack)
+                    } else {
+                        OnlineSearchScreen(
+                            query = query.text,
+                            onQueryChange = { query = it },
+                            onSearch = onSearchFromSuggestion,
+                            onDismiss = { /* Don't dismiss when searching from suggestions */ },
+                            pureBlack = pureBlack,
+                        )
+                    }
                 }
             }
 
