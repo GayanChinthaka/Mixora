@@ -158,6 +158,7 @@ import com.pokerlanka.mixora.db.MusicDatabase
 import com.pokerlanka.mixora.db.entities.SearchHistory
 import com.pokerlanka.mixora.extensions.toEnum
 import com.pokerlanka.mixora.lyrics.LyricsProviderRegistry
+import com.pokerlanka.mixora.models.MediaMetadata
 import com.pokerlanka.mixora.models.toMediaMetadata
 import com.pokerlanka.mixora.playback.DownloadUtil
 import com.pokerlanka.mixora.playback.MusicService
@@ -172,6 +173,7 @@ import com.pokerlanka.mixora.ui.component.AppNavigationRail
 import com.pokerlanka.mixora.ui.component.BottomSheetMenu
 import com.pokerlanka.mixora.ui.component.BottomSheetPage
 import com.pokerlanka.mixora.ui.component.BottomSheetState
+import com.pokerlanka.mixora.ui.component.dismissedAnchor
 import com.pokerlanka.mixora.ui.component.LocalBottomSheetPageState
 import com.pokerlanka.mixora.ui.component.LocalMenuState
 import com.pokerlanka.mixora.ui.component.rememberBottomSheetState
@@ -200,6 +202,7 @@ import com.pokerlanka.mixora.widget.PlaylistWidgetReceiver
 import com.valentinilk.shimmer.LocalShimmerTheme
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
@@ -719,16 +722,28 @@ class MainActivity : ComponentActivity() {
                     }
                 }
 
-                LaunchedEffect(activePlayerConnection) {
-                    val player = runCatching { activePlayerConnection?.player }.getOrNull()
-                    if (player?.currentMediaItem == null) {
+                // Track the current item instead of sampling it once. The saved queue is restored
+                // asynchronously *after* the service reports the player ready, so a one-shot read here
+                // always saw a null item, dismissed the sheet, and then never ran again - leaving a full
+                // queue playing with no mini player and no way back to the player.
+                val noMediaMetadata = remember { MutableStateFlow<MediaMetadata?>(null) }
+                val activeMediaMetadata by (activePlayerConnection?.mediaMetadata ?: noMediaMetadata)
+                    .collectAsStateWithLifecycle()
+
+                LaunchedEffect(activePlayerConnection, activeMediaMetadata) {
+                    if (activePlayerConnection == null) return@LaunchedEffect
+
+                    if (activeMediaMetadata == null) {
                         if (!playerBottomSheetState.isDismissed) {
                             playerBottomSheetState.dismiss()
                         }
-                        return@LaunchedEffect
-                    }
-
-                    if (playerBottomSheetState.isDismissed) {
+                    } else if (playerBottomSheetState.targetAnchor == dismissedAnchor) {
+                        // Restores reveal the mini player only; openPlayerEvent still handles the
+                        // expand-to-full-screen for playback the user actually started. Checking the
+                        // target anchor rather than isDismissed matters: when the user taps a song both
+                        // fire, and isDismissed is still true for the frames before the expand
+                        // animation moves, so collapsing here would cancel it and strand the user on
+                        // the mini player.
                         playerBottomSheetState.collapseSoft()
                     }
                 }

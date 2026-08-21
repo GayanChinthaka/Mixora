@@ -148,6 +148,8 @@ import com.pokerlanka.mixora.constants.DisableBlurKey
 import com.pokerlanka.mixora.constants.HidePlayerThumbnailKey
 import com.pokerlanka.mixora.constants.HideStatusBarOnFullscreenKey
 import com.pokerlanka.mixora.constants.KeepScreenOn
+import com.pokerlanka.mixora.constants.LyricsBackgroundStyle
+import com.pokerlanka.mixora.constants.LyricsBackgroundStyleKey
 import com.pokerlanka.mixora.constants.PlayerBackgroundStyle
 import com.pokerlanka.mixora.constants.PlayerBackgroundStyleKey
 import com.pokerlanka.mixora.constants.PlayerButtonsStyle
@@ -199,6 +201,122 @@ import kotlin.math.roundToInt
 import com.pokerlanka.mixora.ui.component.Icon as MIcon
 
 
+/**
+ * Container/content colours for the player's round action buttons.
+ *
+ * [onDarkBackground] forces the light-on-dark pairing that the blur, gradient and lyrics-thumbnail
+ * backdrops all need, regardless of the app theme.
+ */
+@Composable
+private fun playerButtonColors(
+    playerButtonsStyle: PlayerButtonsStyle,
+    onDarkBackground: Boolean,
+    useDarkTheme: Boolean,
+): Pair<Color, Color> =
+    when (playerButtonsStyle) {
+        PlayerButtonsStyle.DEFAULT ->
+            if (onDarkBackground || useDarkTheme) {
+                Pair(Color.White, Color.Black)
+            } else {
+                Pair(Color.Black, Color.White)
+            }
+
+        PlayerButtonsStyle.PRIMARY ->
+            Pair(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.onPrimary)
+
+        PlayerButtonsStyle.TERTIARY ->
+            Pair(MaterialTheme.colorScheme.tertiary, MaterialTheme.colorScheme.onTertiary)
+    }
+
+/**
+ * Neutral backdrop used before palette extraction finishes, or when the track has no artwork.
+ */
+private val LyricsThumbnailFallbackGradient =
+    listOf(
+        Color(0xFF202020),
+        Color(0xFF141414),
+        Color(0xFF050505),
+    )
+
+/**
+ * Backdrop for the inline lyrics pane in [LyricsBackgroundStyle.THUMBNAIL]: the album art blurred
+ * behind a palette-derived vertical gradient, then darkened so white lyrics stay legible over any
+ * artwork.
+ */
+@Composable
+private fun LyricsThumbnailBackground(
+    thumbnailUrl: String?,
+    gradientColors: List<Color>,
+    disableBlur: Boolean,
+    modifier: Modifier = Modifier,
+) {
+    val colors = if (gradientColors.isNotEmpty()) gradientColors else LyricsThumbnailFallbackGradient
+    val backgroundBrush =
+        remember(colors) {
+            Brush.verticalGradient(
+                listOf(
+                    colors.getOrElse(0) { LyricsThumbnailFallbackGradient[0] }.copy(alpha = 0.88f),
+                    colors.getOrElse(1) { LyricsThumbnailFallbackGradient[1] }.copy(alpha = 0.76f),
+                    colors.getOrElse(2) { LyricsThumbnailFallbackGradient[2] }.copy(alpha = 0.96f),
+                ),
+            )
+        }
+    val bottomScrim =
+        remember {
+            Brush.verticalGradient(
+                listOf(
+                    Color.Transparent,
+                    Color.Black.copy(alpha = 0.28f),
+                ),
+            )
+        }
+
+    Box(
+        modifier =
+            modifier
+                .fillMaxSize()
+                .background(LyricsThumbnailFallbackGradient.last()),
+    ) {
+        AnimatedContent(
+            targetState = thumbnailUrl,
+            transitionSpec = { fadeIn(tween(700)) togetherWith fadeOut(tween(700)) },
+            label = "lyricsThumbnailBackground",
+        ) { url ->
+            if (url != null) {
+                AsyncImage(
+                    model = url,
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
+                    modifier =
+                        Modifier
+                            .fillMaxSize()
+                            // Without the blur the artwork detail competes with the lyrics, so it is
+                            // pushed further back instead.
+                            .let { if (disableBlur) it.alpha(0.35f) else it.blur(46.dp).alpha(0.62f) },
+                )
+            }
+        }
+        Box(
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .background(backgroundBrush),
+        )
+        Box(
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .background(Color.Black.copy(alpha = 0.18f)),
+        )
+        Box(
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .background(bottomScrim),
+        )
+    }
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BottomSheetPlayer(
@@ -227,6 +345,11 @@ fun BottomSheetPlayer(
         mutableStateOf(false)
     }
 
+    val lyricsBackgroundStyle by rememberEnumPreference(LyricsBackgroundStyleKey, LyricsBackgroundStyle.THEME)
+
+    // Apple-Music styled lyrics backdrop: only while the lyrics pane is actually on screen.
+    val isLyricsThumbnailBg = showInlineLyrics && lyricsBackgroundStyle == LyricsBackgroundStyle.THUMBNAIL
+
     var isFullScreen by rememberSaveable {
         mutableStateOf(false)
     }
@@ -239,10 +362,11 @@ fun BottomSheetPlayer(
         }
 
     val shouldUseDarkButtonColors =
-        remember(playerBackground, useDarkTheme) {
-            when (playerBackground) {
-                PlayerBackgroundStyle.BLUR, PlayerBackgroundStyle.GRADIENT -> true
-                PlayerBackgroundStyle.DEFAULT -> useDarkTheme
+        remember(playerBackground, useDarkTheme, isLyricsThumbnailBg) {
+            when {
+                isLyricsThumbnailBg -> true
+                playerBackground == PlayerBackgroundStyle.BLUR || playerBackground == PlayerBackgroundStyle.GRADIENT -> true
+                else -> useDarkTheme
             }
         }
 
@@ -251,17 +375,29 @@ fun BottomSheetPlayer(
     val (disableBlur) = rememberPreference(DisableBlurKey, false)
     val keepScreenOn = isPlaying && isKeepScreenOn
 
-    DisposableEffect(playerBackground, state.isExpanded, useDarkTheme, keepScreenOn, isFullScreen, hideStatusBarOnFullscreen) {
+    DisposableEffect(
+        playerBackground,
+        state.isExpanded,
+        useDarkTheme,
+        keepScreenOn,
+        isFullScreen,
+        hideStatusBarOnFullscreen,
+        isLyricsThumbnailBg,
+    ) {
         val window = (context as? android.app.Activity)?.window
         if (window != null && state.isExpanded) {
             val insetsController = WindowCompat.getInsetsController(window, window.decorView)
 
-            when (playerBackground) {
-                PlayerBackgroundStyle.BLUR, PlayerBackgroundStyle.GRADIENT -> {
+            when {
+                isLyricsThumbnailBg -> {
                     insetsController.isAppearanceLightStatusBars = false
                 }
 
-                PlayerBackgroundStyle.DEFAULT -> {
+                playerBackground == PlayerBackgroundStyle.BLUR || playerBackground == PlayerBackgroundStyle.GRADIENT -> {
+                    insetsController.isAppearanceLightStatusBars = false
+                }
+
+                else -> {
                     insetsController.isAppearanceLightStatusBars = !useDarkTheme
                 }
             }
@@ -294,11 +430,12 @@ fun BottomSheetPlayer(
         state.collapseSoft()
     }
 
-    val onBackgroundColor =
+    val themeOnBackgroundColor =
         when (playerBackground) {
             PlayerBackgroundStyle.DEFAULT -> MaterialTheme.colorScheme.secondary
             else -> MaterialTheme.colorScheme.onSurface
         }
+    val onBackgroundColor = if (isLyricsThumbnailBg) Color.White else themeOnBackgroundColor
     val useBlackBackground =
         remember(isSystemInDarkTheme, darkTheme, pureBlack) {
             val useDarkTheme =
@@ -392,8 +529,8 @@ fun BottomSheetPlayer(
     val defaultGradientColors = listOf(MaterialTheme.colorScheme.surface, MaterialTheme.colorScheme.surfaceVariant)
     val fallbackColor = MaterialTheme.colorScheme.surface.toArgb()
 
-    LaunchedEffect(mediaMetadata?.id, playerBackground) {
-        if (playerBackground == PlayerBackgroundStyle.GRADIENT) {
+    LaunchedEffect(mediaMetadata?.id, playerBackground, isLyricsThumbnailBg) {
+        if (playerBackground == PlayerBackgroundStyle.GRADIENT || isLyricsThumbnailBg) {
             val currentMetadata = mediaMetadata
             if (currentMetadata != null && currentMetadata.thumbnailUrl != null) {
                 val cachedColors = gradientColorsCache[currentMetadata.id]
@@ -439,83 +576,51 @@ fun BottomSheetPlayer(
         }
     }
 
+    val themeTextBackgroundColor =
+        when (playerBackground) {
+            PlayerBackgroundStyle.DEFAULT -> MaterialTheme.colorScheme.onBackground
+            PlayerBackgroundStyle.BLUR -> Color.White
+            PlayerBackgroundStyle.GRADIENT -> Color.White
+        }
+
     val TextBackgroundColor by animateColorAsState(
-        targetValue =
-            when (playerBackground) {
-                PlayerBackgroundStyle.DEFAULT -> MaterialTheme.colorScheme.onBackground
-                PlayerBackgroundStyle.BLUR -> Color.White
-                PlayerBackgroundStyle.GRADIENT -> Color.White
-            },
+        targetValue = if (isLyricsThumbnailBg) Color.White else themeTextBackgroundColor,
         label = "TextBackgroundColor",
     )
 
     val icBackgroundColor by animateColorAsState(
         targetValue =
-            when (playerBackground) {
-                PlayerBackgroundStyle.DEFAULT -> MaterialTheme.colorScheme.surface
-                PlayerBackgroundStyle.BLUR -> Color.Black
-                PlayerBackgroundStyle.GRADIENT -> Color.Black
+            if (isLyricsThumbnailBg) {
+                Color.Black
+            } else {
+                when (playerBackground) {
+                    PlayerBackgroundStyle.DEFAULT -> MaterialTheme.colorScheme.surface
+                    PlayerBackgroundStyle.BLUR -> Color.Black
+                    PlayerBackgroundStyle.GRADIENT -> Color.Black
+                }
             },
         label = "icBackgroundColor",
     )
 
+    val playerBackgroundIsDark =
+        playerBackground == PlayerBackgroundStyle.BLUR || playerBackground == PlayerBackgroundStyle.GRADIENT
+
+    // Kept separate from the pair below: the queue sheet draws on its own themed surface and must not
+    // inherit the forced-light foreground the lyrics backdrop needs.
+    val themeButtonColors = playerButtonColors(playerButtonsStyle, playerBackgroundIsDark, useDarkTheme)
+    val (themeTextButtonColor, themeIconButtonColor) = themeButtonColors
+
     val (textButtonColor, iconButtonColor) =
-        when {
-            playerBackground == PlayerBackgroundStyle.BLUR ||
-                playerBackground == PlayerBackgroundStyle.GRADIENT -> {
-                when (playerButtonsStyle) {
-                    PlayerButtonsStyle.DEFAULT -> {
-                        Pair(Color.White, Color.Black)
-                    }
-
-                    PlayerButtonsStyle.PRIMARY -> {
-                        Pair(
-                            MaterialTheme.colorScheme.primary,
-                            MaterialTheme.colorScheme.onPrimary,
-                        )
-                    }
-
-                    PlayerButtonsStyle.TERTIARY -> {
-                        Pair(
-                            MaterialTheme.colorScheme.tertiary,
-                            MaterialTheme.colorScheme.onTertiary,
-                        )
-                    }
-                }
-            }
-
-            else -> {
-                when (playerButtonsStyle) {
-                    PlayerButtonsStyle.DEFAULT -> {
-                        if (useDarkTheme) {
-                            Pair(Color.White, Color.Black)
-                        } else {
-                            Pair(Color.Black, Color.White)
-                        }
-                    }
-
-                    PlayerButtonsStyle.PRIMARY -> {
-                        Pair(
-                            MaterialTheme.colorScheme.primary,
-                            MaterialTheme.colorScheme.onPrimary,
-                        )
-                    }
-
-                    PlayerButtonsStyle.TERTIARY -> {
-                        Pair(
-                            MaterialTheme.colorScheme.tertiary,
-                            MaterialTheme.colorScheme.onTertiary,
-                        )
-                    }
-                }
-            }
+        if (isLyricsThumbnailBg) {
+            playerButtonColors(playerButtonsStyle, onDarkBackground = true, useDarkTheme = useDarkTheme)
+        } else {
+            themeButtonColors
         }
 
     // Separate colors for Previous/Next buttons in PRIMARY/TERTIARY modes
     val (sideButtonContainerColor, sideButtonContentColor) =
         when {
-            playerBackground == PlayerBackgroundStyle.BLUR ||
-                playerBackground == PlayerBackgroundStyle.GRADIENT -> {
+            isLyricsThumbnailBg || playerBackgroundIsDark -> {
                 when (playerButtonsStyle) {
                     PlayerButtonsStyle.DEFAULT -> {
                         Pair(
@@ -824,79 +929,88 @@ fun BottomSheetPlayer(
                         .fillMaxSize()
                         .background(bottomSheetBackgroundColor),
             ) {
-                when (playerBackground) {
-                    PlayerBackgroundStyle.BLUR -> {
-                        AnimatedContent(
-                            targetState = mediaMetadata?.thumbnailUrl,
-                            transitionSpec = {
-                                fadeIn(tween(800)).togetherWith(fadeOut(tween(800)))
-                            },
-                            label = "blurBackground",
-                        ) { thumbnailUrl ->
-                            if (thumbnailUrl != null) {
-                                Box(modifier = Modifier.alpha(backgroundAlpha)) {
-                                    AsyncImage(
-                                        model =
-                                            ImageRequest
-                                                .Builder(context)
-                                                .data(thumbnailUrl)
-                                                .size(100, 100)
-                                                .allowHardware(false)
-                                                .build(),
-                                        contentDescription = null,
-                                        contentScale = ContentScale.Crop,
-                                        modifier =
-                                            Modifier
-                                                .fillMaxSize()
-                                                .let { if (disableBlur) it else it.blur(if (useDarkTheme) 150.dp else 100.dp) },
-                                    )
+                if (isLyricsThumbnailBg) {
+                    LyricsThumbnailBackground(
+                        thumbnailUrl = mediaMetadata?.thumbnailUrl,
+                        gradientColors = gradientColors,
+                        disableBlur = disableBlur,
+                        modifier = Modifier.alpha(backgroundAlpha),
+                    )
+                } else {
+                    when (playerBackground) {
+                        PlayerBackgroundStyle.BLUR -> {
+                            AnimatedContent(
+                                targetState = mediaMetadata?.thumbnailUrl,
+                                transitionSpec = {
+                                    fadeIn(tween(800)).togetherWith(fadeOut(tween(800)))
+                                },
+                                label = "blurBackground",
+                            ) { thumbnailUrl ->
+                                if (thumbnailUrl != null) {
+                                    Box(modifier = Modifier.alpha(backgroundAlpha)) {
+                                        AsyncImage(
+                                            model =
+                                                ImageRequest
+                                                    .Builder(context)
+                                                    .data(thumbnailUrl)
+                                                    .size(100, 100)
+                                                    .allowHardware(false)
+                                                    .build(),
+                                            contentDescription = null,
+                                            contentScale = ContentScale.Crop,
+                                            modifier =
+                                                Modifier
+                                                    .fillMaxSize()
+                                                    .let { if (disableBlur) it else it.blur(if (useDarkTheme) 150.dp else 100.dp) },
+                                        )
+                                        Box(
+                                            modifier =
+                                                Modifier
+                                                    .fillMaxSize()
+                                                    .background(Color.Black.copy(alpha = 0.3f)),
+                                        )
+                                    }
+                                }
+                            }
+                        }
+
+                        PlayerBackgroundStyle.GRADIENT -> {
+                            AnimatedContent(
+                                targetState = gradientColors,
+                                transitionSpec = {
+                                    fadeIn(tween(800)).togetherWith(fadeOut(tween(800)))
+                                },
+                                label = "gradientBackground",
+                            ) { colors ->
+                                if (colors.isNotEmpty()) {
+                                    val gradientColorStops =
+                                        if (colors.size >= 3) {
+                                            arrayOf(
+                                                0.0f to colors[0],
+                                                0.5f to colors[1],
+                                                1.0f to colors[2],
+                                            )
+                                        } else {
+                                            arrayOf(
+                                                0.0f to colors[0],
+                                                0.6f to colors[0].copy(alpha = 0.7f),
+                                                1.0f to Color.Black,
+                                            )
+                                        }
                                     Box(
-                                        modifier =
-                                            Modifier
-                                                .fillMaxSize()
-                                                .background(Color.Black.copy(alpha = 0.3f)),
+                                        Modifier
+                                            .fillMaxSize()
+                                            .alpha(backgroundAlpha)
+                                            .background(Brush.verticalGradient(colorStops = gradientColorStops))
+                                            .background(Color.Black.copy(alpha = 0.2f)),
                                     )
                                 }
                             }
                         }
-                    }
 
-                    PlayerBackgroundStyle.GRADIENT -> {
-                        AnimatedContent(
-                            targetState = gradientColors,
-                            transitionSpec = {
-                                fadeIn(tween(800)).togetherWith(fadeOut(tween(800)))
-                            },
-                            label = "gradientBackground",
-                        ) { colors ->
-                            if (colors.isNotEmpty()) {
-                                val gradientColorStops =
-                                    if (colors.size >= 3) {
-                                        arrayOf(
-                                            0.0f to colors[0],
-                                            0.5f to colors[1],
-                                            1.0f to colors[2],
-                                        )
-                                    } else {
-                                        arrayOf(
-                                            0.0f to colors[0],
-                                            0.6f to colors[0].copy(alpha = 0.7f),
-                                            1.0f to Color.Black,
-                                        )
-                                    }
-                                Box(
-                                    Modifier
-                                        .fillMaxSize()
-                                        .alpha(backgroundAlpha)
-                                        .background(Brush.verticalGradient(colorStops = gradientColorStops))
-                                        .background(Color.Black.copy(alpha = 0.2f)),
-                                )
-                            }
+                        else -> {
+                            PlayerBackgroundStyle.DEFAULT
                         }
-                    }
-
-                    else -> {
-                        PlayerBackgroundStyle.DEFAULT
                     }
                 }
             }
@@ -1355,7 +1469,12 @@ fun BottomSheetPlayer(
 
             Spacer(Modifier.height(24.dp))
 
-            val sliderColors = PlayerSliderColors.getSliderColors(textButtonColor, playerBackground, useDarkTheme)
+            val sliderColors =
+                PlayerSliderColors.getSliderColors(
+                    textButtonColor,
+                    if (isLyricsThumbnailBg) PlayerBackgroundStyle.BLUR else playerBackground,
+                    useDarkTheme,
+                )
             val sliderValue = (sliderPosition ?: effectivePosition).toFloat()
             val sliderValueRange = 0f..(if (duration == C.TIME_UNSET) 0f else duration.toFloat())
             val onSliderValueChange: (Float) -> Unit = {
@@ -1733,10 +1852,10 @@ fun BottomSheetPlayer(
                     } else {
                         MaterialTheme.colorScheme.surfaceContainer
                     },
-                onBackgroundColor = onBackgroundColor,
-                TextBackgroundColor = TextBackgroundColor,
-                textButtonColor = textButtonColor,
-                iconButtonColor = iconButtonColor,
+                onBackgroundColor = themeOnBackgroundColor,
+                TextBackgroundColor = themeTextBackgroundColor,
+                textButtonColor = themeTextButtonColor,
+                iconButtonColor = themeIconButtonColor,
                 pureBlack = pureBlack,
                 showInlineLyrics = showInlineLyrics,
                 playerBackground = playerBackground,
@@ -1760,6 +1879,9 @@ fun InlineLyricsView(
     val queueWindows by playerConnection.queueWindows.collectAsStateWithLifecycle(initialValue = emptyList())
     val currentWindowIndex by playerConnection.currentWindowIndex.collectAsStateWithLifecycle(initialValue = -1)
     val lyrics = remember(currentLyrics) { currentLyrics?.lyrics?.trim() }
+    val lyricsBackgroundStyle by rememberEnumPreference(LyricsBackgroundStyleKey, LyricsBackgroundStyle.THEME)
+    // The thumbnail backdrop is always dark, so the lyrics have to be forced light on top of it.
+    val lyricsTextColor = if (lyricsBackgroundStyle == LyricsBackgroundStyle.THUMBNAIL) Color.White else null
     val context = LocalContext.current
     val database = LocalDatabase.current
     val coroutineScope = rememberCoroutineScope()
@@ -1857,14 +1979,21 @@ fun InlineLyricsView(
     ) {
         when {
             lyrics == null -> {
-                ContainedLoadingIndicator()
+                if (lyricsTextColor != null) {
+                    ContainedLoadingIndicator(
+                        indicatorColor = lyricsTextColor,
+                        containerColor = Color.White.copy(alpha = 0.16f),
+                    )
+                } else {
+                    ContainedLoadingIndicator()
+                }
             }
 
             lyrics == LyricsEntity.LYRICS_NOT_FOUND -> {
                 Text(
                     text = stringResource(R.string.lyrics_not_found),
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                    color = (lyricsTextColor ?: MaterialTheme.colorScheme.onSurface).copy(alpha = 0.7f),
                     textAlign = TextAlign.Center,
                 )
             }
@@ -1875,6 +2004,7 @@ fun InlineLyricsView(
                         sliderPositionProvider = positionProvider,
                         modifier = Modifier.padding(horizontal = 24.dp),
                         showLyrics = showLyrics,
+                        textColorOverride = lyricsTextColor,
                     )
                 }
                 ProvideTextStyle(

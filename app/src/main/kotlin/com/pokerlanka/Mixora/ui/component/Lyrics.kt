@@ -8,6 +8,7 @@ package com.pokerlanka.mixora.ui.component
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.pokerlanka.mixora.constants.ExperimentalLyricsKey
 import com.pokerlanka.mixora.utils.rememberPreference
@@ -18,7 +19,8 @@ fun Lyrics(
     sliderPositionProvider: () -> Long?,
     modifier: Modifier = Modifier,
     showLyrics: Boolean,
-    lyricsViewModel: LyricsViewModel = hiltViewModel()
+    lyricsViewModel: LyricsViewModel = hiltViewModel(),
+    textColorOverride: Color? = null,
 ) {
     val (experimentalLyrics, _) = rememberPreference(key = ExperimentalLyricsKey, defaultValue = true)
 
@@ -27,13 +29,15 @@ fun Lyrics(
             sliderPositionProvider = sliderPositionProvider,
             modifier = modifier,
             showLyrics = showLyrics,
-            lyricsViewModel = lyricsViewModel
+            lyricsViewModel = lyricsViewModel,
+            textColorOverride = textColorOverride,
         )
     } else {
         OriginalLyrics(
             sliderPositionProvider = sliderPositionProvider,
             modifier = modifier,
-            showLyrics = showLyrics
+            showLyrics = showLyrics,
+            textColorOverride = textColorOverride,
         )
     }
 }

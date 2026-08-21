@@ -54,6 +54,8 @@ import com.pokerlanka.mixora.constants.EnableLyricsPlus
 import com.pokerlanka.mixora.constants.ExperimentalLyricsKey
 import com.pokerlanka.mixora.constants.HideStatusBarOnFullscreenKey
 import com.pokerlanka.mixora.constants.LyricsAnimationStyle
+import com.pokerlanka.mixora.constants.LyricsBackgroundStyle
+import com.pokerlanka.mixora.constants.LyricsBackgroundStyleKey
 import com.pokerlanka.mixora.constants.LyricsAnimationStyleKey
 import com.pokerlanka.mixora.constants.LyricsClickKey
 import com.pokerlanka.mixora.constants.LyricsGlowEffectKey
@@ -123,10 +125,16 @@ fun LyricsSettings(
             LyricsAnimationStyleKey,
             defaultValue = LyricsAnimationStyle.FADE,
         )
+    val (lyricsBackgroundStyle, onLyricsBackgroundStyleChange) =
+        rememberEnumPreference(
+            LyricsBackgroundStyleKey,
+            defaultValue = LyricsBackgroundStyle.THEME,
+        )
     val (lyricsTextSize, onLyricsTextSizeChange) = rememberPreference(LyricsTextSizeKey, defaultValue = 24f)
     val (lyricsLineSpacing, onLyricsLineSpacingChange) = rememberPreference(LyricsLineSpacingKey, defaultValue = 1.2f)
 
     var showLyricsAnimationStyleDialog by remember { mutableStateOf(false) }
+    var showLyricsBackgroundStyleDialog by remember { mutableStateOf(false) }
     var showLyricsTextSizeDialog by remember { mutableStateOf(false) }
     var showLyricsLineSpacingDialog by remember { mutableStateOf(false) }
     var showLyricsPositionDialog by remember { mutableStateOf(false) }
@@ -433,6 +441,25 @@ fun LyricsSettings(
         )
     }
 
+    if (showLyricsBackgroundStyleDialog) {
+        EnumDialog(
+            onDismiss = { showLyricsBackgroundStyleDialog = false },
+            onSelect = {
+                onLyricsBackgroundStyleChange(it)
+                showLyricsBackgroundStyleDialog = false
+            },
+            title = stringResource(R.string.lyrics_background),
+            current = lyricsBackgroundStyle,
+            values = LyricsBackgroundStyle.values().toList(),
+            valueText = {
+                when (it) {
+                    LyricsBackgroundStyle.THEME -> stringResource(R.string.lyrics_background_theme)
+                    LyricsBackgroundStyle.THUMBNAIL -> stringResource(R.string.lyrics_background_thumbnail)
+                }
+            },
+        )
+    }
+
     if (showLyricsTextSizeDialog) {
         var tempTextSize by remember { mutableFloatStateOf(lyricsTextSize) }
 
@@ -669,6 +696,28 @@ fun LyricsSettings(
                                         )
                                     },
                                     onClick = { onLyricsGlowEffectChange(!lyricsGlowEffect) },
+                                ),
+                            )
+                            add(
+                                Material3SettingsItem(
+                                    icon =
+                                        painterResource(
+                                            if (lyricsBackgroundStyle == LyricsBackgroundStyle.THUMBNAIL) {
+                                                R.drawable.insert_photo
+                                            } else {
+                                                R.drawable.palette
+                                            },
+                                        ),
+                                    title = { Text(stringResource(R.string.lyrics_background)) },
+                                    description = {
+                                        Text(
+                                            when (lyricsBackgroundStyle) {
+                                                LyricsBackgroundStyle.THEME -> stringResource(R.string.lyrics_background_theme_desc)
+                                                LyricsBackgroundStyle.THUMBNAIL -> stringResource(R.string.lyrics_background_thumbnail_desc)
+                                            },
+                                        )
+                                    },
+                                    onClick = { showLyricsBackgroundStyleDialog = true },
                                 ),
                             )
                             add(

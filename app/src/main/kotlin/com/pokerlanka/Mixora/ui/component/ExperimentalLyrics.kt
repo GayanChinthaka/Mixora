@@ -137,7 +137,8 @@ fun ExperimentalLyrics(
     sliderPositionProvider: () -> Long?,
     modifier: Modifier = Modifier,
     showLyrics: Boolean,
-    lyricsViewModel: LyricsViewModel = hiltViewModel()
+    lyricsViewModel: LyricsViewModel = hiltViewModel(),
+    textColorOverride: Color? = null,
 ) {
     val playerConnection = LocalPlayerConnection.current ?: return
     val database = LocalDatabase.current
@@ -195,7 +196,7 @@ fun ExperimentalLyrics(
     val isSynced = remember(lyrics) { lyricsTextLooksSynced(lyrics) }
     val hasWordTimings = remember(lines) { lines.any { it.words?.isNotEmpty() == true } }
 
-    val expressiveAccent = when (playerBackground) {
+    val expressiveAccent = textColorOverride ?: when (playerBackground) {
         PlayerBackgroundStyle.DEFAULT -> MaterialTheme.colorScheme.primary
         PlayerBackgroundStyle.BLUR, PlayerBackgroundStyle.GRADIENT -> Color.White
     }
@@ -548,7 +549,7 @@ fun ExperimentalLyrics(
 
         if (lyrics == LYRICS_NOT_FOUND) {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text(text = stringResource(R.string.lyrics_not_found), fontSize = 20.sp, color = MaterialTheme.colorScheme.secondary, modifier = Modifier.alpha(0.5f))
+                Text(text = stringResource(R.string.lyrics_not_found), fontSize = 20.sp, color = textColorOverride ?: MaterialTheme.colorScheme.secondary, modifier = Modifier.alpha(0.5f))
             }
         } else if (lyrics == null) {
              Column(modifier = Modifier.padding(top = 100.dp)) {
@@ -618,7 +619,7 @@ fun ExperimentalLyrics(
                     )
                     Text(
                         text = stringResource(R.string.lyrics_from_provider, lyricsEntity.provider),
-                        fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                        fontSize = 12.sp, color = (textColorOverride ?: MaterialTheme.colorScheme.onSurface).copy(alpha = 0.6f),
                         modifier = Modifier.fillMaxWidth().offset { IntOffset(0, (animatedProviderBase + userManualOffset).roundToInt()) }.padding(horizontal = 24.dp, vertical = 4.dp)
                     )
                 }

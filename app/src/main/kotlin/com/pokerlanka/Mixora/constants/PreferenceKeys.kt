@@ -432,6 +432,18 @@ val LyricsLineSpacingKey = floatPreferencesKey("lyricsLineSpacing")
 val RespectAgentPositioningKey = booleanPreferencesKey("respectAgentPositioning")
 val ShowIntervalIndicatorKey = booleanPreferencesKey("showIntervalIndicator")
 val ExperimentalLyricsKey = booleanPreferencesKey("experimentalLyrics")
+val LyricsBackgroundStyleKey = stringPreferencesKey("lyricsBackgroundStyle")
+
+/**
+ * Background drawn behind the inline lyrics pane in the expanded player.
+ *
+ * [THEME] keeps the regular app-theme surface; [THUMBNAIL] paints the blurred album art with a
+ * palette-derived gradient on top and flips the player foreground to white.
+ */
+enum class LyricsBackgroundStyle {
+    THEME,
+    THUMBNAIL,
+}
 
 val PlayerVolumeKey = floatPreferencesKey("playerVolume")
 val SleepTimerDefaultKey = floatPreferencesKey("sleepTimerDefault")

@@ -169,7 +169,20 @@ class BottomSheetState(
     private val animatable: Animatable<Dp, AnimationVector1D>,
     private val onAnchorChanged: (Int) -> Unit,
     val collapsedBound: Dp,
+    initialAnchor: Int = dismissedAnchor,
 ) : DraggableState by draggableState {
+    /**
+     * The anchor most recently asked for, updated synchronously by [collapse], [expand] and
+     * [dismiss].
+     *
+     * [isDismissed] and friends compare the *animated* value, so they still report the old position
+     * for the frames before an animation gets going. Callers that need to know where the sheet is
+     * heading - rather than where it currently sits - must read this instead, or they will fight an
+     * in-flight animation.
+     */
+    var targetAnchor by mutableIntStateOf(initialAnchor)
+        private set
+
     val dismissedBound: Dp
         get() = animatable.lowerBound!!
 
@@ -195,6 +208,7 @@ class BottomSheetState(
     }
 
     fun collapse(animationSpec: AnimationSpec<Dp>) {
+        targetAnchor = collapsedAnchor
         onAnchorChanged(collapsedAnchor)
         coroutineScope.launch {
             animatable.animateTo(collapsedBound, animationSpec)
@@ -202,6 +216,7 @@ class BottomSheetState(
     }
 
     fun expand(animationSpec: AnimationSpec<Dp>) {
+        targetAnchor = expandedAnchor
         onAnchorChanged(expandedAnchor)
         coroutineScope.launch {
             animatable.animateTo(animatable.upperBound!!, animationSpec)
@@ -225,6 +240,7 @@ class BottomSheetState(
     }
 
     fun dismiss() {
+        targetAnchor = dismissedAnchor
         onAnchorChanged(dismissedAnchor)
         coroutineScope.launch {
             animatable.animateTo(animatable.lowerBound!!)
@@ -232,6 +248,7 @@ class BottomSheetState(
     }
     
     suspend fun dismissAndWait() {
+        targetAnchor = dismissedAnchor
         onAnchorChanged(dismissedAnchor)
         animatable.animateTo(animatable.lowerBound!!)
     }
@@ -374,7 +391,8 @@ fun rememberBottomSheetState(
             onAnchorChanged = { previousAnchor = it },
             coroutineScope = coroutineScope,
             animatable = animatable,
-            collapsedBound = collapsedBound
+            collapsedBound = collapsedBound,
+            initialAnchor = previousAnchor,
         )
     }
 }

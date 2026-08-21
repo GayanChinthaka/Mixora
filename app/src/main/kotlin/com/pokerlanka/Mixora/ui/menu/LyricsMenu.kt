@@ -52,6 +52,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -75,8 +76,11 @@ import com.pokerlanka.mixora.ui.component.NewAction
 import com.pokerlanka.mixora.ui.component.NewActionGrid
 import com.pokerlanka.mixora.ui.component.TextFieldDialog
 import com.pokerlanka.mixora.viewmodels.LyricsMenuViewModel
+import com.pokerlanka.mixora.constants.LyricsBackgroundStyle
+import com.pokerlanka.mixora.constants.LyricsBackgroundStyleKey
 import com.pokerlanka.mixora.constants.RespectAgentPositioningKey
 import com.pokerlanka.mixora.constants.ShowIntervalIndicatorKey
+import com.pokerlanka.mixora.utils.rememberEnumPreference
 import com.pokerlanka.mixora.utils.rememberPreference
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -94,6 +98,7 @@ fun LyricsMenu(
 
     var respectAgentPositioning by rememberPreference(RespectAgentPositioningKey, true)
     var showIntervalIndicator by rememberPreference(ShowIntervalIndicatorKey, true)
+    var lyricsBackgroundStyle by rememberEnumPreference(LyricsBackgroundStyleKey, LyricsBackgroundStyle.THEME)
 
     var showEditDialog by rememberSaveable {
         mutableStateOf(false)
@@ -367,9 +372,51 @@ fun LyricsMenu(
         ),
     ) {
         item {
+            val isThumbnailBackground = lyricsBackgroundStyle == LyricsBackgroundStyle.THUMBNAIL
+            val backgroundTileContentColor =
+                if (isThumbnailBackground) {
+                    MaterialTheme.colorScheme.onPrimaryContainer
+                } else {
+                    MaterialTheme.colorScheme.onSurfaceVariant
+                }
+
             NewActionGrid(
                 actions =
                     listOf(
+                        NewAction(
+                            icon = {
+                                Icon(
+                                    painter =
+                                        painterResource(
+                                            if (isThumbnailBackground) R.drawable.insert_photo else R.drawable.palette,
+                                        ),
+                                    contentDescription = null,
+                                    modifier = Modifier.size(28.dp),
+                                    tint = backgroundTileContentColor,
+                                )
+                            },
+                            text =
+                                if (isThumbnailBackground) {
+                                    stringResource(R.string.lyrics_background_thumbnail)
+                                } else {
+                                    stringResource(R.string.lyrics_background_theme)
+                                },
+                            onClick = {
+                                lyricsBackgroundStyle =
+                                    if (isThumbnailBackground) {
+                                        LyricsBackgroundStyle.THEME
+                                    } else {
+                                        LyricsBackgroundStyle.THUMBNAIL
+                                    }
+                            },
+                            backgroundColor =
+                                if (isThumbnailBackground) {
+                                    MaterialTheme.colorScheme.primaryContainer
+                                } else {
+                                    Color.Unspecified
+                                },
+                            contentColor = backgroundTileContentColor,
+                        ),
                         NewAction(
                             icon = {
                                 Icon(
