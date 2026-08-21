@@ -94,6 +94,7 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -273,6 +274,7 @@ fun Queue(
                 // 1. List / Queue Button (50% width)
                 PlayerQueueButton(
                     icon = R.drawable.queue_music,
+                    text = stringResource(R.string.queue),
                     onClick = { state.expandSoft() },
                     isActive = false,
                     shape = CircleShape,
@@ -290,6 +292,7 @@ fun Queue(
                 // 2. Lyrics Button (50% width)
                 PlayerQueueButton(
                     icon = R.drawable.lyrics,
+                    text = stringResource(R.string.lyrics),
                     onClick = { onToggleLyrics() },
                     isActive = showInlineLyrics,
                     shape = CircleShape,
@@ -1078,45 +1081,48 @@ private fun PlayerQueueButton(
                 ).alpha(alphaFactor)
         }
 
+    val baseTint =
+        if (isActive) {
+            iconButtonColor
+        } else {
+            when (playerBackground) {
+                PlayerBackgroundStyle.BLUR, PlayerBackgroundStyle.GRADIENT -> {
+                    Color.White
+                }
+
+                PlayerBackgroundStyle.DEFAULT -> {
+                    MaterialTheme.colorScheme.onSurface.copy(alpha = 0.85f)
+                }
+            }
+        }
+    val finalTint = if (enabled) baseTint else baseTint.copy(alpha = 0.5f)
+
     Box(
         modifier = appliedModifier,
         contentAlignment = Alignment.Center,
     ) {
-        if (text != null) {
-            Text(
-                text = text,
-                color = iconButtonColor.copy(alpha = if (enabled) 1f else 0.6f),
-                fontSize = 10.sp,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                textAlign = TextAlign.Center,
-                modifier =
-                    Modifier
-                        .fillMaxWidth()
-                        .basicMarquee(),
-            )
-        } else {
-            val baseTint =
-                if (isActive) {
-                    iconButtonColor
-                } else {
-                    when (playerBackground) {
-                        PlayerBackgroundStyle.BLUR, PlayerBackgroundStyle.GRADIENT -> {
-                            Color.White
-                        }
-
-                        PlayerBackgroundStyle.DEFAULT -> {
-                            MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
-                        }
-                    }
-                }
-            val finalTint = if (enabled) baseTint else baseTint.copy(alpha = 0.5f)
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center,
+            modifier = Modifier.padding(horizontal = 12.dp),
+        ) {
             Icon(
                 painter = painterResource(id = icon),
                 contentDescription = null,
                 modifier = Modifier.size(iconSize),
                 tint = finalTint,
             )
+            if (!text.isNullOrBlank()) {
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = text,
+                    color = finalTint,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Medium,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
         }
     }
 }

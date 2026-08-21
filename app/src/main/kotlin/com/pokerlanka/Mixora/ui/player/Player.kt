@@ -1138,7 +1138,7 @@ fun BottomSheetPlayer(
                                     modifier = Modifier.size(42.dp),
                                 ) {
                                     Icon(
-                                        painter = painterResource(R.drawable.fullscreen),
+                                        painter = painterResource(if (isFullScreen) R.drawable.fullscreen_exit else R.drawable.fullscreen),
                                         contentDescription = null,
                                         modifier = Modifier.size(24.dp),
                                     )
@@ -1260,7 +1260,7 @@ fun BottomSheetPlayer(
                                         .clickable { isFullScreen = !isFullScreen },
                             ) {
                                 Icon(
-                                    painter = painterResource(R.drawable.fullscreen),
+                                    painter = painterResource(if (isFullScreen) R.drawable.fullscreen_exit else R.drawable.fullscreen),
                                     contentDescription = null,
                                     tint = iconButtonColor,
                                     modifier =
