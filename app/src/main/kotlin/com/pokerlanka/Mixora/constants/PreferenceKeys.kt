@@ -411,11 +411,9 @@ val LyricsClickKey = booleanPreferencesKey("lyricsClick")
 val LyricsScrollKey = booleanPreferencesKey("lyricsScrollKey")
 val HideStatusBarOnFullscreenKey = booleanPreferencesKey("hideStatusBarOnFullscreen")
 val LyricsRomanizeAsMainKey = booleanPreferencesKey("lyricsRomanizeAsMain")
-val LyricsRomanizeCyrillicByLineKey = booleanPreferencesKey("lyricsRomanizeCyrillicByLine")
 
 val LyricsGlowEffectKey = booleanPreferencesKey("lyricsGlowEffect")
 
-val LyricsRomanizeList = stringPreferencesKey("lyricsRomanizeList")
 val LyricsAnimationStyleKey = stringPreferencesKey("lyricsAnimationStyle")
 
 enum class LyricsAnimationStyle {
@@ -599,3 +597,37 @@ val CountryCodeToName =
         "YE" to "Yemen",
         "ZW" to "Zimbabwe",
     )
+
+// ---------------------------------------------------------------------------
+// AI Integration
+// ---------------------------------------------------------------------------
+
+val AiProviderKey = stringPreferencesKey("ai_provider")
+val AiCustomEndpointKey = stringPreferencesKey("ai_custom_endpoint")
+val AiApiKeyKey = stringPreferencesKey("ai_api_key")
+val AiApiValidationStatusKey = stringPreferencesKey("ai_api_validation_status")
+val AiSelectedModelKey = stringPreferencesKey("ai_selected_model")
+val AiCustomModelKey = stringPreferencesKey("ai_custom_model")
+
+enum class AiProvider {
+    CHATGPT,
+    GEMINI,
+    OPENROUTER,
+    CUSTOM,
+    NONE,
+}
+
+enum class AiApiValidationStatus {
+    UNKNOWN,
+    SUCCESS,
+    FAILED,
+}
+
+/**
+ * Romanization is AI-only: there is no on-device transliteration path, so this gate
+ * doubles as the "lyrics text leaves the device" consent switch and defaults to off.
+ */
+val AiRomanizationEnabledKey = booleanPreferencesKey("aiRomanizationEnabled")
+
+/** Pinyin with diacritics (wǒ ài nǐ) vs bare syllables (wo ai ni). Part of the cache key. */
+val RomanizationPinyinToneMarksKey = booleanPreferencesKey("romanizationPinyinToneMarks")

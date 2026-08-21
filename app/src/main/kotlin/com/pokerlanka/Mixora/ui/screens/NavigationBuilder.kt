@@ -44,6 +44,7 @@ import com.pokerlanka.mixora.ui.screens.search.OnlineSearchResult
 import com.pokerlanka.mixora.ui.screens.search.SearchScreen
 import com.pokerlanka.mixora.ui.screens.settings.AboutScreen
 import com.pokerlanka.mixora.ui.screens.settings.AccountSettings
+import com.pokerlanka.mixora.ui.screens.settings.AiIntegrationSettings
 import com.pokerlanka.mixora.ui.screens.settings.AndroidAutoSettings
 import com.pokerlanka.mixora.ui.screens.settings.AppearanceSettings
 import com.pokerlanka.mixora.ui.screens.settings.BackupAndRestore
@@ -413,6 +414,10 @@ fun NavGraphBuilder.navigationBuilder(
 
     composable("settings/about") {
         AboutScreen(navController)
+    }
+
+    composable("settings/ai_integration") {
+        AiIntegrationSettings(navController)
     }
 
     composable("settings/music_together") {

@@ -38,6 +38,7 @@ import com.pokerlanka.mixora.db.entities.FormatEntity
 import com.pokerlanka.mixora.db.entities.ListeningBySlot
 import com.pokerlanka.mixora.db.entities.ListeningTotals
 import com.pokerlanka.mixora.db.entities.LyricsEntity
+import com.pokerlanka.mixora.db.entities.RomanizedLyricsEntity
 import com.pokerlanka.mixora.db.entities.PlayCountEntity
 import com.pokerlanka.mixora.db.entities.Playlist
 import com.pokerlanka.mixora.db.entities.PlaylistEntity
@@ -2048,4 +2049,21 @@ interface DatabaseDao {
 
     @Delete
     fun delete(podcast: PodcastEntity)
+
+    // --- Romanized lyrics cache -------------------------------------------------------------
+
+    @Query("SELECT * FROM romanized_lyrics WHERE lyricsHash = :lyricsHash AND style = :style")
+    suspend fun romanizedLyrics(
+        lyricsHash: String,
+        style: String,
+    ): RomanizedLyricsEntity?
+
+    @Upsert
+    suspend fun upsert(romanized: RomanizedLyricsEntity)
+
+    @Query("DELETE FROM romanized_lyrics")
+    suspend fun clearRomanizedLyricsCache()
+
+    @Query("SELECT COUNT(*) FROM romanized_lyrics")
+    fun romanizedLyricsCacheCount(): Flow<Int>
 }

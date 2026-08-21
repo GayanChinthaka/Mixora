@@ -89,8 +89,7 @@ import com.pokerlanka.mixora.LocalPlayerConnection
 import com.pokerlanka.mixora.R
 import com.pokerlanka.mixora.constants.LyricsClickKey
 import com.pokerlanka.mixora.constants.LyricsRomanizeAsMainKey
-import com.pokerlanka.mixora.constants.LyricsRomanizeCyrillicByLineKey
-import com.pokerlanka.mixora.constants.LyricsRomanizeList
+import com.pokerlanka.mixora.constants.AiRomanizationEnabledKey
 import com.pokerlanka.mixora.constants.LyricsTextPositionKey
 import com.pokerlanka.mixora.constants.PlayerBackgroundStyle
 import com.pokerlanka.mixora.constants.PlayerBackgroundStyleKey
@@ -103,7 +102,6 @@ import com.pokerlanka.mixora.lyrics.lyricsTextLooksSynced
 import com.pokerlanka.mixora.ui.component.shimmer.ShimmerHost
 import com.pokerlanka.mixora.ui.component.shimmer.TextPlaceholder
 import com.pokerlanka.mixora.ui.screens.settings.LyricsPosition
-import com.pokerlanka.mixora.ui.screens.settings.defaultList
 import com.pokerlanka.mixora.ui.utils.fadingEdge
 import com.pokerlanka.mixora.utils.ComposeToImage
 import com.pokerlanka.mixora.utils.rememberEnumPreference
@@ -148,9 +146,8 @@ fun ExperimentalLyrics(
 
     val lyricsTextPosition by rememberEnumPreference(LyricsTextPositionKey, LyricsPosition.CENTER)
     val changeLyrics by rememberPreference(LyricsClickKey, true)
-    val romanizeLyricsList = rememberPreference(LyricsRomanizeList, "")
     val romanizeAsMain by rememberPreference(LyricsRomanizeAsMainKey, false)
-    val romanizeCyrillicByLine by rememberPreference(LyricsRomanizeCyrillicByLineKey, false)
+    val aiRomanizationEnabled by rememberPreference(AiRomanizationEnabledKey, false)
     val respectAgentPositioning by rememberPreference(RespectAgentPositioningKey, true)
     val showIntervalIndicator by rememberPreference(ShowIntervalIndicatorKey, true)
     
@@ -175,22 +172,15 @@ fun ExperimentalLyrics(
         defaultValue = PlayerBackgroundStyle.DEFAULT
     )
 
-    val enabledLanguages = remember(romanizeLyricsList.value) {
-        if (romanizeLyricsList.value.isEmpty()) {
-            defaultList
-        } else {
-            romanizeLyricsList.value.split(",").map { entry ->
-                val (lang, checked) = entry.split(":")
-                Pair(lang, checked.toBoolean())
-            }
-        }.filter { it.second }.map { it.first }
-    }
-
     val lines by lyricsViewModel.lines.collectAsStateWithLifecycle()
     val mergedLyricsList by lyricsViewModel.mergedLyricsList.collectAsStateWithLifecycle()
 
-    LaunchedEffect(lyrics, enabledLanguages, romanizeCyrillicByLine, showIntervalIndicator) {
-        lyricsViewModel.processLyrics(lyrics, enabledLanguages, romanizeCyrillicByLine, showIntervalIndicator)
+    // Romanization is only worth requesting when it is both globally enabled and left on for
+    // this song, so a per-song opt-out also stops the network call rather than only hiding it.
+    val romanizeThisSong = aiRomanizationEnabled && currentSong?.romanizeLyrics == true
+
+    LaunchedEffect(lyrics, romanizeThisSong, showIntervalIndicator) {
+        lyricsViewModel.processLyrics(lyrics, romanizeThisSong, showIntervalIndicator)
     }
 
     val isSynced = remember(lyrics) { lyricsTextLooksSynced(lyrics) }
@@ -679,7 +669,7 @@ fun ExperimentalLyrics(
                                         expressiveAccent = expressiveAccent, lyricsTextPosition = lyricsTextPosition,
                                         respectAgentPositioning = respectAgentPositioning, isAutoScrollEnabled = isAutoScrollEnabled,
                                         displayedCurrentLineIndex = deferredCurrentLineIndex, romanizeAsMain = romanizeAsMain,
-                                        enabledLanguages = enabledLanguages, romanizeLyrics = currentSong?.romanizeLyrics == true,
+                                        romanizeLyrics = currentSong?.romanizeLyrics == true,
                                         onSizeChanged = { itemHeights[listIndex] = it },
                                         onClick = {
                                             if (isSelectionModeActive) {

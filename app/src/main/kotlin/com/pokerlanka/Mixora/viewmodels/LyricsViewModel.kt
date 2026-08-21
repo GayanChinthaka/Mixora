@@ -1,19 +1,24 @@
-﻿/**
+/**
  * Mixora Project (C) 2026
  * Licensed under GPL-3.0 | See git history for contributors
  */
 
 package com.pokerlanka.mixora.viewmodels
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.pokerlanka.mixora.db.MusicDatabase
 import com.pokerlanka.mixora.db.entities.LyricsEntity.Companion.LYRICS_NOT_FOUND
 import com.pokerlanka.mixora.lyrics.LyricsEntry
+import com.pokerlanka.mixora.lyrics.LyricsRomanizationCoordinator
 import com.pokerlanka.mixora.lyrics.LyricsUtils
 import com.pokerlanka.mixora.ui.component.LyricsListItem
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -21,12 +26,17 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 @HiltViewModel
-class LyricsViewModel @Inject constructor() : ViewModel() {
+class LyricsViewModel @Inject constructor(
+    @ApplicationContext context: Context,
+    database: MusicDatabase,
+) : ViewModel() {
     companion object {
         private val timestampRegex = Regex("\\[\\d{1,2}:\\d{2}")
     }
 
-    private var processJob: kotlinx.coroutines.Job? = null
+    private val romanizationCoordinator = LyricsRomanizationCoordinator(context, database)
+
+    private var processJob: Job? = null
 
     private val _lines = MutableStateFlow<List<LyricsEntry>>(emptyList())
     val lines: StateFlow<List<LyricsEntry>> = _lines.asStateFlow()
@@ -34,11 +44,14 @@ class LyricsViewModel @Inject constructor() : ViewModel() {
     private val _mergedLyricsList = MutableStateFlow<List<LyricsListItem>>(emptyList())
     val mergedLyricsList: StateFlow<List<LyricsListItem>> = _mergedLyricsList.asStateFlow()
 
+    /** True while a romanization request is in flight, for a progress affordance. */
+    private val _isRomanizing = MutableStateFlow(false)
+    val isRomanizing: StateFlow<Boolean> = _isRomanizing.asStateFlow()
+
     fun processLyrics(
         lyrics: String?,
-        enabledLanguages: List<String>,
-        romanizeCyrillicByLine: Boolean,
-        showIntervalIndicator: Boolean
+        romanizeEnabled: Boolean,
+        showIntervalIndicator: Boolean,
     ) {
         processJob?.cancel()
         processJob = viewModelScope.launch {
@@ -48,7 +61,7 @@ class LyricsViewModel @Inject constructor() : ViewModel() {
                 } else {
                     val isLrc = timestampRegex.containsMatchIn(lyrics)
                     val parsedLines = if (isLrc) LyricsUtils.parseLyrics(lyrics) else emptyList()
-                    
+
                     if (parsedLines.isNotEmpty()) {
                         listOf(LyricsEntry.HEAD_LYRICS_ENTRY) + parsedLines
                     } else {
@@ -62,22 +75,20 @@ class LyricsViewModel @Inject constructor() : ViewModel() {
                     }
                 }
             }
-            
+
             _lines.value = processedLines
             updateMergedList(processedLines, showIntervalIndicator)
 
-            // Romanize in the background after the UI has been updated
-            if (lyrics != null && lyrics != LYRICS_NOT_FOUND && enabledLanguages.isNotEmpty()) {
-                launch(Dispatchers.Default) {
-                    processedLines.forEach { entry ->
-                        if (entry == LyricsEntry.HEAD_LYRICS_ENTRY) return@forEach
-                        entry.romanizedTextFlow.value = LyricsUtils.romanize(
-                            text = lyrics,
-                            line = entry.text,
-                            enabledLanguages = enabledLanguages,
-                            romanizeCyrillicByLine = romanizeCyrillicByLine
-                        )
-                    }
+            // Romanize only after the UI already shows the original text. Each entry's
+            // romanizedTextFlow swaps itself in when a value arrives, so a slow or failed request
+            // never blocks or empties the lyrics sheet.
+            if (romanizeEnabled && lyrics != null && lyrics != LYRICS_NOT_FOUND) {
+                launch {
+                    romanizationCoordinator.romanize(
+                        lyrics = lyrics,
+                        entries = processedLines,
+                        onRunningChange = { _isRomanizing.value = it },
+                    )
                 }
             }
         }

@@ -134,7 +134,6 @@ internal fun LyricsLine(
     isAutoScrollEnabled: Boolean,
     displayedCurrentLineIndex: Int,
     romanizeAsMain: Boolean,
-    enabledLanguages: List<String>,
     romanizeLyrics: Boolean,
     onSizeChanged: (Int) -> Unit,
     onClick: () -> Unit,
@@ -276,7 +275,7 @@ internal fun LyricsLine(
                     )
                 }
                 
-                if (romanizeLyrics && enabledLanguages.isNotEmpty()) {
+                if (romanizeLyrics) {
                     subText?.let { 
                         Text(
                             text = it,

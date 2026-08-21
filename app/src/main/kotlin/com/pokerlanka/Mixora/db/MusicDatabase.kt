@@ -35,6 +35,7 @@ import com.pokerlanka.mixora.db.entities.PlaylistSongMapPreview
 import com.pokerlanka.mixora.db.entities.PodcastEntity
 import com.pokerlanka.mixora.db.entities.RecognitionHistory
 import com.pokerlanka.mixora.db.entities.RelatedSongMap
+import com.pokerlanka.mixora.db.entities.RomanizedLyricsEntity
 import com.pokerlanka.mixora.db.entities.SearchHistory
 import com.pokerlanka.mixora.db.entities.SetVideoIdEntity
 import com.pokerlanka.mixora.db.entities.SongAlbumMap
@@ -112,13 +113,14 @@ class MusicDatabase(
         RecognitionHistory::class,
         SpeedDialItem::class,
         PodcastEntity::class,
+        RomanizedLyricsEntity::class,
     ],
     views = [
         SortedSongArtistMap::class,
         SortedSongAlbumMap::class,
         PlaylistSongMapPreview::class,
     ],
-    version = 39,
+    version = 40,
     exportSchema = true,
     autoMigrations = [
         AutoMigration(from = 2, to = 3),
@@ -157,6 +159,7 @@ class MusicDatabase(
         AutoMigration(from = 35, to = 36, spec = Migration35To36::class),
         AutoMigration(from = 36, to = 37),
         AutoMigration(from = 37, to = 38, spec = Migration37To38::class),
+        AutoMigration(from = 39, to = 40),
     ],
 )
 @TypeConverters(Converters::class)
