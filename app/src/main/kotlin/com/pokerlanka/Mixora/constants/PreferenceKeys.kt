@@ -412,24 +412,13 @@ val LyricsScrollKey = booleanPreferencesKey("lyricsScrollKey")
 val HideStatusBarOnFullscreenKey = booleanPreferencesKey("hideStatusBarOnFullscreen")
 val LyricsRomanizeAsMainKey = booleanPreferencesKey("lyricsRomanizeAsMain")
 
-val LyricsGlowEffectKey = booleanPreferencesKey("lyricsGlowEffect")
 
-val LyricsAnimationStyleKey = stringPreferencesKey("lyricsAnimationStyle")
 
-enum class LyricsAnimationStyle {
-    NONE,
-    FADE,
-    GLOW,
-    SLIDE,
-    KARAOKE,
-    APPLE,
-}
 
 val LyricsTextSizeKey = floatPreferencesKey("lyricsTextSize")
 val LyricsLineSpacingKey = floatPreferencesKey("lyricsLineSpacing")
 val RespectAgentPositioningKey = booleanPreferencesKey("respectAgentPositioning")
 val ShowIntervalIndicatorKey = booleanPreferencesKey("showIntervalIndicator")
-val ExperimentalLyricsKey = booleanPreferencesKey("experimentalLyrics")
 val LyricsBackgroundStyleKey = stringPreferencesKey("lyricsBackgroundStyle")
 
 /**

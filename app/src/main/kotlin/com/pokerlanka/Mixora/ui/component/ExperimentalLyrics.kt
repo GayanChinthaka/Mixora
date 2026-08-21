@@ -88,7 +88,10 @@ import com.pokerlanka.mixora.LocalDatabase
 import com.pokerlanka.mixora.LocalPlayerConnection
 import com.pokerlanka.mixora.R
 import com.pokerlanka.mixora.constants.LyricsClickKey
+import com.pokerlanka.mixora.constants.LyricsLineSpacingKey
 import com.pokerlanka.mixora.constants.LyricsRomanizeAsMainKey
+import com.pokerlanka.mixora.constants.LyricsScrollKey
+import com.pokerlanka.mixora.constants.LyricsTextSizeKey
 import com.pokerlanka.mixora.constants.AiRomanizationEnabledKey
 import com.pokerlanka.mixora.constants.LyricsTextPositionKey
 import com.pokerlanka.mixora.constants.PlayerBackgroundStyle
@@ -148,6 +151,12 @@ fun ExperimentalLyrics(
     val changeLyrics by rememberPreference(LyricsClickKey, true)
     val romanizeAsMain by rememberPreference(LyricsRomanizeAsMainKey, false)
     val aiRomanizationEnabled by rememberPreference(AiRomanizationEnabledKey, false)
+    // These three were previously ignored here: text size and spacing were hardcoded at the
+    // LyricsLine call and auto-scroll could not be turned off. Defaults match what this view
+    // already rendered (36sp / 1.3) so honouring the settings does not change existing looks.
+    val lyricsTextSize by rememberPreference(LyricsTextSizeKey, 36f)
+    val lyricsLineSpacing by rememberPreference(LyricsLineSpacingKey, 1.3f)
+    val scrollLyrics by rememberPreference(LyricsScrollKey, true)
     val respectAgentPositioning by rememberPreference(RespectAgentPositioningKey, true)
     val showIntervalIndicator by rememberPreference(ShowIntervalIndicatorKey, true)
     
@@ -347,15 +356,15 @@ fun ExperimentalLyrics(
         }
     }
 
-    LaunchedEffect(scrollTargetIndex, isAutoScrollEnabled) {
-        if (scrollTargetIndex != -1 && isAutoScrollEnabled) {
+    LaunchedEffect(scrollTargetIndex, isAutoScrollEnabled, scrollLyrics) {
+        if (scrollTargetIndex != -1 && isAutoScrollEnabled && scrollLyrics) {
             deferredCurrentLineIndex = scrollTargetIndex
         }
     }
 
     var userManualOffset by remember { mutableFloatStateOf(0f) }
     LaunchedEffect(lyrics, lines) {
-        isAutoScrollEnabled = true
+        isAutoScrollEnabled = scrollLyrics
         userManualOffset = 0f
         scrollTargetIndex = -1
         deferredCurrentLineIndex = 0
@@ -669,7 +678,8 @@ fun ExperimentalLyrics(
                                         bgVisible = bgVisible, isSelected = selectedIndices.contains(index),
                                         isSelectionModeActive = isSelectionModeActive, currentPositionState = currentPositionState,
                                         lyricsOffset = (currentSong?.song?.lyricsOffset ?: 0).toLong(),
-                                        playerConnection = playerConnection, lyricsTextSize = 36f, lyricsLineSpacing = 1.3f,
+                                        playerConnection = playerConnection, lyricsTextSize = lyricsTextSize,
+                                        lyricsLineSpacing = lyricsLineSpacing,
                                         expressiveAccent = expressiveAccent, lyricsTextPosition = lyricsTextPosition,
                                         respectAgentPositioning = respectAgentPositioning, isAutoScrollEnabled = isAutoScrollEnabled,
                                         displayedCurrentLineIndex = deferredCurrentLineIndex, romanizeAsMain = romanizeAsMain,

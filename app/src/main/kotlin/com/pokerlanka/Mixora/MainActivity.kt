@@ -138,7 +138,6 @@ import com.pokerlanka.mixora.constants.CustomThemeColorKey
 import com.pokerlanka.mixora.constants.DarkModeKey
 import com.pokerlanka.mixora.constants.DisableAnimationsKey
 import com.pokerlanka.mixora.constants.DynamicThemeKey
-import com.pokerlanka.mixora.constants.ExperimentalLyricsKey
 import com.pokerlanka.mixora.constants.LastSeenVersionKey
 import com.pokerlanka.mixora.constants.LyricsProviderOrderKey
 import com.pokerlanka.mixora.constants.MiniPlayerBottomSpacing
