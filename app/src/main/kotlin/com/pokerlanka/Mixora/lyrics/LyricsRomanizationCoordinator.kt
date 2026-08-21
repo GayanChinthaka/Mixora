@@ -21,6 +21,7 @@ import com.pokerlanka.mixora.db.entities.RomanizedLyricsEntity
 import com.pokerlanka.mixora.extensions.toEnum
 import com.pokerlanka.mixora.utils.dataStore
 import java.security.MessageDigest
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
@@ -53,10 +54,16 @@ class LyricsRomanizationCoordinator(
         onRunningChange: (Boolean) -> Unit = {},
     ) {
         val targets = entries.filter { it != LyricsEntry.HEAD_LYRICS_ENTRY && it.text.isNotBlank() }
-        if (targets.isEmpty()) return
+        if (targets.isEmpty()) {
+            Timber.tag(LogTag).d("skip: no romanizable lines in %d entries", entries.size)
+            return
+        }
 
         val prefs = context.dataStore.data.first()
-        if (prefs[AiRomanizationEnabledKey] != true) return
+        if (prefs[AiRomanizationEnabledKey] != true) {
+            Timber.tag(LogTag).d("skip: AI romanization is off (Settings > Lyrics > Lyrics romanization)")
+            return
+        }
 
         val provider = prefs[AiProviderKey].toEnum(AiProvider.NONE)
         val config =
@@ -73,7 +80,15 @@ class LyricsRomanizationCoordinator(
                         }
                     ).orEmpty(),
             )
-        if (!config.canCallApi) return
+        if (!config.canCallApi) {
+            Timber.tag(LogTag).w(
+                "skip: provider not usable (provider=%s, hasKey=%b, model='%s')",
+                provider,
+                config.apiKey.isNotBlank(),
+                config.model,
+            )
+            return
+        }
 
         val toneMarks = prefs[RomanizationPinyinToneMarksKey] ?: true
         val style = romanizationStyleKey(toneMarks)
@@ -81,10 +96,18 @@ class LyricsRomanizationCoordinator(
         val hash = withContext(Dispatchers.Default) { sha256(lyrics) }
 
         readCache(hash, style, sourceLines.size)?.let { cached ->
+            Timber.tag(LogTag).d("cache hit: %d lines (style=%s)", cached.size, style)
             apply(targets, cached)
             return
         }
 
+        Timber.tag(LogTag).d(
+            "requesting: %d lines, provider=%s, model=%s, style=%s",
+            sourceLines.size,
+            provider,
+            config.model,
+            style,
+        )
         onRunningChange(true)
         try {
             val romanized =
@@ -93,8 +116,19 @@ class LyricsRomanizationCoordinator(
                     lines = sourceLines,
                     pinyinToneMarks = toneMarks,
                 )
+            Timber.tag(LogTag).d(
+                "done: %d of %d lines romanized; first='%s'",
+                romanized.count { it != null },
+                romanized.size,
+                romanized.firstOrNull { it != null }.orEmpty(),
+            )
             apply(targets, romanized)
             writeCache(hash, style, romanized, config.model)
+        } catch (cancellation: CancellationException) {
+            // The lyrics sheet left the composition or the track changed. Not an error, and not
+            // cached, so the next play starts clean.
+            Timber.tag(LogTag).d("cancelled mid-request")
+            throw cancellation
         } catch (error: Exception) {
             // Deliberately not cached: a transient failure should retry on the next play rather
             // than pin an empty result for this song forever.

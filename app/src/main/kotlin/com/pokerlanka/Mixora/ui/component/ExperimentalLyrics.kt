@@ -173,11 +173,15 @@ fun ExperimentalLyrics(
     )
 
     val lines by lyricsViewModel.lines.collectAsStateWithLifecycle()
+    val isRomanizing by lyricsViewModel.isRomanizing.collectAsStateWithLifecycle()
     val mergedLyricsList by lyricsViewModel.mergedLyricsList.collectAsStateWithLifecycle()
 
     // Romanization is only worth requesting when it is both globally enabled and left on for
     // this song, so a per-song opt-out also stops the network call rather than only hiding it.
-    val romanizeThisSong = aiRomanizationEnabled && currentSong?.romanizeLyrics == true
+    // `currentSong` is a Room lookup, so it is null for a streamed song that was never saved to
+    // the library. Treat null as "not opted out" (SongEntity defaults romanizeLyrics to true) —
+    // testing `== true` here silently blocked romanization for every unsaved song.
+    val romanizeThisSong = aiRomanizationEnabled && currentSong?.romanizeLyrics != false
 
     LaunchedEffect(lyrics, romanizeThisSong, showIntervalIndicator) {
         lyricsViewModel.processLyrics(lyrics, romanizeThisSong, showIntervalIndicator)
@@ -669,7 +673,7 @@ fun ExperimentalLyrics(
                                         expressiveAccent = expressiveAccent, lyricsTextPosition = lyricsTextPosition,
                                         respectAgentPositioning = respectAgentPositioning, isAutoScrollEnabled = isAutoScrollEnabled,
                                         displayedCurrentLineIndex = deferredCurrentLineIndex, romanizeAsMain = romanizeAsMain,
-                                        romanizeLyrics = currentSong?.romanizeLyrics == true,
+                                        romanizeLyrics = romanizeThisSong,
                                         onSizeChanged = { itemHeights[listIndex] = it },
                                         onClick = {
                                             if (isSelectionModeActive) {
@@ -703,6 +707,16 @@ fun ExperimentalLyrics(
                 }
             }
         }
+
+        RomanizingIndicator(
+            visible = isRomanizing,
+            accent = expressiveAccent,
+            // Bottom-centre, clearing the resync/action button zone below (16dp padding + ~48dp
+            // button). Top-centre put it under the status bar, where it was easy to miss.
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(bottom = 72.dp),
+        )
 
         LyricsActionOverlay(
             modifier = Modifier.align(Alignment.BottomCenter),

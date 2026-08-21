@@ -5,6 +5,7 @@
 
 package com.pokerlanka.mixora.ai
 
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
 import timber.log.Timber
 
@@ -32,7 +33,20 @@ class AiLyricsRomanizer {
         // occurrence would multiply cost and let the model drift between repeats; collapsing to
         // distinct values makes rule 6 of the prompt hold by construction.
         val distinct = lines.filter { needsRomanization(it) }.distinct()
-        if (distinct.isEmpty()) return List(lines.size) { null }
+        if (distinct.isEmpty()) {
+            Timber.tag(LogTag).d(
+                "no non-Latin lines among %d; nothing to send (sample='%s')",
+                lines.size,
+                lines.firstOrNull().orEmpty().take(40),
+            )
+            return List(lines.size) { null }
+        }
+        Timber.tag(LogTag).d(
+            "%d lines -> %d distinct non-Latin (sample='%s')",
+            lines.size,
+            distinct.size,
+            distinct.first().take(40),
+        )
 
         val results = HashMap<String, String>(distinct.size)
         var failures = 0
@@ -67,6 +81,12 @@ class AiLyricsRomanizer {
                     lines = batch,
                     pinyinToneMarks = pinyinToneMarks,
                 )
+            } catch (cancellation: CancellationException) {
+                // Cancellation is not a failure: the caller navigated away or the lyrics changed.
+                // Swallowing it here broke structured concurrency and, worse, surfaced as
+                // "AI romanization failed for every batch" — blaming the provider for our own
+                // lifecycle. It must always propagate.
+                throw cancellation
             } catch (error: Exception) {
                 attempt++
                 val message = error.message.orEmpty()

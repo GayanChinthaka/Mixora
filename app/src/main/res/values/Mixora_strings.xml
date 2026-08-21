@@ -812,4 +812,5 @@
     <string name="romanization_pinyin_tones_desc">Show Chinese as \"wǒ ài nǐ\" instead of \"wo ai ni\". Changing this re-romanizes on next play.</string>
     <string name="romanization_clear_cache">Clear romanization cache</string>
     <string name="romanization_clear_cache_desc">Removes stored romanized lyrics. They will be requested again when needed.</string>
+    <string name="romanizing_in_progress">Romanizing…</string>
 </resources>

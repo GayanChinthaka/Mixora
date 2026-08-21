@@ -24,6 +24,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import timber.log.Timber
 
 @HiltViewModel
 class LyricsViewModel @Inject constructor(
@@ -32,6 +33,7 @@ class LyricsViewModel @Inject constructor(
 ) : ViewModel() {
     companion object {
         private val timestampRegex = Regex("\\[\\d{1,2}:\\d{2}")
+        private const val LogTag = "LyricsRomanization"
     }
 
     private val romanizationCoordinator = LyricsRomanizationCoordinator(context, database)
@@ -90,6 +92,12 @@ class LyricsViewModel @Inject constructor(
                         onRunningChange = { _isRomanizing.value = it },
                     )
                 }
+            } else {
+                Timber.tag(LogTag).d(
+                    "romanization not attempted: enabled=%b, hasLyrics=%b",
+                    romanizeEnabled,
+                    lyrics != null && lyrics != LYRICS_NOT_FOUND,
+                )
             }
         }
     }

@@ -235,11 +235,22 @@ fun OriginalLyrics(
     // global switch so a song opted out never costs a request.
     val romanizationCoordinator =
         remember(context, database) { LyricsRomanizationCoordinator(context, database) }
-    val romanizeThisSong = aiRomanizationEnabled && currentSong?.romanizeLyrics == true
+    // `currentSong` is a Room lookup, so it is null for a streamed song that was never saved to
+    // the library. Treat null as "not opted out" (SongEntity defaults romanizeLyrics to true) —
+    // testing `== true` here silently blocked romanization for every unsaved song.
+    val romanizeThisSong = aiRomanizationEnabled && currentSong?.romanizeLyrics != false
+
+    // Local rather than hoisted: this view owns its romanization call directly instead of going
+    // through LyricsViewModel, so there is no shared flow to observe here.
+    var isRomanizing by remember { mutableStateOf(false) }
 
     LaunchedEffect(lines, romanizeThisSong) {
         if (romanizeThisSong && lyrics != null && lyrics != LYRICS_NOT_FOUND && lines.isNotEmpty()) {
-            romanizationCoordinator.romanize(lyrics, lines)
+            romanizationCoordinator.romanize(
+                lyrics = lyrics,
+                entries = lines,
+                onRunningChange = { isRomanizing = it },
+            )
         }
     }
 
@@ -1427,6 +1438,16 @@ fun OriginalLyrics(
             // Action buttons are now in the bottom bar
             // Removed the more button from bottom - it's now in the top header
         }
+
+        RomanizingIndicator(
+            visible = isRomanizing,
+            accent = expressiveAccent,
+            // Bottom-centre, clearing the resync/action button zone below (16dp padding + ~48dp
+            // button). Top-centre put it under the status bar, where it was easy to miss.
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(bottom = 72.dp),
+        )
 
         Box(
             modifier = Modifier
