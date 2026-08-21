@@ -25,7 +25,6 @@ class AiLyricsRomanizer {
     suspend fun romanize(
         config: AiServiceConfig,
         lines: List<String>,
-        pinyinToneMarks: Boolean,
     ): List<String?> {
         if (lines.isEmpty()) return emptyList()
 
@@ -52,7 +51,7 @@ class AiLyricsRomanizer {
         var failures = 0
         val batches = distinct.chunkedByBudget()
         batches.forEach { batch ->
-            val romanized = requestWithRetry(config, batch, pinyinToneMarks)
+            val romanized = requestWithRetry(config, batch)
             if (romanized == null) {
                 failures++
             } else {
@@ -71,7 +70,6 @@ class AiLyricsRomanizer {
     private suspend fun requestWithRetry(
         config: AiServiceConfig,
         batch: List<String>,
-        pinyinToneMarks: Boolean,
     ): List<String>? {
         var attempt = 0
         while (attempt < MaxAttempts) {
@@ -79,7 +77,6 @@ class AiLyricsRomanizer {
                 return AiTextService.romanizeLines(
                     config = config,
                     lines = batch,
-                    pinyinToneMarks = pinyinToneMarks,
                 )
             } catch (cancellation: CancellationException) {
                 // Cancellation is not a failure: the caller navigated away or the lyrics changed.

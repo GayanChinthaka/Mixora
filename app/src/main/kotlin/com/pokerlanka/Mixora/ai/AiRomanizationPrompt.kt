@@ -40,15 +40,8 @@ internal val RomanizationResponseSchema: JSONObject
  * "helping" — restyling Latin text, renumbering, merging repeated chorus lines, or appending a
  * note — each of which desyncs lyrics against their timestamps.
  */
-internal fun romanizationSystemPrompt(pinyinToneMarks: Boolean): String {
-    val pinyinRule =
-        if (pinyinToneMarks) {
-            """Hanyu Pinyin WITH tone marks (nǐ hǎo, wǒ ài nǐ)."""
-        } else {
-            """Hanyu Pinyin WITHOUT tone marks (ni hao, wo ai ni). Never add diacritics."""
-        }
-
-    return """
+internal fun romanizationSystemPrompt(): String =
+    """
 You are a precision transliteration engine for song lyrics. You convert text from non-Latin
 scripts into Latin script. You are NOT a translator.
 
@@ -77,7 +70,7 @@ Japanese  - Modified Hepburn.
             non-standard lyric readings (gikun) where the song clearly intends them.
 Korean    - Revised Romanization. Apply sound-change rules across syllable boundaries:
             한국말 -> "hangungmal" (not "hangukmal"); 신라 -> "silla"; 좋다 -> "jota".
-Chinese   - $pinyinRule
+Chinese   - Hanyu Pinyin WITHOUT tone marks (ni hao, wo ai ni). Never add diacritics.
             Group syllables into words, not one syllable per space.
             Resolve polyphones by context:
             行 = xíng (to go) vs háng (a row); 乐 = lè (happy) vs yuè (music);
@@ -135,4 +128,3 @@ of that object's "t". Output nothing else.
 Example input:  [{"i":0,"t":"君の名前を呼ぶよ"},{"i":1,"t":"Baby, 안녕"}]
 Example output: [{"i":0,"r":"kimi no namae o yobu yo"},{"i":1,"r":"Baby, annyeong"}]
 """.trimIndent()
-}

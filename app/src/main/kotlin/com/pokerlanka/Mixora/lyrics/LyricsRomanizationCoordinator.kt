@@ -15,7 +15,6 @@ import com.pokerlanka.mixora.constants.AiProvider
 import com.pokerlanka.mixora.constants.AiProviderKey
 import com.pokerlanka.mixora.constants.AiRomanizationEnabledKey
 import com.pokerlanka.mixora.constants.AiSelectedModelKey
-import com.pokerlanka.mixora.constants.RomanizationPinyinToneMarksKey
 import com.pokerlanka.mixora.db.MusicDatabase
 import com.pokerlanka.mixora.db.entities.RomanizedLyricsEntity
 import com.pokerlanka.mixora.extensions.toEnum
@@ -90,8 +89,7 @@ class LyricsRomanizationCoordinator(
             return
         }
 
-        val toneMarks = prefs[RomanizationPinyinToneMarksKey] ?: true
-        val style = romanizationStyleKey(toneMarks)
+        val style = RomanizationStyleVersion
         val sourceLines = targets.map { it.text }
         val hash = withContext(Dispatchers.Default) { sha256(lyrics) }
 
@@ -114,7 +112,6 @@ class LyricsRomanizationCoordinator(
                 romanizer.romanize(
                     config = config,
                     lines = sourceLines,
-                    pinyinToneMarks = toneMarks,
                 )
             Timber.tag(LogTag).d(
                 "done: %d of %d lines romanized; first='%s'",
@@ -190,13 +187,13 @@ class LyricsRomanizationCoordinator(
         const val LogTag = "LyricsRomanization"
 
         /**
-         * Every user choice that changes romanized output has to be represented here, or changing
-         * a setting would serve output produced under the old one. Bump the version prefix when
-         * the prompt itself changes enough to invalidate stored results.
+         * Part of the cache primary key, so stored rows produced by an older prompt are a miss
+         * rather than stale output. Bump whenever the prompt changes what it emits.
+         *
+         * v1 initial; v2 added explicit Tamil/Sinhala/Telugu/Kannada/Malayalam/Bengali rules;
+         * v3 dropped the pinyin tone-mark option, which previously split this into two variants.
          */
-        // v2: added explicit Tamil, Sinhala, Telugu, Kannada, Malayalam and Bengali rules, which
-        // changes output for those scripts versus the earlier catch-all "Other" instruction.
-        fun romanizationStyleKey(pinyinToneMarks: Boolean): String = if (pinyinToneMarks) "v2-tones" else "v2-notones"
+        const val RomanizationStyleVersion = "v3"
 
         fun sha256(value: String): String =
             MessageDigest

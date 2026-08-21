@@ -75,7 +75,6 @@ object AiTextService {
     suspend fun romanizeLines(
         config: AiServiceConfig,
         lines: List<String>,
-        pinyinToneMarks: Boolean,
     ): List<String> {
         if (lines.isEmpty()) return emptyList()
         val payload = JSONArray()
@@ -85,7 +84,7 @@ object AiTextService {
         val response =
             complete(
                 config = config,
-                systemPrompt = romanizationSystemPrompt(pinyinToneMarks),
+                systemPrompt = romanizationSystemPrompt(),
                 userPrompt = payload.toString(),
                 // Transliteration is mechanical: any creativity here is a defect.
                 temperature = 0.0,

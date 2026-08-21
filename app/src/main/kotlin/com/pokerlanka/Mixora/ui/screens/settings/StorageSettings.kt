@@ -100,6 +100,7 @@ fun StorageSettings(
     var clearDownloads by remember { mutableStateOf(false) }
     var clearCacheDialog by remember { mutableStateOf(false) }
     var clearImageCacheDialog by remember { mutableStateOf(false) }
+    var clearRomanizationCacheDialog by remember { mutableStateOf(false) }
 
     // State for the confirmation dialog
     var showCacheWarningDialog by remember { mutableStateOf(false) }
@@ -203,6 +204,22 @@ fun StorageSettings(
             onCancel = { clearCacheDialog = false },
             content = {
                 Text(text = stringResource(R.string.clear_song_cache_dialog))
+            },
+        )
+    }
+    if (clearRomanizationCacheDialog) {
+        ActionPromptDialog(
+            title = stringResource(R.string.romanization_clear_cache),
+            onDismiss = { clearRomanizationCacheDialog = false },
+            onConfirm = {
+                coroutineScope.launch(Dispatchers.IO) {
+                    runCatching { database.clearRomanizedLyricsCache() }
+                }
+                clearRomanizationCacheDialog = false
+            },
+            onCancel = { clearRomanizationCacheDialog = false },
+            content = {
+                Text(text = stringResource(R.string.romanization_clear_cache_desc))
             },
         )
     }
@@ -312,6 +329,14 @@ fun StorageSettings(
                         title = { Text(stringResource(R.string.clear_all_downloads)) },
                         onClick = {
                             clearDownloads = true
+                        },
+                    ),
+                    Material3SettingsItem(
+                        icon = painterResource(R.drawable.language_korean_latin),
+                        title = { Text(stringResource(R.string.romanization_clear_cache)) },
+                        description = { Text(stringResource(R.string.romanization_clear_cache_desc)) },
+                        onClick = {
+                            clearRomanizationCacheDialog = true
                         },
                     ),
                 ),

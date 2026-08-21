@@ -410,7 +410,6 @@ val LyricsTextPositionKey = stringPreferencesKey("lyricsTextPosition")
 val LyricsClickKey = booleanPreferencesKey("lyricsClick")
 val LyricsScrollKey = booleanPreferencesKey("lyricsScrollKey")
 val HideStatusBarOnFullscreenKey = booleanPreferencesKey("hideStatusBarOnFullscreen")
-val LyricsRomanizeAsMainKey = booleanPreferencesKey("lyricsRomanizeAsMain")
 
 
 
@@ -618,5 +617,3 @@ enum class AiApiValidationStatus {
  */
 val AiRomanizationEnabledKey = booleanPreferencesKey("aiRomanizationEnabled")
 
-/** Pinyin with diacritics (wǒ ài nǐ) vs bare syllables (wo ai ni). Part of the cache key. */
-val RomanizationPinyinToneMarksKey = booleanPreferencesKey("romanizationPinyinToneMarks")

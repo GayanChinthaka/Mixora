@@ -804,12 +804,7 @@
     <string name="ai_usage_note_desc">AI Integration powers lyrics romanization in the player\'s lyrics sheet, converting non-Latin lyrics into Latin script using your configured AI model.</string>
     <string name="ai_paste_key">Paste API key</string>
     <!-- Romanization -->
-    <string name="romanization_ai_enable">Use AI romanization</string>
     <string name="romanization_ai_enable_desc">Converts non-Latin lyrics into Latin script. Lyrics text for the playing song is sent to your configured AI provider, and results are cached on this device. Requires a connection.</string>
-    <string name="romanization_provider_configured">Provider configured. Tap to change model or key.</string>
-    <string name="romanization_provider_missing">No provider set up yet. Tap to add an API key.</string>
-    <string name="romanization_pinyin_tones">Pinyin tone marks</string>
-    <string name="romanization_pinyin_tones_desc">Show Chinese as \"wǒ ài nǐ\" instead of \"wo ai ni\". Changing this re-romanizes on next play.</string>
     <string name="romanization_clear_cache">Clear romanization cache</string>
     <string name="romanization_clear_cache_desc">Removes stored romanized lyrics. They will be requested again when needed.</string>
     <string name="romanizing_in_progress">Romanizing…</string>

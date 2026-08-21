@@ -60,6 +60,7 @@ import com.pokerlanka.mixora.ui.component.TextFieldDialog
 import com.pokerlanka.mixora.viewmodels.LyricsMenuViewModel
 import com.pokerlanka.mixora.constants.LyricsBackgroundStyle
 import com.pokerlanka.mixora.constants.LyricsBackgroundStyleKey
+import com.pokerlanka.mixora.constants.AiRomanizationEnabledKey
 import com.pokerlanka.mixora.constants.RespectAgentPositioningKey
 import com.pokerlanka.mixora.constants.ShowIntervalIndicatorKey
 import com.pokerlanka.mixora.utils.rememberEnumPreference
@@ -107,14 +108,12 @@ fun LyricsMenu(
         )
     }
 
-    var isChecked by remember { mutableStateOf(songProvider()?.romanizeLyrics ?: true) }
+    // Same preference the Lyrics settings screen writes. This used to toggle a per-song DB
+    // column instead, which is why the two switches appeared out of sync: each was gating the
+    // other, so flipping one alone did nothing.
+    var isChecked by rememberPreference(AiRomanizationEnabledKey, defaultValue = false)
 
     var lyricsOffset by rememberSaveable { mutableIntStateOf(songProvider()?.lyricsOffset ?: 0) }
-
-    // Sync isChecked with song changes
-    LaunchedEffect(songProvider()) {
-        isChecked = songProvider()?.romanizeLyrics ?: true
-    }
 
     LaunchedEffect(songProvider()) {
         lyricsOffset = songProvider()?.lyricsOffset ?: 0
@@ -352,22 +351,12 @@ fun LyricsMenu(
                             },
                             onClick = {
                                 isChecked = !isChecked
-                                songProvider()?.let { song ->
-                                    database.query {
-                                        upsert(song.copy(romanizeLyrics = isChecked))
-                                    }
-                                }
                             },
                             trailingContent = {
                                 Switch(
                                     checked = isChecked,
                                     onCheckedChange = { newCheckedState ->
                                         isChecked = newCheckedState
-                                        songProvider()?.let { song ->
-                                            database.query {
-                                                upsert(song.copy(romanizeLyrics = newCheckedState))
-                                            }
-                                        }
                                     },
                                     thumbContent = {
                                         Icon(

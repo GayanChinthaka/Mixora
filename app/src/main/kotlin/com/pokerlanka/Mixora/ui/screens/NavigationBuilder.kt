@@ -57,7 +57,6 @@ import com.pokerlanka.mixora.ui.screens.settings.MusicTogetherScreen
 import com.pokerlanka.mixora.ui.screens.settings.PalettePickerScreen
 import com.pokerlanka.mixora.ui.screens.settings.PlayerSettings
 import com.pokerlanka.mixora.ui.screens.settings.PrivacySettings
-import com.pokerlanka.mixora.ui.screens.settings.RomanizationSettings
 import com.pokerlanka.mixora.ui.screens.settings.SettingsScreen
 import com.pokerlanka.mixora.ui.screens.settings.StorageSettings
 import com.pokerlanka.mixora.ui.screens.settings.StreamSourcesSettings
@@ -360,10 +359,6 @@ fun NavGraphBuilder.navigationBuilder(
 
     composable("settings/content") {
         ContentSettings(navController)
-    }
-
-    composable("settings/content/romanization") {
-        RomanizationSettings(navController)
     }
 
     composable("settings/player") {

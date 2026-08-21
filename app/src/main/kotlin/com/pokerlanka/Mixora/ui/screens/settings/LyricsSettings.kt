@@ -47,6 +47,7 @@ import androidx.navigation.NavController
 import com.pokerlanka.mixora.LocalPlayerAwareWindowInsets
 import com.pokerlanka.mixora.R
 import com.pokerlanka.mixora.constants.EnableBetterLyricsKey
+import com.pokerlanka.mixora.constants.AiRomanizationEnabledKey
 import com.pokerlanka.mixora.constants.EnableKugouKey
 import com.pokerlanka.mixora.constants.EnableLrcLibKey
 import com.pokerlanka.mixora.constants.EnablePaxsenixKey
@@ -119,6 +120,10 @@ fun LyricsSettings(
             LyricsBackgroundStyleKey,
             defaultValue = LyricsBackgroundStyle.THEME,
         )
+    // Single switch for romanization now that the dedicated Romanization screen is gone. The
+    // provider/model live under Settings > Account > AI Integration, so nothing is duplicated here.
+    val (aiRomanizationEnabled, onAiRomanizationEnabledChange) =
+        rememberPreference(AiRomanizationEnabledKey, defaultValue = false)
     val (lyricsTextSize, onLyricsTextSizeChange) = rememberPreference(LyricsTextSizeKey, defaultValue = 36f)
     val (lyricsLineSpacing, onLyricsLineSpacingChange) = rememberPreference(LyricsLineSpacingKey, defaultValue = 1.3f)
 
@@ -598,7 +603,24 @@ fun LyricsSettings(
                     Material3SettingsItem(
                         icon = painterResource(R.drawable.language_korean_latin),
                         title = { Text(stringResource(R.string.lyrics_romanization)) },
-                        onClick = { navController.navigate("settings/content/romanization") }
+                        description = { Text(stringResource(R.string.romanization_ai_enable_desc)) },
+                        trailingContent = {
+                            Switch(
+                                checked = aiRomanizationEnabled,
+                                onCheckedChange = onAiRomanizationEnabledChange,
+                                thumbContent = {
+                                    Icon(
+                                        painter =
+                                            painterResource(
+                                                id = if (aiRomanizationEnabled) R.drawable.check else R.drawable.close,
+                                            ),
+                                        contentDescription = null,
+                                        modifier = Modifier.size(SwitchDefaults.IconSize),
+                                    )
+                                },
+                            )
+                        },
+                        onClick = { onAiRomanizationEnabledChange(!aiRomanizationEnabled) },
                     )
                 )
             )

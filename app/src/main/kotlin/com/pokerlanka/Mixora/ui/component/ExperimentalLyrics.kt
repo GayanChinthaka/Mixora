@@ -89,7 +89,6 @@ import com.pokerlanka.mixora.LocalPlayerConnection
 import com.pokerlanka.mixora.R
 import com.pokerlanka.mixora.constants.LyricsClickKey
 import com.pokerlanka.mixora.constants.LyricsLineSpacingKey
-import com.pokerlanka.mixora.constants.LyricsRomanizeAsMainKey
 import com.pokerlanka.mixora.constants.LyricsScrollKey
 import com.pokerlanka.mixora.constants.LyricsTextSizeKey
 import com.pokerlanka.mixora.constants.AiRomanizationEnabledKey
@@ -149,7 +148,6 @@ fun ExperimentalLyrics(
 
     val lyricsTextPosition by rememberEnumPreference(LyricsTextPositionKey, LyricsPosition.CENTER)
     val changeLyrics by rememberPreference(LyricsClickKey, true)
-    val romanizeAsMain by rememberPreference(LyricsRomanizeAsMainKey, false)
     val aiRomanizationEnabled by rememberPreference(AiRomanizationEnabledKey, false)
     // These three were previously ignored here: text size and spacing were hardcoded at the
     // LyricsLine call and auto-scroll could not be turned off. Defaults match what this view
@@ -185,12 +183,10 @@ fun ExperimentalLyrics(
     val isRomanizing by lyricsViewModel.isRomanizing.collectAsStateWithLifecycle()
     val mergedLyricsList by lyricsViewModel.mergedLyricsList.collectAsStateWithLifecycle()
 
-    // Romanization is only worth requesting when it is both globally enabled and left on for
-    // this song, so a per-song opt-out also stops the network call rather than only hiding it.
-    // `currentSong` is a Room lookup, so it is null for a streamed song that was never saved to
-    // the library. Treat null as "not opted out" (SongEntity defaults romanizeLyrics to true) —
-    // testing `== true` here silently blocked romanization for every unsaved song.
-    val romanizeThisSong = aiRomanizationEnabled && currentSong?.romanizeLyrics != false
+    // One switch, so the lyrics-menu item and the Lyrics settings toggle can never disagree.
+    // Previously this also ANDed a per-song DB flag, which meant flipping either one while the
+    // other was off did nothing visible.
+    val romanizeThisSong = aiRomanizationEnabled
 
     LaunchedEffect(lyrics, romanizeThisSong, showIntervalIndicator) {
         lyricsViewModel.processLyrics(lyrics, romanizeThisSong, showIntervalIndicator)
@@ -682,7 +678,10 @@ fun ExperimentalLyrics(
                                         lyricsLineSpacing = lyricsLineSpacing,
                                         expressiveAccent = expressiveAccent, lyricsTextPosition = lyricsTextPosition,
                                         respectAgentPositioning = respectAgentPositioning, isAutoScrollEnabled = isAutoScrollEnabled,
-                                        displayedCurrentLineIndex = deferredCurrentLineIndex, romanizeAsMain = romanizeAsMain,
+                                        displayedCurrentLineIndex = deferredCurrentLineIndex,
+                                        // Romanized text is always the primary line now;
+                                        // the original script shows beneath it.
+                                        romanizeAsMain = true,
                                         romanizeLyrics = romanizeThisSong,
                                         onSizeChanged = { itemHeights[listIndex] = it },
                                         onClick = {
