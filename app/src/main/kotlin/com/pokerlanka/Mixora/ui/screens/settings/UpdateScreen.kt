@@ -9,9 +9,7 @@ package com.pokerlanka.mixora.ui.screens.settings
 import android.content.Intent
 import android.net.Uri
 import android.widget.Toast
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -50,21 +48,15 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import coil3.compose.AsyncImage
 import com.pokerlanka.mixora.BuildConfig
 import com.pokerlanka.mixora.LocalPlayerAwareWindowInsets
 import com.pokerlanka.mixora.R
@@ -75,7 +67,6 @@ import com.pokerlanka.mixora.ui.component.IconButton
 import com.pokerlanka.mixora.ui.component.Material3SettingsGroup
 import com.pokerlanka.mixora.ui.component.Material3SettingsItem
 import com.pokerlanka.mixora.ui.utils.backToMain
-import com.pokerlanka.mixora.utils.GitCommit
 import com.pokerlanka.mixora.utils.ReleaseInfo
 import com.pokerlanka.mixora.utils.Updater
 import com.pokerlanka.mixora.utils.rememberPreference
@@ -104,9 +95,7 @@ fun UpdateScreen(
 
     var isChecking by remember { mutableStateOf(false) }
     var latestRelease by remember { mutableStateOf<ReleaseInfo?>(null) }
-    var recentCommits by remember { mutableStateOf<List<GitCommit>>(emptyList()) }
     var checkError by remember { mutableStateOf<String?>(null) }
-    var showCommits by rememberSaveable { mutableStateOf(true) }
 
     val isUpdateAvailable = remember(latestRelease) {
         val release = latestRelease ?: return@remember false
@@ -121,7 +110,6 @@ fun UpdateScreen(
         coroutineScope.launch {
             try {
                 val releaseResult = Updater.getLatestRelease()
-                val commitsResult = Updater.getRecentCommits(15)
 
                 releaseResult.onSuccess { release ->
                     latestRelease = release
@@ -134,10 +122,6 @@ fun UpdateScreen(
                     if (!silent) {
                         Toast.makeText(context, "Could not fetch updates", Toast.LENGTH_SHORT).show()
                     }
-                }
-
-                commitsResult.onSuccess { commits ->
-                    recentCommits = commits
                 }
             } catch (e: Exception) {
                 checkError = e.message
@@ -407,138 +391,6 @@ fun UpdateScreen(
                     )
                 )
             )
-
-            // Recent Commits (Changelog) Section
-            if (recentCommits.isNotEmpty()) {
-                Spacer(Modifier.height(16.dp))
-
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 4.dp, vertical = 8.dp)
-                ) {
-                    Text(
-                        text = stringResource(R.string.changelog),
-                        style = MaterialTheme.typography.labelLarge,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-
-                    Text(
-                        text = if (showCommits) stringResource(R.string.hide_changelog) else stringResource(R.string.view_changelog),
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(8.dp))
-                            .clickable { showCommits = !showCommits }
-                            .padding(horizontal = 8.dp, vertical = 4.dp)
-                    )
-                }
-
-                AnimatedVisibility(visible = showCommits) {
-                    ElevatedCard(
-                        shape = RoundedCornerShape(16.dp),
-                        colors = CardDefaults.elevatedCardColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceContainerLow
-                        ),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Column(modifier = Modifier.padding(vertical = 8.dp)) {
-                            recentCommits.forEachIndexed { index, commit ->
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .clickable {
-                                            if (commit.url.isNotBlank()) {
-                                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(commit.url))
-                                                context.startActivity(intent)
-                                            }
-                                        }
-                                        .padding(horizontal = 16.dp, vertical = 10.dp)
-                                ) {
-                                    // Author Avatar
-                                    Surface(
-                                        shape = CircleShape,
-                                        color = MaterialTheme.colorScheme.surfaceContainerHighest,
-                                        modifier = Modifier.size(36.dp)
-                                    ) {
-                                        if (commit.authorAvatarUrl != null) {
-                                            AsyncImage(
-                                                model = commit.authorAvatarUrl,
-                                                contentDescription = commit.author,
-                                                contentScale = ContentScale.Crop,
-                                                modifier = Modifier.fillMaxSize()
-                                            )
-                                        } else {
-                                            Box(contentAlignment = Alignment.Center) {
-                                                Icon(
-                                                    painter = painterResource(R.drawable.person),
-                                                    contentDescription = null,
-                                                    modifier = Modifier.size(20.dp),
-                                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
-                                                )
-                                            }
-                                        }
-                                    }
-
-                                    Spacer(Modifier.width(12.dp))
-
-                                    Column(modifier = Modifier.weight(1f)) {
-                                        Text(
-                                            text = commit.message,
-                                            style = MaterialTheme.typography.bodyMedium,
-                                            fontWeight = FontWeight.SemiBold,
-                                            maxLines = 2,
-                                            overflow = TextOverflow.Ellipsis
-                                        )
-
-                                        Spacer(Modifier.height(2.dp))
-
-                                        Row(
-                                            verticalAlignment = Alignment.CenterVertically,
-                                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                        ) {
-                                            Text(
-                                                text = commit.author,
-                                                style = MaterialTheme.typography.labelSmall,
-                                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                                            )
-                                            Text(
-                                                text = "•",
-                                                style = MaterialTheme.typography.labelSmall,
-                                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                                            )
-                                            Text(
-                                                text = commit.date,
-                                                style = MaterialTheme.typography.labelSmall,
-                                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                                            )
-                                        }
-                                    }
-
-                                    Spacer(Modifier.width(8.dp))
-
-                                    // Commit SHA Badge
-                                    Surface(
-                                        shape = RoundedCornerShape(6.dp),
-                                        color = MaterialTheme.colorScheme.surfaceContainerHighest,
-                                    ) {
-                                        Text(
-                                            text = commit.sha,
-                                            style = MaterialTheme.typography.labelSmall,
-                                            fontFamily = FontFamily.Monospace,
-                                            color = MaterialTheme.colorScheme.primary,
-                                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                                        )
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
 
             Spacer(Modifier.height(24.dp))
         }
