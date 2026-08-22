@@ -342,7 +342,7 @@ fun BottomSheetPlayer(
     val cropAlbumArt = false
     val useNewPlayerDesign = true
 
-    var showInlineLyrics by rememberSaveable {
+    var showInlineLyrics by remember {
         mutableStateOf(false)
     }
 
@@ -479,6 +479,16 @@ fun BottomSheetPlayer(
             } catch (e: Exception) {
                 // Ignore if focus request fails
             }
+        }
+    }
+
+    LaunchedEffect(mediaMetadata?.id) {
+        showInlineLyrics = false
+    }
+
+    LaunchedEffect(state.isCollapsed, state.isDismissed) {
+        if (state.isCollapsed || state.isDismissed) {
+            showInlineLyrics = false
         }
     }
 
