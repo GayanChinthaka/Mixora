@@ -304,7 +304,7 @@ class MusicService :
             get() = this@MusicService
     }
 
-    val openPlayerEvent = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
+    val openPlayerEvent = MutableSharedFlow<Unit>(extraBufferCapacity = 64)
     val togetherSessionState = MutableStateFlow<com.pokerlanka.mixora.together.TogetherSessionState>(com.pokerlanka.mixora.together.TogetherSessionState.Idle)
     private var togetherServer: com.pokerlanka.mixora.together.TogetherServer? = null
     private var togetherClient: com.pokerlanka.mixora.together.TogetherClient? = null

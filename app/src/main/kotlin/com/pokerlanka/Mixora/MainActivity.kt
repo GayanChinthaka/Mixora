@@ -748,8 +748,8 @@ class MainActivity : ComponentActivity() {
                     }
                 }
 
-                LaunchedEffect(activePlayerConnection) {
-                    activePlayerConnection?.service?.openPlayerEvent?.collectLatest {
+                LaunchedEffect(playerConnection) {
+                    playerConnection?.service?.openPlayerEvent?.collectLatest {
                         playerBottomSheetState.expandSoft()
                     }
                 }

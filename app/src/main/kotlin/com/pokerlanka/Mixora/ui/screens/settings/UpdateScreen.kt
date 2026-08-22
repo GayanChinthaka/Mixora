@@ -260,18 +260,20 @@ fun UpdateScreen(
 
                     Spacer(Modifier.height(20.dp))
 
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        if (isUpdateAvailable && latestRelease != null) {
+                    if (isUpdateAvailable && latestRelease != null) {
+                        Column(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalArrangement = Arrangement.spacedBy(10.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
                             Button(
                                 onClick = {
                                     val downloadUrl = latestRelease?.downloadUrl ?: latestRelease?.htmlUrl ?: Updater.GITHUB_RELEASES_URL
                                     val intent = Intent(Intent.ACTION_VIEW, Uri.parse(downloadUrl))
                                     context.startActivity(intent)
                                 },
-                                shape = RoundedCornerShape(12.dp)
+                                shape = RoundedCornerShape(12.dp),
+                                modifier = Modifier.fillMaxWidth()
                             ) {
                                 Icon(
                                     painter = painterResource(R.drawable.download),
@@ -281,8 +283,23 @@ fun UpdateScreen(
                                 Spacer(Modifier.width(8.dp))
                                 Text("Download Update")
                             }
-                        }
 
+                            OutlinedButton(
+                                onClick = { checkForUpdates(silent = false) },
+                                enabled = !isChecking,
+                                shape = RoundedCornerShape(12.dp),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Icon(
+                                    painter = painterResource(R.drawable.sync),
+                                    contentDescription = null,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                                Spacer(Modifier.width(8.dp))
+                                Text(stringResource(R.string.check_for_updates_button))
+                            }
+                        }
+                    } else {
                         OutlinedButton(
                             onClick = { checkForUpdates(silent = false) },
                             enabled = !isChecking,
