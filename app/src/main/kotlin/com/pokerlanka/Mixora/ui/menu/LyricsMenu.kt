@@ -48,6 +48,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.pokerlanka.mixora.LocalDatabase
+import com.pokerlanka.mixora.LocalNavController
+import com.pokerlanka.mixora.LocalPlayerBottomSheetState
 import com.pokerlanka.mixora.R
 import com.pokerlanka.mixora.db.entities.LyricsEntity
 import com.pokerlanka.mixora.db.entities.SongEntity
@@ -62,7 +64,6 @@ import com.pokerlanka.mixora.ui.component.RomanizationSetupDialog
 import com.pokerlanka.mixora.viewmodels.LyricsMenuViewModel
 import com.pokerlanka.mixora.constants.LyricsBackgroundStyle
 import com.pokerlanka.mixora.constants.LyricsBackgroundStyleKey
-import com.pokerlanka.mixora.LocalNavController
 import com.pokerlanka.mixora.constants.AiApiKeyKey
 import com.pokerlanka.mixora.constants.AiCustomEndpointKey
 import com.pokerlanka.mixora.constants.AiCustomModelKey
@@ -88,6 +89,7 @@ fun LyricsMenu(
     val context = LocalContext.current
     val database = LocalDatabase.current
     val navController = LocalNavController.current
+    val playerBottomSheetState = LocalPlayerBottomSheetState.current
 
     var respectAgentPositioning by rememberPreference(RespectAgentPositioningKey, true)
     var showIntervalIndicator by rememberPreference(ShowIntervalIndicatorKey, true)
@@ -143,6 +145,7 @@ fun LyricsMenu(
             onDismiss = { showRomanizationSetupDialog = false },
             onSetUp = {
                 showRomanizationSetupDialog = false
+                playerBottomSheetState?.collapseSoft()
                 onDismiss()
                 navController.navigate("settings/ai_integration")
             },
