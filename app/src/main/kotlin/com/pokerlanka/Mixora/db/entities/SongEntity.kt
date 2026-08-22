@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Mixora Project (C) 2026
  * Author : Gayan Chinthaka
  * Company: Pokerlanka
@@ -14,6 +14,7 @@ import androidx.room.PrimaryKey
 import com.pokerlanka.innertube.YouTube
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import java.time.LocalDateTime
 
@@ -66,6 +67,16 @@ data class SongEntity(
     @ColumnInfo(name = "isCached", defaultValue = "0")
     val isCached: Boolean = false,
 ) {
+    companion object {
+        /**
+         * Shared scope for fire-and-forget YouTube sync calls from entity toggle methods.
+         * Uses SupervisorJob so individual failures don't cancel sibling calls,
+         * and lives for the process lifetime (matching the old behavior but without
+         * creating a throwaway scope per call).
+         */
+        internal val ytSyncScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    }
+
     fun localToggleLike() =
         copy(
             liked = !liked,
@@ -78,7 +89,7 @@ data class SongEntity(
             likedDate = if (!liked) LocalDateTime.now() else null,
             inLibrary = if (!liked) inLibrary ?: LocalDateTime.now() else inLibrary,
         ).also {
-            CoroutineScope(Dispatchers.IO).launch {
+            ytSyncScope.launch {
                 YouTube.likeVideo(id, !liked)
             }
         }
@@ -90,7 +101,7 @@ data class SongEntity(
             likedDate = if (inLibrary == null) likedDate else null,
         ).also {
             if (syncToYouTube) {
-                CoroutineScope(Dispatchers.IO).launch {
+                ytSyncScope.launch {
                     // Use the new reliable method that fetches fresh tokens
                     val addToLibrary = inLibrary == null
                     YouTube.toggleSongLibrary(id, addToLibrary)

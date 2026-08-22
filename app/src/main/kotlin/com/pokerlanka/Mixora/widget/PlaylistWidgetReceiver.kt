@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Mixora Project (C) 2026
  * Author : Gayan Chinthaka
  * Company: Pokerlanka
@@ -12,10 +12,12 @@ import android.content.Context
 import android.content.Intent
 import com.pokerlanka.mixora.MainActivity
 import com.pokerlanka.mixora.playback.MusicService
+import com.pokerlanka.mixora.di.ApplicationScope
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import timber.log.Timber
 
@@ -23,6 +25,10 @@ import timber.log.Timber
 class PlaylistWidgetReceiver : AppWidgetProvider() {
     @Inject
     lateinit var playlistWidgetManager: PlaylistWidgetManager
+
+    @Inject
+    @ApplicationScope
+    lateinit var applicationScope: CoroutineScope
 
     override fun onUpdate(
         context: Context,
@@ -70,13 +76,15 @@ class PlaylistWidgetReceiver : AppWidgetProvider() {
         appWidgetIds: IntArray,
     ) {
         val pendingResult = goAsync()
-        CoroutineScope(Dispatchers.Main).launch {
+        applicationScope.launch {
             try {
-                appWidgetIds.forEach { appWidgetId ->
-                    playlistWidgetManager.updateIdleWidget(
-                        appWidgetId = appWidgetId,
-                        options = appWidgetManager.getAppWidgetOptions(appWidgetId),
-                    )
+                withContext(Dispatchers.Main) {
+                    appWidgetIds.forEach { appWidgetId ->
+                        playlistWidgetManager.updateIdleWidget(
+                            appWidgetId = appWidgetId,
+                            options = appWidgetManager.getAppWidgetOptions(appWidgetId),
+                        )
+                    }
                 }
             } catch (e: Exception) {
                 Timber.tag(TAG).e(e, "Failed to refresh playlist widgets")
@@ -88,9 +96,11 @@ class PlaylistWidgetReceiver : AppWidgetProvider() {
 
     private fun refreshIdleWidgets() {
         val pendingResult = goAsync()
-        CoroutineScope(Dispatchers.Main).launch {
+        applicationScope.launch {
             try {
-                playlistWidgetManager.updateIdleWidgets()
+                withContext(Dispatchers.Main) {
+                    playlistWidgetManager.updateIdleWidgets()
+                }
             } catch (e: Exception) {
                 Timber.tag(TAG).e(e, "Failed to refresh playlist widgets")
             } finally {
@@ -101,9 +111,11 @@ class PlaylistWidgetReceiver : AppWidgetProvider() {
 
     private fun refreshIdleWidget(appWidgetId: Int, options: android.os.Bundle) {
         val pendingResult = goAsync()
-        CoroutineScope(Dispatchers.Main).launch {
+        applicationScope.launch {
             try {
-                playlistWidgetManager.updateIdleWidget(appWidgetId, options)
+                withContext(Dispatchers.Main) {
+                    playlistWidgetManager.updateIdleWidget(appWidgetId, options)
+                }
             } catch (e: Exception) {
                 Timber.tag(TAG).e(e, "Failed to refresh playlist widget")
             } finally {

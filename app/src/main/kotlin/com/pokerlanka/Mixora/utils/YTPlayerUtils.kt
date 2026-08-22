@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Mixora Project (C) 2026
  * Author : Gayan Chinthaka
  * Company: Pokerlanka
@@ -76,6 +76,8 @@ object YTPlayerUtils {
     // self-heal a stale/wrong cipher config. Kept off the resolution coroutine so the (network)
     // refresh never blocks falling through to the next client.
     private val cipherRefreshScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    /** Guard to coalesce concurrent cipher refresh attempts into a single operation. */
+    private val cipherRefreshInFlight = java.util.concurrent.atomic.AtomicBoolean(false)
 
     private val MAIN_CLIENT: YouTubeClient = WEB_REMIX
     private val fallbackStrategy = ContentAwareFallbackStrategy()
@@ -449,8 +451,14 @@ object YTPlayerUtils {
                     // cipher rebuilds its WebView and the next resolution returns to this client — no
                     // app restart. This is what covers WEB_CREATOR/TVHTML5/WEB-only users.
                     if (needsNTransform) {
-                        cipherRefreshScope.launch {
-                            if (CipherDeobfuscator.onStreamRejected()) clearWebRemixFailures()
+                        if (cipherRefreshInFlight.compareAndSet(false, true)) {
+                            cipherRefreshScope.launch {
+                                try {
+                                    if (CipherDeobfuscator.onStreamRejected()) clearWebRemixFailures()
+                                } finally {
+                                    cipherRefreshInFlight.set(false)
+                                }
+                            }
                         }
                     }
                 }

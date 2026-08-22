@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Mixora Project (C) 2026
  * Author : Gayan Chinthaka
  * Company: Pokerlanka
@@ -45,6 +45,14 @@ constructor(
 
     private val cache = LruCache<String, List<LyricsResult>>(MAX_CACHE_SIZE)
     private var currentLyricsJob: Job? = null
+
+    /**
+     * Shared scope for lyrics fetch operations. Uses SupervisorJob so individual
+     * provider failures don't cancel sibling providers. This scope lives for the
+     * lifetime of the LyricsHelper singleton (Hilt @Singleton) instead of creating
+     * a new throwaway CoroutineScope per getAllLyrics call.
+     */
+    private val fetchScope = CoroutineScope(SupervisorJob() + kotlinx.coroutines.Dispatchers.IO)
 
     suspend fun getLyrics(mediaMetadata: MediaMetadata): LyricsWithProvider {
         currentLyricsJob?.cancel()
@@ -137,7 +145,7 @@ constructor(
         if (!isNetworkAvailable) return
 
         val allResult = mutableListOf<LyricsResult>()
-        currentLyricsJob = CoroutineScope(SupervisorJob()).launch {
+        currentLyricsJob = fetchScope.launch {
             val cleanedTitle = LyricsUtils.cleanTitleForSearch(songTitle)
             val allProviders = context.dataStore.data
                 .map { preferences -> resolveLyricsProviders(preferences) }

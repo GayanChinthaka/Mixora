@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Mixora Project (C) 2026
  * Author : Gayan Chinthaka
  * Company: Pokerlanka
@@ -11,8 +11,6 @@ import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import com.pokerlanka.innertube.YouTube
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.apache.commons.lang3.RandomStringUtils
 import java.time.LocalDateTime
@@ -59,7 +57,7 @@ data class PlaylistEntity(
     )
 
     fun toggleLike() = localToggleLike().also {
-        CoroutineScope(Dispatchers.IO).launch {
+        SongEntity.ytSyncScope.launch {
             if (browseId != null)
                 YouTube.likePlaylist(browseId, bookmarkedAt == null)
         }
