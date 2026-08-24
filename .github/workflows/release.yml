@@ -3,10 +3,6 @@ name: Build & Publish Release
 on:
   workflow_dispatch:
     inputs:
-      version_name:
-        description: 'Release version name (leave blank to read from app/build.gradle.kts)'
-        required: false
-        default: ''
       prerelease:
         description: 'Mark this release as pre-release / beta'
         type: boolean
@@ -29,24 +25,17 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Determine Release Version
+      - name: Determine Release Version from Gradle
         id: version_step
         run: |
-          INPUT_VERSION="${{ inputs.version_name }}"
+          VERSION=$(grep -oP 'versionName\s*=\s*"\K[^"]+' app/build.gradle.kts || echo "")
           
-          if [ -n "$INPUT_VERSION" ]; then
-            VERSION="$INPUT_VERSION"
-            echo "Using manual input version: $VERSION"
-          else
-            VERSION=$(grep -oP 'versionName\s*=\s*"\K[^"]+' app/build.gradle.kts || echo "")
-            echo "Extracted version from app/build.gradle.kts: $VERSION"
-          fi
-
           if [ -z "$VERSION" ]; then
-            echo "Error: Could not determine version name!"
+            echo "Error: Could not extract versionName from app/build.gradle.kts!"
             exit 1
           fi
 
+          echo "Extracted version from app/build.gradle.kts: $VERSION"
           TAG="v$VERSION"
           echo "version_name=$VERSION" >> "$GITHUB_OUTPUT"
           echo "tag_name=$TAG" >> "$GITHUB_OUTPUT"
