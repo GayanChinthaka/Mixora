@@ -317,51 +317,6 @@ fun UpdateScreen(
                 }
             }
 
-            // Release Notes Card (if update available)
-            if (isUpdateAvailable && latestRelease?.body?.isNotBlank() == true) {
-                Spacer(Modifier.height(16.dp))
-
-                ElevatedCard(
-                    shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.elevatedCardColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceContainerLow
-                    ),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp)
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Icon(
-                                painter = painterResource(R.drawable.info),
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(20.dp)
-                            )
-                            Spacer(Modifier.width(8.dp))
-                            Text(
-                                text = "What's New in ${latestRelease?.tagName}",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
-
-                        Spacer(Modifier.height(10.dp))
-
-                        Text(
-                            text = latestRelease?.body ?: "",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-            }
-
             Spacer(Modifier.height(16.dp))
 
             // Settings Section
