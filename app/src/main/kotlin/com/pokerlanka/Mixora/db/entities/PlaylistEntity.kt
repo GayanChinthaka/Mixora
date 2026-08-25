@@ -12,8 +12,8 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 import com.pokerlanka.innertube.YouTube
 import kotlinx.coroutines.launch
-import org.apache.commons.lang3.RandomStringUtils
 import java.time.LocalDateTime
+import kotlin.random.Random
 
 @Immutable
 @Entity(tableName = "playlist")
@@ -42,7 +42,8 @@ data class PlaylistEntity(
         const val WEEKLY_MOST_PLAYLIST_ID = "LP_WEEKLY_MOST"
         const val MONTHLY_MOST_PLAYLIST_ID = "LP_MONTHLY_MOST"
 
-        fun generatePlaylistId() = "LP" + RandomStringUtils.insecure().next(8, true, false)
+        private val PLAYLIST_ID_CHARS = ('a'..'z') + ('A'..'Z')
+        fun generatePlaylistId() = "LP" + (1..8).map { PLAYLIST_ID_CHARS.random() }.joinToString("")
     }
 
     val shareLink: String?

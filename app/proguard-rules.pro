@@ -1,4 +1,4 @@
-﻿# Add project specific ProGuard rules here.
+# Add project specific ProGuard rules here.
 # You can control the set of applied configuration files using the
 # proguardFiles setting in build.gradle.kts.
 #
@@ -111,17 +111,6 @@
 -dontwarn org.openjsse.net.ssl.OpenJSSE
 -dontwarn org.slf4j.impl.StaticLoggerBinder
 
-## Rules for NewPipeExtractor
--keep class org.schabi.newpipe.extractor.services.youtube.protos.** { *; }
--keep class org.schabi.newpipe.extractor.timeago.patterns.** { *; }
--keep class org.mozilla.javascript.** { *; }
--keep class org.mozilla.javascript.engine.** { *; }
--dontwarn org.mozilla.javascript.JavaToJSONConverters
--dontwarn org.mozilla.javascript.tools.**
--keep class javax.script.** { *; }
--dontwarn javax.script.**
--keep class jdk.dynalink.** { *; }
--dontwarn jdk.dynalink.**
 
 ## Logging (does not affect Timber)
 -assumenosideeffects class android.util.Log {
@@ -165,8 +154,7 @@
 -keep class com.google.android.gms.cast.** { *; }
 -keep class androidx.mediarouter.** { *; }
 
-## JSoup re2j optional dependency
--dontwarn com.google.re2j.**
+
 
 # Vibra fingerprint library
 -keep class com.pokerlanka.mixora.recognition.VibraSignature { *; }

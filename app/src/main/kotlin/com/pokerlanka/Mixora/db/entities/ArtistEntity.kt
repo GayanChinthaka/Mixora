@@ -12,7 +12,6 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 import com.pokerlanka.innertube.YouTube
 import kotlinx.coroutines.launch
-import org.apache.commons.lang3.RandomStringUtils
 import java.time.LocalDateTime
 
 @Immutable
@@ -51,6 +50,7 @@ data class ArtistEntity(
     }
 
     companion object {
-        fun generateArtistId() = "LA" + RandomStringUtils.insecure().next(8, true, false)
+        private val ARTIST_ID_CHARS = ('a'..'z') + ('A'..'Z')
+        fun generateArtistId() = "LA" + (1..8).map { ARTIST_ID_CHARS.random() }.joinToString("")
     }
 }
