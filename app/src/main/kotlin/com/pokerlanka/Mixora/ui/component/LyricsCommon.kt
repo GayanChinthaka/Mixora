@@ -10,8 +10,6 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -21,18 +19,13 @@ import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.dp
-import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.ui.input.pointer.pointerInput
 import com.airbnb.lottie.compose.LottieAnimation
 import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.LottieConstants
@@ -50,11 +43,7 @@ sealed class LyricsListItem {
     ) : LyricsListItem()
 }
 
-private val DANCING_ANIMATIONS = listOf(
-    "lottie/cute_bear.lottie",
-    "lottie/character_dance.lottie",
-    "lottie/balloon_dance.lottie"
-)
+private const val BEAR_LOTTIE_ASSET = "lottie/cute_bear.lottie"
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
@@ -68,7 +57,6 @@ internal fun IntervalIndicator(
 ) {
     val alpha = remember { Animatable(0f) }
     val rowHeightPx = remember { Animatable(0f) }
-    var currentAnimIndex by rememberSaveable { mutableIntStateOf(0) }
 
     LaunchedEffect(visible) {
         if (visible) {
@@ -92,8 +80,7 @@ internal fun IntervalIndicator(
         label = "intervalProgress"
     )
 
-    val currentAsset = DANCING_ANIMATIONS[currentAnimIndex % DANCING_ANIMATIONS.size]
-    val composition by rememberLottieComposition(LottieCompositionSpec.Asset(currentAsset))
+    val composition by rememberLottieComposition(LottieCompositionSpec.Asset(BEAR_LOTTIE_ASSET))
 
     Box(
         modifier = modifier
@@ -115,20 +102,13 @@ internal fun IntervalIndicator(
             trackColor = color.copy(alpha = 0.2f),
         )
 
-        // Fluid Dancing Character (Click to cycle animation)
+        // Fluid Dancing Panda Bear
         LottieAnimation(
             composition = composition,
             iterations = LottieConstants.IterateForever,
             modifier = Modifier
                 .size(42.dp)
                 .alpha(alpha.value)
-                .pointerInput(Unit) {
-                    detectTapGestures(
-                        onTap = {
-                            currentAnimIndex = (currentAnimIndex + 1) % DANCING_ANIMATIONS.size
-                        }
-                    )
-                }
         )
     }
 }
