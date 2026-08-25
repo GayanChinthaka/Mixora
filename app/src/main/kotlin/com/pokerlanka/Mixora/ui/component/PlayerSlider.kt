@@ -117,26 +117,38 @@ private fun DrawScope.drawPlayerTrack(
 
         SliderStyle.BALL -> {
             val ballRadiusPx = 5.5.dp.toPx()
+            val visibleGapPx = 3.dp.toPx()
+            val capRadiusPx = trackStrokeWidth / 2f
+            val gapOffsetPx = ballRadiusPx + visibleGapPx + capRadiusPx
 
-            // Full inactive track
-            drawLine(
-                inactiveTrackColor,
-                sliderStart,
-                sliderEnd,
-                trackStrokeWidth,
-                StrokeCap.Round,
-            )
-            // Active track up to ball center
-            if (activeRangeEnd > 0f) {
-                val sliderValueEnd = Offset(currentFractionPos, center.y)
+            val isLeftToRight = sliderStart.x <= sliderEnd.x
+            val activeEndX = if (isLeftToRight) currentFractionPos - gapOffsetPx else currentFractionPos + gapOffsetPx
+            val inactiveStartX = if (isLeftToRight) currentFractionPos + gapOffsetPx else currentFractionPos - gapOffsetPx
+
+            // Inactive track segment
+            val canDrawInactive = if (isLeftToRight) inactiveStartX < sliderEnd.x else inactiveStartX > sliderEnd.x
+            if (canDrawInactive) {
                 drawLine(
-                    activeTrackColor,
-                    sliderStart,
-                    sliderValueEnd,
+                    inactiveTrackColor,
+                    Offset(inactiveStartX, center.y),
+                    sliderEnd,
                     trackStrokeWidth,
                     StrokeCap.Round,
                 )
             }
+
+            // Active track segment
+            val canDrawActive = if (isLeftToRight) activeEndX > sliderStart.x else activeEndX < sliderStart.x
+            if (canDrawActive) {
+                drawLine(
+                    activeTrackColor,
+                    sliderStart,
+                    Offset(activeEndX, center.y),
+                    trackStrokeWidth,
+                    StrokeCap.Round,
+                )
+            }
+
             // Circular Ball centered exactly on the line
             drawCircle(
                 color = thumbColor,
