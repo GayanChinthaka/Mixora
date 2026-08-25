@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Mixora Project (C) 2026
  * Author : Gayan Chinthaka
  * Company: Pokerlanka
@@ -145,7 +145,7 @@ fun BottomSheetMenu(
                     .background(MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f))
             )
         },
-        modifier = modifier.fillMaxHeight()
+        modifier = Modifier
     ) {
         Column(
             modifier = Modifier

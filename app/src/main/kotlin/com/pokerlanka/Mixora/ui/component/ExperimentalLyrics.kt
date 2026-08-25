@@ -96,8 +96,6 @@ import com.pokerlanka.mixora.constants.AiRomanizationEnabledKey
 import com.pokerlanka.mixora.constants.LyricsTextPositionKey
 import com.pokerlanka.mixora.constants.PlayerBackgroundStyle
 import com.pokerlanka.mixora.constants.PlayerBackgroundStyleKey
-import com.pokerlanka.mixora.constants.RespectAgentPositioningKey
-import com.pokerlanka.mixora.constants.ShowIntervalIndicatorKey
 import com.pokerlanka.mixora.db.entities.LyricsEntity.Companion.LYRICS_NOT_FOUND
 import com.pokerlanka.mixora.lyrics.LyricsResyncHelper
 import com.pokerlanka.mixora.lyrics.LyricsUtils.findActiveLineIndices
@@ -156,8 +154,6 @@ fun ExperimentalLyrics(
     val lyricsTextSize by rememberPreference(LyricsTextSizeKey, 36f)
     val lyricsLineSpacing by rememberPreference(LyricsLineSpacingKey, 1.3f)
     val scrollLyrics by rememberPreference(LyricsScrollKey, true)
-    val respectAgentPositioning by rememberPreference(RespectAgentPositioningKey, true)
-    val showIntervalIndicator by rememberPreference(ShowIntervalIndicatorKey, true)
     
     val scope = rememberCoroutineScope()
 
@@ -189,8 +185,8 @@ fun ExperimentalLyrics(
     // other was off did nothing visible.
     val romanizeThisSong = aiRomanizationEnabled
 
-    LaunchedEffect(lyrics, romanizeThisSong, showIntervalIndicator) {
-        lyricsViewModel.processLyrics(lyrics, romanizeThisSong, showIntervalIndicator)
+    LaunchedEffect(lyrics, romanizeThisSong) {
+        lyricsViewModel.processLyrics(lyrics, romanizeThisSong)
     }
 
     val isSynced = remember(lyrics) { lyricsTextLooksSynced(lyrics) }
@@ -684,7 +680,7 @@ fun ExperimentalLyrics(
                                         playerConnection = playerConnection, lyricsTextSize = lyricsTextSize,
                                         lyricsLineSpacing = lyricsLineSpacing,
                                         expressiveAccent = expressiveAccent, lyricsTextPosition = lyricsTextPosition,
-                                        respectAgentPositioning = respectAgentPositioning, isAutoScrollEnabled = isAutoScrollEnabled,
+                                        isAutoScrollEnabled = isAutoScrollEnabled,
                                         displayedCurrentLineIndex = deferredCurrentLineIndex,
                                         // Romanized text is always the primary line now;
                                         // the original script shows beneath it.

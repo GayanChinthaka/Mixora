@@ -54,7 +54,6 @@ class LyricsViewModel @Inject constructor(
     fun processLyrics(
         lyrics: String?,
         romanizeEnabled: Boolean,
-        showIntervalIndicator: Boolean,
     ) {
         processJob?.cancel()
         processJob = viewModelScope.launch {
@@ -80,7 +79,7 @@ class LyricsViewModel @Inject constructor(
             }
 
             _lines.value = processedLines
-            updateMergedList(processedLines, showIntervalIndicator)
+            updateMergedList(processedLines)
 
             // Romanize only after the UI already shows the original text. Each entry's
             // romanizedTextFlow swaps itself in when a value arrives, so a slow or failed request
@@ -103,7 +102,7 @@ class LyricsViewModel @Inject constructor(
         }
     }
 
-    private fun updateMergedList(lines: List<LyricsEntry>, showIntervalIndicator: Boolean) {
+    private fun updateMergedList(lines: List<LyricsEntry>) {
         val result = mutableListOf<LyricsListItem>()
         if (lines.isEmpty()) {
             _mergedLyricsList.value = result
@@ -113,7 +112,7 @@ class LyricsViewModel @Inject constructor(
             if (entry.text.isNotBlank()) {
                 result.add(LyricsListItem.Line(i, entry))
             }
-            if (showIntervalIndicator && i < lines.size - 1) {
+            if (i < lines.size - 1) {
                 val nextStart = lines[i + 1].time
                 val currentEnd = if (!entry.words.isNullOrEmpty()) {
                     (entry.words.last().endTime * 1000).toLong()

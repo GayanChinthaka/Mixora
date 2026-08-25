@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Mixora Project (C) 2026
  * Author : Gayan Chinthaka
  * Company: Pokerlanka
@@ -131,7 +131,6 @@ internal fun LyricsLine(
     lyricsLineSpacing: Float,
     expressiveAccent: Color,
     lyricsTextPosition: LyricsPosition,
-    respectAgentPositioning: Boolean,
     isAutoScrollEnabled: Boolean,
     displayedCurrentLineIndex: Int,
     romanizeAsMain: Boolean,
@@ -160,9 +159,9 @@ internal fun LyricsLine(
         )
 
     val agentAlignment = when {
-        respectAgentPositioning && item.agent == "v1" -> Alignment.Start
-        respectAgentPositioning && item.agent == "v2" -> Alignment.End
-        respectAgentPositioning && item.agent == "v1000" -> Alignment.CenterHorizontally
+        item.agent == "v1" -> Alignment.Start
+        item.agent == "v2" -> Alignment.End
+        item.agent == "v1000" -> Alignment.CenterHorizontally
         item.isBackground -> Alignment.CenterHorizontally
         else -> when (lyricsTextPosition) {
             LyricsPosition.LEFT -> Alignment.Start
@@ -172,9 +171,9 @@ internal fun LyricsLine(
     }
     
     val agentTextAlign = when {
-        respectAgentPositioning && item.agent == "v1" -> TextAlign.Left
-        respectAgentPositioning && item.agent == "v2" -> TextAlign.Right
-        respectAgentPositioning && item.agent == "v1000" -> TextAlign.Center
+        item.agent == "v1" -> TextAlign.Left
+        item.agent == "v2" -> TextAlign.Right
+        item.agent == "v1000" -> TextAlign.Center
         item.isBackground -> TextAlign.Center
         else -> when (lyricsTextPosition) {
             LyricsPosition.LEFT -> TextAlign.Left
@@ -184,10 +183,10 @@ internal fun LyricsLine(
     }
 
     Box(modifier = itemModifier, contentAlignment = when {
-        respectAgentPositioning && item.agent == "v1" -> Alignment.CenterStart
-        respectAgentPositioning && item.agent == "v2" -> Alignment.CenterEnd
+        item.agent == "v1" -> Alignment.CenterStart
+        item.agent == "v2" -> Alignment.CenterEnd
         item.isBackground -> Alignment.Center
-        respectAgentPositioning && item.agent == "v1000" -> Alignment.Center
+        item.agent == "v1000" -> Alignment.Center
         else -> when (lyricsTextPosition) {
             LyricsPosition.LEFT -> Alignment.CenterStart
             LyricsPosition.RIGHT -> Alignment.CenterEnd

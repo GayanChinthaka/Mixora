@@ -68,7 +68,6 @@ import com.pokerlanka.mixora.constants.LyricsProviderOrderKey
 import com.pokerlanka.mixora.constants.LyricsScrollKey
 import com.pokerlanka.mixora.constants.LyricsTextPositionKey
 import com.pokerlanka.mixora.constants.LyricsTextSizeKey
-import com.pokerlanka.mixora.constants.RespectAgentPositioningKey
 import com.pokerlanka.mixora.lyrics.LyricsProviderRegistry
 import com.pokerlanka.mixora.ui.component.DefaultDialog
 import com.pokerlanka.mixora.ui.component.DraggableLyricsProviderItem
@@ -121,7 +120,6 @@ fun LyricsSettings(
             HideStatusBarOnFullscreenKey,
             defaultValue = false,
         )
-    val (respectAgentPositioning, onRespectAgentPositioningChange) = rememberPreference(RespectAgentPositioningKey, defaultValue = true)
 
     val (lyricsBackgroundStyle, onLyricsBackgroundStyleChange) =
         rememberEnumPreference(
@@ -618,30 +616,6 @@ fun LyricsSettings(
                                     )
                                 },
                                 onClick = { showLyricsPositionDialog = true },
-                            ),
-                        )
-                        add(
-                            Material3SettingsItem(
-                                icon = painterResource(R.drawable.lyrics),
-                                title = { Text(stringResource(R.string.respect_agent_positioning)) },
-                                description = { Text(stringResource(R.string.respect_agent_positioning_desc)) },
-                                trailingContent = {
-                                    Switch(
-                                        checked = respectAgentPositioning,
-                                        onCheckedChange = onRespectAgentPositioningChange,
-                                        thumbContent = {
-                                            Icon(
-                                                painter =
-                                                    painterResource(
-                                                        id = if (respectAgentPositioning) R.drawable.check else R.drawable.close,
-                                                    ),
-                                                contentDescription = null,
-                                                modifier = Modifier.size(SwitchDefaults.IconSize),
-                                            )
-                                        },
-                                    )
-                                },
-                                onClick = { onRespectAgentPositioningChange(!respectAgentPositioning) },
                             ),
                         )
                         add(

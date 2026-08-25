@@ -71,8 +71,6 @@ import com.pokerlanka.mixora.constants.AiProvider
 import com.pokerlanka.mixora.constants.AiProviderKey
 import com.pokerlanka.mixora.constants.AiRomanizationEnabledKey
 import com.pokerlanka.mixora.constants.AiSelectedModelKey
-import com.pokerlanka.mixora.constants.RespectAgentPositioningKey
-import com.pokerlanka.mixora.constants.ShowIntervalIndicatorKey
 import com.pokerlanka.mixora.utils.rememberEnumPreference
 import com.pokerlanka.mixora.utils.rememberPreference
 
@@ -91,8 +89,6 @@ fun LyricsMenu(
     val navController = LocalNavController.current
     val playerBottomSheetState = LocalPlayerBottomSheetState.current
 
-    var respectAgentPositioning by rememberPreference(RespectAgentPositioningKey, true)
-    var showIntervalIndicator by rememberPreference(ShowIntervalIndicatorKey, true)
     var lyricsBackgroundStyle by rememberEnumPreference(LyricsBackgroundStyleKey, LyricsBackgroundStyle.THEME)
 
     var showEditDialog by rememberSaveable {
@@ -273,7 +269,7 @@ fun LyricsMenu(
                             },
                         ),
                     ),
-                modifier = Modifier.padding(horizontal = 4.dp, vertical = 16.dp),
+                modifier = Modifier.padding(start = 4.dp, end = 4.dp, top = 4.dp, bottom = 8.dp),
                 columns = 4,
             )
         }
@@ -281,82 +277,6 @@ fun LyricsMenu(
         item {
             Material3MenuGroup(
                 items = buildList {
-                    add(
-                        Material3MenuItemData(
-                            title = { Text(stringResource(R.string.respect_agent_positioning)) },
-                            description = { Text(stringResource(R.string.respect_agent_positioning_desc)) },
-                            icon = {
-                                Icon(
-                                    painter = painterResource(R.drawable.lyrics),
-                                    contentDescription = null,
-                                )
-                            },
-                            onClick = {
-                                respectAgentPositioning = !respectAgentPositioning
-                            },
-                            trailingContent = {
-                                Switch(
-                                    checked = respectAgentPositioning,
-                                    onCheckedChange = { newCheckedState ->
-                                        respectAgentPositioning = newCheckedState
-                                    },
-                                    thumbContent = {
-                                        Icon(
-                                            painter = painterResource(
-                                                id = if (respectAgentPositioning) R.drawable.check else R.drawable.close
-                                            ),
-                                            contentDescription = null,
-                                            modifier = Modifier.size(SwitchDefaults.IconSize)
-                                        )
-                                    },
-                                    colors = SwitchDefaults.colors(
-                                        uncheckedThumbColor = MaterialTheme.colorScheme.primaryContainer,
-                                        checkedThumbColor = MaterialTheme.colorScheme.onPrimary,
-                                        checkedTrackColor = MaterialTheme.colorScheme.primary
-                                    )
-                                )
-                            }
-                        )
-                    )
-                    
-                    add(
-                        Material3MenuItemData(
-                            title = { Text(stringResource(R.string.show_interval_indicator)) },
-                            description = { Text(stringResource(R.string.show_interval_indicator_desc)) },
-                            icon = {
-                                Icon(
-                                    painter = painterResource(R.drawable.lyrics),
-                                    contentDescription = null,
-                                )
-                            },
-                            onClick = {
-                                showIntervalIndicator = !showIntervalIndicator
-                            },
-                            trailingContent = {
-                                Switch(
-                                    checked = showIntervalIndicator,
-                                    onCheckedChange = { newCheckedState ->
-                                        showIntervalIndicator = newCheckedState
-                                    },
-                                    thumbContent = {
-                                        Icon(
-                                            painter = painterResource(
-                                                id = if (showIntervalIndicator) R.drawable.check else R.drawable.close
-                                            ),
-                                            contentDescription = null,
-                                            modifier = Modifier.size(SwitchDefaults.IconSize)
-                                        )
-                                    },
-                                    colors = SwitchDefaults.colors(
-                                        uncheckedThumbColor = MaterialTheme.colorScheme.primaryContainer,
-                                        checkedThumbColor = MaterialTheme.colorScheme.onPrimary,
-                                        checkedTrackColor = MaterialTheme.colorScheme.primary
-                                    )
-                                )
-                            }
-                        )
-                    )
-                    
                     add(
                         Material3MenuItemData(
                             title = { Text(stringResource(R.string.lyrics_offset)) },

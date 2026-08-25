@@ -105,10 +105,6 @@
     <string name="lyrics_auto_scroll">Auto-scroll lyrics</string>
     <string name="hide_status_bar_fullscreen">Hide status bar on fullscreen</string>
     <string name="hide_status_bar_fullscreen_desc">Hide the status bar when lyrics fullscreen mode is active</string>
-    <string name="show_interval_indicator">Show interval indicator</string>
-    <string name="show_interval_indicator_desc">Shows a progress bar during long instrumental gaps</string>
-    <string name="respect_agent_positioning">Respect agent positioning</string>
-    <string name="respect_agent_positioning_desc">Align lyrics based on the agent role (e.g. background vocals)</string>
     <string name="lyrics_background">Lyrics background</string>
     <string name="lyrics_background_theme">Theme</string>
     <string name="lyrics_background_theme_desc">Follow the app theme</string>

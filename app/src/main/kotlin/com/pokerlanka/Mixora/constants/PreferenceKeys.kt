@@ -416,8 +416,6 @@ val HideStatusBarOnFullscreenKey = booleanPreferencesKey("hideStatusBarOnFullscr
 
 val LyricsTextSizeKey = floatPreferencesKey("lyricsTextSize")
 val LyricsLineSpacingKey = floatPreferencesKey("lyricsLineSpacing")
-val RespectAgentPositioningKey = booleanPreferencesKey("respectAgentPositioning")
-val ShowIntervalIndicatorKey = booleanPreferencesKey("showIntervalIndicator")
 val LyricsBackgroundStyleKey = stringPreferencesKey("lyricsBackgroundStyle")
 
 /**
