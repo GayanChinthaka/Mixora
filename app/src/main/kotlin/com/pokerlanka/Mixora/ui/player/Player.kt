@@ -1863,13 +1863,13 @@ fun BottomSheetPlayer(
                     } else {
                         MaterialTheme.colorScheme.surfaceContainer
                     },
-                onBackgroundColor = themeOnBackgroundColor,
-                TextBackgroundColor = themeTextBackgroundColor,
-                textButtonColor = themeTextButtonColor,
-                iconButtonColor = themeIconButtonColor,
+                onBackgroundColor = onBackgroundColor,
+                TextBackgroundColor = TextBackgroundColor,
+                textButtonColor = textButtonColor,
+                iconButtonColor = iconButtonColor,
                 pureBlack = pureBlack,
                 showInlineLyrics = showInlineLyrics,
-                playerBackground = playerBackground,
+                playerBackground = if (isLyricsThumbnailBg) PlayerBackgroundStyle.BLUR else playerBackground,
                 onToggleLyrics = {
                     showInlineLyrics = !showInlineLyrics
                 },

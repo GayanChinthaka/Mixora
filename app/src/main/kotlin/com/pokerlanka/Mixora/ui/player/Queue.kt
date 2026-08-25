@@ -1072,14 +1072,33 @@ private fun PlayerQueueButton(
         if (isActive) {
             modifier.then(buttonModifier.background(textButtonColor)).alpha(alphaFactor)
         } else {
-            modifier
-                .then(
-                    buttonModifier.border(
-                        width = 1.dp,
-                        color = textButtonColor.copy(alpha = 0.3f),
-                        shape = shape,
-                    ),
-                ).alpha(alphaFactor)
+            when (playerBackground) {
+                PlayerBackgroundStyle.BLUR, PlayerBackgroundStyle.GRADIENT -> {
+                    modifier
+                        .then(
+                            buttonModifier
+                                .background(Color.White.copy(alpha = 0.16f))
+                                .border(
+                                    width = 1.dp,
+                                    color = Color.White.copy(alpha = 0.25f),
+                                    shape = shape,
+                                ),
+                        ).alpha(alphaFactor)
+                }
+
+                PlayerBackgroundStyle.DEFAULT -> {
+                    modifier
+                        .then(
+                            buttonModifier
+                                .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.06f))
+                                .border(
+                                    width = 1.dp,
+                                    color = textButtonColor.copy(alpha = 0.3f),
+                                    shape = shape,
+                                ),
+                        ).alpha(alphaFactor)
+                }
+            }
         }
 
     val baseTint =
