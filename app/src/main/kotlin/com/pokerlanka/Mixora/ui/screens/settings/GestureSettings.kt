@@ -46,7 +46,6 @@ import com.pokerlanka.mixora.constants.SwipeMiniPlayerKey
 import com.pokerlanka.mixora.constants.SwipeSensitivityKey
 import com.pokerlanka.mixora.constants.SwipeThumbnailKey
 import com.pokerlanka.mixora.constants.SwipeToRemoveSongKey
-import com.pokerlanka.mixora.constants.SwipeToSongKey
 import com.pokerlanka.mixora.ui.component.DefaultDialog
 import com.pokerlanka.mixora.ui.component.IconButton
 import com.pokerlanka.mixora.ui.component.Material3SettingsGroup
@@ -74,11 +73,6 @@ fun GestureSettings(
         rememberPreference(
             SwipeSensitivityKey,
             defaultValue = 0.73f,
-        )
-    val (swipeToSong, onSwipeToSongChange) =
-        rememberPreference(
-            SwipeToSongKey,
-            defaultValue = false,
         )
     val (swipeToRemoveSong, onSwipeToRemoveSongChange) =
         rememberPreference(
@@ -263,27 +257,6 @@ fun GestureSettings(
                 title = stringResource(R.string.list_gestures),
                 items =
                     listOf(
-                        Material3SettingsItem(
-                            icon = painterResource(R.drawable.swipe),
-                            title = { Text(stringResource(R.string.swipe_song_to_add)) },
-                            trailingContent = {
-                                Switch(
-                                    checked = swipeToSong,
-                                    onCheckedChange = onSwipeToSongChange,
-                                    thumbContent = {
-                                        Icon(
-                                            painter =
-                                                painterResource(
-                                                    id = if (swipeToSong) R.drawable.check else R.drawable.close,
-                                                ),
-                                            contentDescription = null,
-                                            modifier = Modifier.size(SwitchDefaults.IconSize),
-                                        )
-                                    },
-                                )
-                            },
-                            onClick = { onSwipeToSongChange(!swipeToSong) },
-                        ),
                         Material3SettingsItem(
                             icon = painterResource(R.drawable.swipe),
                             title = { Text(stringResource(R.string.swipe_song_to_remove)) },

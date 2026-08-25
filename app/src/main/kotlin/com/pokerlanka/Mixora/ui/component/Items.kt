@@ -110,7 +110,6 @@ import com.pokerlanka.mixora.constants.GridThumbnailHeight
 import com.pokerlanka.mixora.constants.ListItemHeight
 import com.pokerlanka.mixora.constants.ListThumbnailSize
 import com.pokerlanka.mixora.constants.SmallGridThumbnailHeight
-import com.pokerlanka.mixora.constants.SwipeToSongKey
 import com.pokerlanka.mixora.constants.ThumbnailCornerRadius
 import com.pokerlanka.mixora.db.entities.Album
 import com.pokerlanka.mixora.db.entities.Artist
@@ -546,63 +545,48 @@ fun SongListItem(
     isSwipeable: Boolean = true,
     trailingContent: @Composable RowScope.() -> Unit = {},
 ) {
-    val swipeEnabled by rememberPreference(SwipeToSongKey, defaultValue = false)
-
-    val content: @Composable () -> Unit = {
-         ListItem(
-             title = song.song.title,
-             subtitle = {
-                  badges()
-                  if (subtitleOverride == null) {
-                      Text(
-                          text = joinByBullet(
-                              song.orderedArtists.joinToArtistString(" ${stringResource(R.string.and)} ") { it.name },
-                              makeTimeString(song.song.duration * 1000L)
-                          ),
-                          style = MaterialTheme.typography.bodySmall,
-                          color = MaterialTheme.colorScheme.secondary,
-                          maxLines = 1,
-                          overflow = TextOverflow.Ellipsis,
-                      )
-                  } else {
-                     Text(
-                         text = subtitleOverride,
-                         style = MaterialTheme.typography.bodySmall,
-                         color = MaterialTheme.colorScheme.secondary,
-                         maxLines = 1,
-                         overflow = TextOverflow.Ellipsis,
-                     )
-                 }
-             },
-             thumbnailContent = {
-                 ItemThumbnail(
-                     thumbnailUrl = song.song.thumbnailUrl?.resize(200, 200),
-                     albumIndex = albumIndex,
-                     isSelected = isSelected,
-                     isActive = isActive,
-                     isPlaying = isPlaying,
-                     isLoading = isLoading,
-                     shape = RoundedCornerShape(ThumbnailCornerRadius),
-                     modifier = Modifier.size(ListThumbnailSize)
-                 )
-             },
-             trailingContent = trailingContent,
-             modifier = modifier,
-             isSelected = isSelected,
-             isActive = isActive
-         )
-     }
-
-    if (isSwipeable && swipeEnabled) {
-        SwipeToSongBox(
-            mediaItem = song.toMediaItem(),
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            content()
-        }
-    } else {
-        content()
-    }
+    ListItem(
+        title = song.song.title,
+        subtitle = {
+            badges()
+            if (subtitleOverride == null) {
+                Text(
+                    text = joinByBullet(
+                        song.orderedArtists.joinToArtistString(" ${stringResource(R.string.and)} ") { it.name },
+                        makeTimeString(song.song.duration * 1000L)
+                    ),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.secondary,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            } else {
+                Text(
+                    text = subtitleOverride,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.secondary,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+        },
+        thumbnailContent = {
+            ItemThumbnail(
+                thumbnailUrl = song.song.thumbnailUrl?.resize(200, 200),
+                albumIndex = albumIndex,
+                isSelected = isSelected,
+                isActive = isActive,
+                isPlaying = isPlaying,
+                isLoading = isLoading,
+                shape = RoundedCornerShape(ThumbnailCornerRadius),
+                modifier = Modifier.size(ListThumbnailSize)
+            )
+        },
+        trailingContent = trailingContent,
+        modifier = modifier,
+        isSelected = isSelected,
+        isActive = isActive
+    )
 }
 
 @Composable
@@ -1179,48 +1163,33 @@ fun YouTubeListItem(
         }
     },
 ) {
-    val swipeEnabled by rememberPreference(SwipeToSongKey, defaultValue = false)
-
-    val content: @Composable () -> Unit = {
-        ListItem(
-            title = item.title,
-            subtitle = when (item) {
-                is SongItem -> joinByBullet(item.artists.joinToArtistString(" ${stringResource(R.string.and)} ") { it.name }, makeTimeString(item.duration?.times(1000L)))
-                is AlbumItem -> joinByBullet(item.artists?.joinToArtistString(" ${stringResource(R.string.and)} ") { it.name }, item.year?.toString())
-                is ArtistItem -> null
-                is PlaylistItem -> joinByBullet(item.author?.name, item.songCountText)
-                is PodcastItem -> joinByBullet(item.author?.name, item.episodeCountText)
-                is EpisodeItem -> joinByBullet(item.author?.name, makeTimeString(item.duration?.times(1000L)))
-            },
-            badges = badges,
-            thumbnailContent = {
-                ItemThumbnail(
-                    thumbnailUrl = item.thumbnail,
-                    albumIndex = albumIndex,
-                    isSelected = isSelected,
-                    isActive = isActive,
-                    isPlaying = isPlaying,
-                    isLoading = isLoading,
-                    shape = if (item is ArtistItem) CircleShape else RoundedCornerShape(ThumbnailCornerRadius),
-                    modifier = Modifier.size(ListThumbnailSize)
-                )
-            },
-            trailingContent = trailingContent,
-            modifier = modifier,
-            isActive = isActive
-        )
-    }
-
-    if (item is SongItem && isSwipeable && swipeEnabled) {
-        SwipeToSongBox(
-            mediaItem = item.copy(thumbnail = item.thumbnail.resize(1080, 1080)).toMediaItem(),
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            content()
-        }
-    } else {
-        content()
-    }
+    ListItem(
+        title = item.title,
+        subtitle = when (item) {
+            is SongItem -> joinByBullet(item.artists.joinToArtistString(" ${stringResource(R.string.and)} ") { it.name }, makeTimeString(item.duration?.times(1000L)))
+            is AlbumItem -> joinByBullet(item.artists?.joinToArtistString(" ${stringResource(R.string.and)} ") { it.name }, item.year?.toString())
+            is ArtistItem -> null
+            is PlaylistItem -> joinByBullet(item.author?.name, item.songCountText)
+            is PodcastItem -> joinByBullet(item.author?.name, item.episodeCountText)
+            is EpisodeItem -> joinByBullet(item.author?.name, makeTimeString(item.duration?.times(1000L)))
+        },
+        badges = badges,
+        thumbnailContent = {
+            ItemThumbnail(
+                thumbnailUrl = item.thumbnail,
+                albumIndex = albumIndex,
+                isSelected = isSelected,
+                isActive = isActive,
+                isPlaying = isPlaying,
+                isLoading = isLoading,
+                shape = if (item is ArtistItem) CircleShape else RoundedCornerShape(ThumbnailCornerRadius),
+                modifier = Modifier.size(ListThumbnailSize)
+            )
+        },
+        trailingContent = trailingContent,
+        modifier = modifier,
+        isActive = isActive
+    )
 }
 
 @Composable
@@ -1822,111 +1791,6 @@ fun BoxScope.AlbumPlayButton(
         }
     }
 }
-
-@Composable
-fun SwipeToSongBox(
-    modifier: Modifier = Modifier,
-    mediaItem: MediaItem,
-    content: @Composable BoxScope.() -> Unit
-) {
-    val ctx = LocalContext.current
-    val player = LocalPlayerConnection.current
-    val scope = rememberCoroutineScope()
-    val offset = remember { mutableFloatStateOf(0f) }
-    val threshold = 300f
-
-    val dragState = rememberDraggableState { delta ->
-        offset.floatValue = (offset.floatValue + delta).coerceIn(-threshold, threshold)
-    }
-
-    Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .draggable(
-                orientation = Orientation.Horizontal,
-                state = dragState,
-                onDragStopped = {
-                    when {
-                        offset.floatValue >= threshold -> {
-                            player?.playNext(listOf(mediaItem))
-                            Toast.makeText(ctx, R.string.play_next, Toast.LENGTH_SHORT).show()
-                            reset(offset, scope)
-                        }
-
-                        offset.floatValue <= -threshold -> {
-                            player?.addToQueue(listOf(mediaItem))
-                            Toast.makeText(ctx, R.string.add_to_queue, Toast.LENGTH_SHORT).show()
-                            reset(offset, scope)
-                        }
-
-                        else -> reset(offset, scope)
-                    }
-                }
-            )
-    ) {
-        if (offset.floatValue != 0f) {
-            val (iconRes, bg, tint, align) = if (offset.floatValue > 0)
-                Quadruple(
-                    R.drawable.playlist_play,
-                    MaterialTheme.colorScheme.secondary,
-                    MaterialTheme.colorScheme.onSecondary,
-                    Alignment.CenterStart
-                ) else
-                Quadruple(
-                    R.drawable.queue_music,
-                    MaterialTheme.colorScheme.primary,
-                    MaterialTheme.colorScheme.onPrimary,
-                    Alignment.CenterEnd
-                )
-
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(60.dp)
-                    .align(Alignment.Center)
-                    .background(bg),
-                contentAlignment = align
-            ) {
-                Icon(
-                    painter = painterResource(id = iconRes),
-                    contentDescription = null,
-                    modifier = Modifier
-                        .padding(horizontal = 24.dp)
-                        .size(30.dp)
-                        .alpha(0.9f),
-                    tint = tint
-                )
-            }
-        }
-
-        Box(
-            modifier = Modifier
-                .offset { IntOffset(offset.floatValue.roundToInt(), 0) }
-                .fillMaxWidth()
-                .background(MaterialTheme.colorScheme.surface),
-            content = content
-        )
-    }
-}
-
-// Helper to animate reset of swipe offset
-private fun reset(offset: MutableState<Float>, scope: CoroutineScope) {
-    scope.launch {
-        animate(
-            initialValue = offset.value,
-            targetValue = 0f,
-            animationSpec = tween(durationMillis = 300)
-        ) { value, _ -> offset.value = value }
-    }
-}
-
-// Data holder for swipe visuals
-data class Quadruple<A, B, C, D>(
-    val first: A,
-    val second: B,
-    val third: C,
-    val fourth: D
-)
 
 object Icon {
     @Composable
