@@ -428,7 +428,13 @@ fun BottomSheetPlayer(
     }
 
     BackHandler(enabled = state.isExpanded) {
-        state.collapseSoft()
+        if (isFullScreen) {
+            isFullScreen = false
+        } else if (showInlineLyrics) {
+            showInlineLyrics = false
+        } else {
+            state.collapseSoft()
+        }
     }
 
     val themeOnBackgroundColor =
@@ -484,11 +490,13 @@ fun BottomSheetPlayer(
 
     LaunchedEffect(mediaMetadata?.id) {
         showInlineLyrics = false
+        isFullScreen = false
     }
 
     LaunchedEffect(state.isCollapsed, state.isDismissed) {
         if (state.isCollapsed || state.isDismissed) {
             showInlineLyrics = false
+            isFullScreen = false
         }
     }
 
@@ -1872,6 +1880,9 @@ fun BottomSheetPlayer(
                 playerBackground = if (isLyricsThumbnailBg) PlayerBackgroundStyle.BLUR else playerBackground,
                 onToggleLyrics = {
                     showInlineLyrics = !showInlineLyrics
+                    if (!showInlineLyrics) {
+                        isFullScreen = false
+                    }
                 },
             )
         }
