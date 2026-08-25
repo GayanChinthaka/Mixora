@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Mixora Project (C) 2026
  * Author : Gayan Chinthaka
  * Company: Pokerlanka
@@ -62,7 +62,7 @@ class YouTubeQueue(
                     continuation = nextResult.continuation
                     retryCount = 0
                     return@withContext Queue.Status(
-                        title = nextResult.title,
+                        title = if (isRadioRequest) null else nextResult.title,
                         items = items.map { it.toMediaItem() },
                         mediaItemIndex = nextResult.currentIndex ?: 0,
                     )

@@ -639,7 +639,7 @@ class MusicService :
     private lateinit var audioQuality: com.pokerlanka.mixora.constants.AudioQuality
 
     private var currentQueue: Queue = EmptyQueue
-    var queueTitle: String? = null
+    val queueTitle = MutableStateFlow<String?>(null)
 
     val currentMediaMetadata = MutableStateFlow<com.pokerlanka.mixora.models.MediaMetadata?>(null)
     private val currentSong =
@@ -1928,7 +1928,7 @@ class MusicService :
         }
 
         currentQueue = queue
-        queueTitle = null
+        queueTitle.value = null
         val persistShuffleAcrossQueues = dataStore.get(PersistentShuffleAcrossQueuesKey, false)
         if (!persistShuffleAcrossQueues && !restoringQueue) {
             player.shuffleModeEnabled = false
@@ -1949,7 +1949,7 @@ class MusicService :
                 }
             if (queue.preloadItem != null && player.playbackState == STATE_IDLE) return@launch
             if (initialStatus.title != null) {
-                queueTitle = initialStatus.title
+                queueTitle.value = initialStatus.title
             }
             if (initialStatus.items.isEmpty()) return@launch
             // Track original queue size for shuffle playlist first feature
@@ -1990,7 +1990,7 @@ class MusicService :
 
     fun adoptQueue(queue: Queue, title: String? = null, initialQueueSize: Int = 0) {
         currentQueue = queue
-        queueTitle = title
+        queueTitle.value = title
         originalQueueSize = initialQueueSize
     }
 
@@ -2025,7 +2025,7 @@ class MusicService :
                     }
 
                 if (initialStatus.title != null) {
-                    queueTitle = initialStatus.title
+                    queueTitle.value = initialStatus.title
                 }
 
                 val radioItems =
@@ -3924,7 +3924,7 @@ class MusicService :
         try {
             val persistQueue =
                 currentQueue.toPersistQueue(
-                    title = queueTitle,
+                    title = queueTitle.value,
                     items = player.mediaItems.mapNotNull { it.metadata },
                     mediaItemIndex = player.currentMediaItemIndex,
                     position = player.currentPosition,

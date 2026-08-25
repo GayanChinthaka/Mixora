@@ -168,7 +168,7 @@ class PlayerConnection(
             database.format(mediaMetadata?.id)
         }.stateIn(scope, SharingStarted.Lazily, null)
 
-    val queueTitle = MutableStateFlow<String?>(null)
+    val queueTitle = service.queueTitle
     val queueWindows = MutableStateFlow<List<Timeline.Window>>(emptyList())
     val currentMediaItemIndex = MutableStateFlow(-1)
     val currentWindowIndex = MutableStateFlow(-1)
@@ -214,7 +214,6 @@ class PlayerConnection(
         playbackState.value = newPlayer.playbackState
         playWhenReady.value = newPlayer.playWhenReady
         mediaMetadata.value = newPlayer.currentMetadata
-        queueTitle.value = service.queueTitle
         queueWindows.value = newPlayer.getQueueWindows()
         currentWindowIndex.value = newPlayer.getCurrentQueueIndex()
         currentMediaItemIndex.value = newPlayer.currentMediaItemIndex
@@ -444,7 +443,6 @@ class PlayerConnection(
         reason: Int,
     ) {
         queueWindows.value = player.getQueueWindows()
-        queueTitle.value = service.queueTitle
         currentMediaItemIndex.value = player.currentMediaItemIndex
         currentWindowIndex.value = player.getCurrentQueueIndex()
         updateCanSkipPreviousAndNext()
