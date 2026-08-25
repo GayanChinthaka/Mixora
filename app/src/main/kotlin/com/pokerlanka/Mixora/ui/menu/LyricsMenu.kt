@@ -371,8 +371,10 @@ fun LyricsMenu(
                                 onShowOffsetDialog()
                             },
                             trailingContent = {
+                                val offsetSec = lyricsOffset / 1000f
+                                val formatted = if (lyricsOffset == 0) "0s" else "${if (lyricsOffset > 0) "+" else ""}${String.format(java.util.Locale.US, "%.1fs", offsetSec)}"
                                 Text(
-                                    text = "${if (lyricsOffset >= 0) "+" else ""}${lyricsOffset}ms",
+                                    text = formatted,
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
