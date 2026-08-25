@@ -40,8 +40,8 @@ android {
         applicationId = applicationIdOverride ?: baseApplicationId
         minSdk = 26
         targetSdk = 36
-        versionCode = 1
-        versionName = "1.0.0"
+        versionCode = 2
+        versionName = "1.2.0"
         resValue("string", "app_name", appNameOverride ?: "Mixora")
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -259,6 +259,7 @@ dependencies {
     implementation(libs.ucrop)
 
     implementation(libs.shimmer)
+    implementation(libs.lottie.compose)
 
     implementation(libs.media3)
     implementation(libs.media3.session)

@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Mixora Project (C) 2026
  * Author : Gayan Chinthaka
  * Company: Pokerlanka
@@ -584,20 +584,26 @@ fun ExperimentalLyrics(
                                 if (isInitialLayout) continue
                                 flingJob?.cancel()
                                 velocityTracker.resetTracking()
-                                isAutoScrollEnabled = false
-                                lastPreviewTime = System.currentTimeMillis()
                                 velocityTracker.addPosition(down.uptimeMillis, down.position)
+                                var hasDragged = false
                                 verticalDrag(down.id) { change ->
+                                    if (!hasDragged) {
+                                        hasDragged = true
+                                        isAutoScrollEnabled = false
+                                        if (!isSelectionModeActive) lastPreviewTime = System.currentTimeMillis()
+                                    }
                                     userManualOffset = (userManualOffset + change.positionChange().y).coerceIn(scrollClampMin, scrollClampMax)
                                     velocityTracker.addPosition(change.uptimeMillis, change.position)
                                     change.consume()
                                 }
-                                val velocity = velocityTracker.calculateVelocity().y
-                                flingJob = scope.launch {
-                                    AnimationState(initialValue = userManualOffset, initialVelocity = velocity).animateDecay(decayAnimSpec) {
-                                        val clamped = value.coerceIn(scrollClampMin, scrollClampMax)
-                                        userManualOffset = clamped
-                                        if (value != clamped) cancelAnimation()
+                                if (hasDragged) {
+                                    val velocity = velocityTracker.calculateVelocity().y
+                                    flingJob = scope.launch {
+                                        AnimationState(initialValue = userManualOffset, initialVelocity = velocity).animateDecay(decayAnimSpec) {
+                                            val clamped = value.coerceIn(scrollClampMin, scrollClampMax)
+                                            userManualOffset = clamped
+                                            if (value != clamped) cancelAnimation()
+                                        }
                                     }
                                 }
                             }

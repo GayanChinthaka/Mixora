@@ -31,8 +31,10 @@ desugaring = "2.1.5"
 junit = "4.13.2"
 timber = "5.0.1"
 materialKolor = "5.0.0"
+lottie = "6.6.2"
 
 [libraries]
+lottie-compose = { module = "com.airbnb.android:lottie-compose", version.ref = "lottie" }
 guava = { module = "com.google.guava:guava", version.ref = "guava" }
 coroutines-guava = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-guava", version.ref = "coroutinesGuava" }
 concurrent-futures = { module = "androidx.concurrent:concurrent-futures-ktx", version.ref = "concurrentFutures" }
