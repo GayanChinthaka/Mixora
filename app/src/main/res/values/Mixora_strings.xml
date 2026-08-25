@@ -31,7 +31,6 @@
     <string name="generating_image">Generating image…</string>
     <string name="please_wait">Please wait</string>
     <string name="cancel">Cancel</string>
-    <string name="enable">Enable</string>
     <string name="share_lyrics">Share lyrics</string>
     <string name="share_as_text">Share as text</string>
     <string name="share_as_image">Share as image</string>
@@ -72,9 +71,6 @@
     <string name="lyrics">Lyrics</string>
     <string name="close">Close</string>
     <string name="hide_player_thumbnail">Hide player thumbnail</string>
-    <string name="hide_player_thumbnail_desc">Replace the album artwork with the app logo in the player</string>
-    <string name="crop_album_art">Crop album art</string>
-    <string name="crop_album_art_desc">Force a square aspect ratio by cropping video thumbnails</string>
 
     <string name="already_in_playlist">Already in playlist: </string>
 
@@ -90,15 +86,8 @@
 
     <string name="player_background_style">Player background style</string>
     <string name="player_background_solid">Solid</string>
-    <string name="follow_theme">Follow theme</string>
     <string name="gradient">Gradient</string>
-    <string name="new_player_design">New player design</string>
-    <string name="new_mini_player_design">New mini-player design</string>
     <string name="player_background_blur">Blur</string>
-    <string name="player_buttons_style">Player button colors</string>
-    <string name="default_style">Default</string>
-    <string name="primary_color_style">Primary color</string>
-    <string name="tertiary_color_style">Tertiary color</string>
     <string name="display_density">Display density</string>
     <string name="restart">Restart</string>
     <string name="restart_required">Restart required!</string>
@@ -121,36 +110,22 @@
     <string name="show_interval_indicator_desc">Shows a progress bar during long instrumental gaps</string>
     <string name="respect_agent_positioning">Respect agent positioning</string>
     <string name="respect_agent_positioning_desc">Align lyrics based on the agent role (e.g. background vocals)</string>
-    <string name="lyrics_glow_effect">Enable glowing lyrics effect</string>
-    <string name="lyrics_glow_effect_desc">Adds a glowing animation and bounce effect to the active lyric line</string>
     <string name="lyrics_background">Lyrics background</string>
     <string name="lyrics_background_theme">Theme</string>
     <string name="lyrics_background_theme_desc">Follow the app theme</string>
     <string name="lyrics_background_thumbnail">Thumbnail</string>
     <string name="lyrics_background_thumbnail_desc">Blurred album art behind the lyrics</string>
-    <string name="lyrics_animation_style">Lyrics animation style</string>
-    <string name="lyrics_animation_none">None</string>
-    <string name="lyrics_animation_fade">Fade</string>
-    <string name="lyrics_animation_glow">Glow</string>
-    <string name="lyrics_animation_slide">Slide</string>
-    <string name="lyrics_animation_karaoke">Karaoke</string>
-    <string name="lyrics_animation_apple">Apple Music Style</string>
     <string name="lyrics_text_size">Lyrics text size</string>
     <string name="lyrics_line_spacing">Lyrics line spacing</string>
     <string name="enable_lrclib_desc">Community-driven synchronized lyrics database</string>
     <string name="enable_kugou_desc">Pulls lyrics from KuGou, a popular Chinese music platform</string>
     <string name="youtube_music_lyrics_note">NOTE: YouTube Music lyrics will be shown automatically when no other source is available. They are usually not synchronized</string>
-    <string name="enable_better_lyrics">Enable Better Lyrics</string>
     <string name="enable_better_lyrics_desc">Syllable-synced lyrics for any song, perfect for karaoke</string>
-    <string name="enable_paxsenix">Enable Paxsenix</string>
     <string name="enable_paxsenix_desc">High-quality synchronized lyrics from Paxsenix API</string>
-    <string name="enable_lyricsplus">Enable LyricsPlus</string>
     <string name="enable_lyricsplus_desc">Synchronized lyrics from multiple sources</string>
     <string name="lyrics_provider_selection">Provider selection</string>
-    <string name="lyrics_provider_selection_desc">Choose which lyrics providers are enabled</string>
     <string name="auto_scroll">Re-sync</string>
     <string name="slim">Slim</string>
-    <string name="slim_navbar">Slim bottom navigation bar</string>
     <string name="auto_playlists">Auto playlists</string>
     <string name="show_liked_playlist">Show Liked playlist</string>
     <string name="show_downloaded_playlist">Show Downloaded playlist</string>
@@ -185,21 +160,13 @@
     <!-- General -->
     <string name="general">General</string>
     <string name="proxy">Proxy</string>
-    <string name="default_lib_chips">Change default library chip</string>
     <string name="set_quick_picks">Set quick picks</string>
     <string name="last_song_listened">Based on the last song you listened to</string>
-    <string name="app_language">App language</string>
-    <string name="lyrics_provider_priority">Lyrics provider priority</string>
     <string name="lyrics_provider_priority_desc">Drag to reorder providers by preference. Higher position means higher priority</string>
-    <string name="experimental_lyrics">Experimental lyrics</string>
-    <string name="experimental_lyrics_desc">Enable the new experimental lyrics component with enhanced animations and performance</string>
-    <string name="experimental_lyrics_beta_title">Experimental feature</string>
-    <string name="experimental_lyrics_beta_message">The new lyrics component is currently in development and may contain bugs. Are you sure you want to enable it?</string>
     <string name="config_proxy">Configure proxy</string>
     <string name="proxy_username">Proxy username</string>
     <string name="proxy_password">Proxy password</string>
     <string name="enable_authentication">Enable authentication</string>
-
 
     <string name="auto_radio_queue">Auto radio queue</string>
     <string name="auto_radio_queue_desc">Automatically create a radio queue when playing a song from search or home</string>
@@ -240,22 +207,9 @@
     <string name="default_links">Open supported links</string>
     <string name="open_app_settings_error">Couldn\'t open the app settings</string>
 
-    <string name="release_notes">Release notes</string>
-    <string name="changelog">Changelog</string>
-    <string name="changelog_empty">No changelogs available</string>
-    <string name="github_releases_url">https://github.com/MixoraGroup/Mixora/releases</string>
-    <string name="list_bullet">•</string>
-    <string name="view_on_github">View on GitHub</string>
-    <string name="current_version">Current version</string>
-    <string name="version_format">Version: %s</string>
     <string name="update_settings">Update settings</string>
-    <string name="check_for_updates_title">Check for updates</string>
     <string name="checking_for_updates">Checking for updates…</string>
-    <string name="latest_version_format">Latest: %s</string>
     <string name="check_for_updates_button">Check for updates</string>
-    <string name="hide_changelog">Hide changelog</string>
-    <string name="view_changelog">View changelog</string>
-    <string name="failed_to_check_updates">Failed to check for updates: %s</string>
 
     <string name="all_time">All time</string>
     <string name="past_24_hours">Past 24 hours</string>
@@ -294,28 +248,9 @@
     <string name="crossfade_duration">Crossfade duration</string>
     <string name="crossfade_gapless">Disable for gapless albums</string>
     <string name="crossfade_gapless_desc">Skip crossfade for albums designed to play without gaps</string>
-    <string name="crossfade_beta_title">Beta feature!</string>
-    <string name="crossfade_beta_message">Crossfade is a new feature and may have bugs. If you experience any issues, please report them.\n\nNOTE: This feature disables audio offload due to technical limitations</string>
 
     <!-- Romanization Settings -->
-    <string name="lyrics_romanization_cyrillic">Cyrillic</string>
-    <string name="lyrics_romanize_title">Romanization</string>
     <string name="lyrics_romanization">Lyrics romanization</string>
-    <string name="lyrics_romanize_japanese">Romanize Japanese lyrics</string>
-    <string name="lyrics_romanize_korean">Romanize Korean lyrics</string>
-    <string name="lyrics_romanize_chinese">Romanize Chinese lyrics</string>
-    <string name="lyrics_romanize_hindi">Romanize Hindi lyrics</string>
-    <string name="lyrics_romanize_punjabi">Romanize Punjabi lyrics</string>
-    <string name="lyrics_romanize_russian">Romanize Russian lyrics</string>
-    <string name="lyrics_romanize_ukrainian">Romanize Ukrainian lyrics</string>
-    <string name="lyrics_romanize_belarusian">Romanize Belarusian lyrics</string>
-    <string name="lyrics_romanize_kyrgyz">Romanize Kyrgyz lyrics</string>
-    <string name="lyrics_romanize_serbian">Romanize Serbian lyrics</string>
-    <string name="lyrics_romanize_bulgarian">Romanize Bulgarian lyrics</string>
-    <string name="line_by_line_option_title">Detect language line-by-line</string>
-    <string name="line_by_line_option_desc">Cyrillic script will be detected line-by-line rather than across the entire song</string>
-    <string name="line_by_line_dialog_title">Are you sure?</string>
-    <string name="line_by_line_dialog_desc">This is a hit-or-miss experimental feature.\n\nBy default, the language is detected from the entire song. With this option on, it will be detected line-by-line instead. This allows multi-language songs to work, BUT the detected language may not always be correct. For example, a Ukrainian line without any Ukrainian-specific characters might be romanized as Russian.\n\nIf you are not experiencing any issues, it is recommended to keep this option off</string>
     <string name="romanize_current_track">Romanize current track</string>
 
     <!-- Lyrics Offset Settings -->
@@ -323,7 +258,6 @@
 
     <!-- Material 3 Settings Sections -->
     <string name="settings_section_ui">Interface</string>
-    <string name="settings_section_privacy">Privacy &amp; Security</string>
     <string name="settings_section_player_content">Player &amp; Content</string>
     <string name="settings_section_storage">Storage &amp; Data</string>
     <string name="settings_section_system">System &amp; About</string>
@@ -335,10 +269,6 @@
     <string name="update_available_title">Update available</string>
     <string name="update_channel_name">App updates</string>
     <string name="update_channel_desc">Notifications about new app versions</string>
-    <string name="kmp_upgrade_title">Mixora KMP %s is available</string>
-    <string name="kmp_upgrade_warning">Mixora KMP is in early access. Features may be broken, incomplete, or change without notice.</string>
-    <string name="kmp_upgrade_action">Upgrade to KMP</string>
-    <string name="kmp_upgrade_later">Not now</string>
 
     <!-- Offload -->
     <string name="audio_offload">Enable audio offload</string>
@@ -357,9 +287,6 @@
     <!-- Google Cast -->
     <string name="google_cast">Google Cast</string>
     <string name="google_cast_description">Cast audio to Chromecast and other Cast-enabled devices</string>
-
-    <string name="lyrics_romanize_macedonian">Romanize Macedonian lyrics</string>
-    <string name="lyrics_romanize_as_main">Show romanized lyrics as main</string>
 
     <string name="integrations">Integrations</string>
     <string name="username">Username</string>
@@ -394,28 +321,12 @@
     <string name="delete_desc">Permanently remove this item</string>
     <string name="advanced_desc">Adjust the song\'s tempo and pitch</string>
     <string name="equalizer_desc">Open the audio equalizer</string>
-    <string name="mini_player">Mini-player</string>
-    <string name="pure_black_mini_player">Pure black mini-player</string>
-    <string name="mini_player_background_style">Mini-player background style</string>
-    <string name="transparent">Transparent</string>
-    <string name="mini_player_background_not_available">Unavailable when the new mini-player design is disabled</string>
     <string name="cache_size_warning_title">Hold on!</string>
     <string name="cache_size_warning_message">The limit you\'ve chosen (%1$s) is smaller than what the app is currently using. Continuing may cause some cached %2$s to be removed. Proceed anyway?</string>
     <string name="cache_size_warning_confirm">Continue</string>
 
-    <string name="lyrics_animation_style_title">Word-by-word animation style</string>
     <string name="none">None</string>
-    <string name="fade">Fade</string>
-    <string name="glow">Glow</string>
-    <string name="slide">Slide</string>
-    <string name="karaoke">Karaoke</string>
-    <string name="apple_music_style">Apple Music</string>
-    <string name="album_art_for">Album art for %s</string>
     <!-- Equalizer UI -->
-    <plurals name="profiles_count">
-        <item quantity="one">%d profile</item>
-        <item quantity="other">%d profiles</item>
-    </plurals>
     <string name="equalizer_header">Equalizer</string>
     <string name="no_profiles">No equalizer profiles</string>
     <string name="import_profile">Import profile</string>
@@ -426,7 +337,6 @@
     <string name="eq_download_db">Download AutoEQ database (17 MB)</string>
     <string name="eq_downloading">Downloading…</string>
     <string name="import_from_file">Import from file</string>
-    <string name="add_profile">Add profile</string>
     <plurals name="band_count">
         <item quantity="one">%d band</item>
         <item quantity="other">%d bands</item>
@@ -453,10 +363,7 @@
     <!-- Hardcoded strings -->
     <string name="your_daily_discover">Your daily discover</string>
     <string name="plays">plays</string>
-    <string name="casting_to">Casting to %s</string>
     <string name="progress_percent">Progress %s%%</string>
-    <string name="listening_to_Mixora">Listening to Mixora</string>
-    <string name="open">Open</string>
     <string name="failed_to_create_image">Failed to create image: %s</string>
     <string name="copied_title">Title copied</string>
     <string name="copied_artist">Artist copied</string>
@@ -503,15 +410,9 @@
     <string name="widget_recognizer_channel_desc">Shows a notification while identifying a song from the widget</string>
     <string name="widget_recognizer_notification_text">Recording audio to identify the song…</string>
 
-    <!-- Player Client Settings -->
-
-    <!-- Decryption Library Settings -->
-
     <string name="clear">Clear</string>
     <string name="copy">Copy</string>
-    <string name="copy_all_lyrics">Copy all lyrics</string>
     <string name="copied_to_clipboard">Copied to clipboard</string>
-    <string name="not_set">Not set</string>
 
     <!-- Crash Handler -->
     <string name="crash_title">App crashed</string>
@@ -524,39 +425,11 @@
 
     <!-- Theme Palette Names -->
     <string name="palette_dynamic">Dynamic</string>
-    <string name="palette_crimson">Crimson</string>
-    <string name="palette_rose">Rose</string>
-    <string name="palette_purple">Purple</string>
-    <string name="palette_deep_purple">Deep Purple</string>
-    <string name="palette_indigo">Indigo</string>
-    <string name="palette_blue">Blue</string>
     <string name="palette_sky_blue">Sky Blue</string>
-    <string name="palette_cyan">Cyan</string>
-    <string name="palette_teal">Teal</string>
-    <string name="palette_green">Green</string>
-    <string name="palette_light_green">Light Green</string>
-    <string name="palette_lime">Lime</string>
-    <string name="palette_yellow">Yellow</string>
-    <string name="palette_amber">Amber</string>
-    <string name="palette_orange">Orange</string>
-    <string name="palette_deep_orange">Deep Orange</string>
-    <string name="palette_brown">Brown</string>
-    <string name="palette_grey">Grey</string>
-    <string name="palette_blue_grey">Blue Grey</string>
 
     <!-- Theme Content Descriptions -->
     <string name="cd_back">Back</string>
-    <string name="cd_pure_black_mode">Pure black mode</string>
-    <string name="cd_light_mode">Light mode</string>
-    <string name="cd_dark_mode">Dark mode</string>
-    <string name="cd_system_mode">System mode</string>
-    <string name="cd_palette_item">%1$s palette</string>
     <string name="play_all">Play all</string>
-    <string name="enable_high_refresh_rate">Enable high refresh rate</string>
-    <string name="enable_high_refresh_rate_desc">Forces the display to run at its highest supported refresh rate (e.g. 120Hz)</string>
-    <string name="enable_landscape_scaling">Landscape Scaling</string>
-    <string name="enable_landscape_scaling_desc">Scale UI in landscape mode for larger screens</string>
-    <string name="dynamic_theme">Dynamic Theme</string>
 
     <!-- Music Recognition -->
     <string name="recognize_music">Recognize music</string>
@@ -611,27 +484,10 @@
     <string name="from_the_community">From the community</string>
 
     <!-- Logout dialog -->
-    <string name="logout_dialog_title">Keep library data?</string>
-    <string name="logout_dialog_message">Do you want to keep your playlists and library data? Downloaded songs will always be kept</string>
-    <string name="logout_keep">Keep</string>
-    <string name="logout_clear">Clear</string>
     <string name="choose_device_account">Choose an account from this device</string>
-    <string name="logout_google_too">Also sign out of Google</string>
-    <string name="logout_google_too_description">Signing back in will need your email and password again</string>
 
     <!-- Credits / About Screen -->
-    <string name="credits_lead_developer">Lead developer</string>
-    <string name="credits_collaborator">Collaborator</string>
-    <string name="credits_collaborators_section">Collaborators</string>
-    <string name="credits_website">Website</string>
-    <string name="credits_instagram">Instagram</string>
-    <string name="credits_github">GitHub</string>
-    <string name="app_version_info">%1$s • %2$s</string>
-    <string name="like_what_i_do">Like what I do?</string>
     <string name="Mixora">Mixora</string>
-    <string name="wanna_play_favorite_song">Want to play their favorite song?</string>
-    <string name="yeah">Yeah!</string>
-    <string name="stands_with_palestine">This project stands with Palestine ????</string>
 
     <!-- Podcasts -->
     <string name="filter_podcasts">Podcasts</string>
@@ -670,8 +526,6 @@
     <string name="checking_previous_account">Checking for previous account…</string>
     <string name="no_account_found">No account found</string>
 
-    <!-- Cache settings -->
-
     <!-- Upload songs -->
     <string name="upload_songs">Upload songs</string>
     <string name="uploading">Uploading…</string>
@@ -692,13 +546,10 @@
     <!-- Android Auto settings -->
     <string name="android_auto">Android Auto</string>
     <string name="android_auto_visible_sections">Visible sections</string>
-    <string name="android_auto_reorder_hint">Tap a section to enable or disable it.\nLong-press the drag handle to reorder. The first section will be shown by default</string>
     <string name="android_auto_youtube_playlists">Show YouTube suggested playlists</string>
     <string name="android_auto_youtube_playlists_desc">Show YouTube Music recommended playlists in the playlists section while browsing with Android Auto</string>
     <string name="android_auto_target_playlist">Quick-add destination</string>
-    <string name="android_auto_target_playlist_desc">Choose the playlist where songs are saved when using the quick-add button in Android Auto</string>
     <string name="android_auto_target_playlist_auto">Not set</string>
-    <string name="added_to_playlist">Added to playlist</string>
     <string name="android_auto_target_playlist_not_set">No playlist selected. Choose one in Android Auto settings</string>
     <string name="android_auto_search_options">Search options</string>
     <string name="android_auto_search_local_songs_limit">Songs search limit</string>
@@ -718,8 +569,6 @@
     <string name="autoplay_desc">Automatically play the next song when the current one ends</string>
 
     <!-- Accessibility -->
-    <string name="back">Back</string>
-    <string name="clear_search">Clear search</string>
     <string name="close_chip">Close</string>
     <string name="switch_to_list_view">Switch to list view</string>
     <string name="switch_to_grid_view">Switch to grid view</string>
@@ -753,18 +602,12 @@
     <string name="stream_source_visionos_desc">Apple Vision. No throttle gate; very reliable.</string>
     <string name="stream_source_android_vr">Android VR</string>
     <string name="stream_source_android_vr_desc">Android VR clients (all versions).</string>
-    <string name="stream_source_ios">iOS / iPadOS</string>
-    <string name="stream_source_ios_desc">Apple iOS and iPadOS clients. Off by default; throttle-gated past ~1 MiB.</string>
     <string name="stream_source_web_creator">WEB_CREATOR</string>
     <string name="stream_source_web_creator_desc">Creator web client.</string>
-    <string name="stream_source_android_creator">ANDROID_CREATOR</string>
-    <string name="stream_source_android_creator_desc">Android creator client. Off by default; needs DroidGuard.</string>
     <!-- AI Integration -->
     <string name="ai_integration">AI Integration</string>
-    <string name="ai_integration_desc">Configure the AI provider used for lyrics romanization.</string>
     <string name="ai_provider_settings">Provider</string>
     <string name="ai_provider">AI provider</string>
-    <string name="ai_provider_desc">Choose the AI service.</string>
     <string name="ai_provider_none">None (Disabled)</string>
     <string name="ai_provider_openrouter">OpenRouter</string>
     <string name="ai_custom_endpoint">Custom endpoint</string>
