@@ -77,7 +77,7 @@ fun GestureSettings(
     val (swipeToRemoveSong, onSwipeToRemoveSongChange) =
         rememberPreference(
             SwipeToRemoveSongKey,
-            defaultValue = false,
+            defaultValue = true,
         )
 
     var showSensitivityDialog by rememberSaveable { mutableStateOf(false) }

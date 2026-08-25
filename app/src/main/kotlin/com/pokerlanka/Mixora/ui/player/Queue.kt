@@ -86,6 +86,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -110,6 +112,8 @@ import com.pokerlanka.mixora.R
 import com.pokerlanka.mixora.constants.ListItemHeight
 import com.pokerlanka.mixora.constants.PlayerBackgroundStyle
 import com.pokerlanka.mixora.constants.PlayerHorizontalPadding
+import com.pokerlanka.mixora.constants.SwipeToRemoveSongKey
+import com.pokerlanka.mixora.constants.ThumbnailCornerRadius
 import com.pokerlanka.mixora.constants.QueueEditLockKey
 import com.pokerlanka.mixora.constants.UseNewPlayerDesignKey
 import com.pokerlanka.mixora.extensions.metadata
@@ -563,9 +567,10 @@ fun Queue(
                     ) {
                         val currentItem by rememberUpdatedState(window)
                         val isActive = window.uid == currentPlayingUid
+                        val swipeRemoveEnabled by rememberPreference(SwipeToRemoveSongKey, defaultValue = true)
                         val dismissBoxState =
                             rememberSwipeToDismissBoxState(
-                                positionalThreshold = { totalDistance -> totalDistance },
+                                positionalThreshold = { totalDistance -> totalDistance * 0.4f },
                             )
 
                         var processedDismiss by remember { mutableStateOf(false) }
@@ -574,11 +579,7 @@ fun Queue(
                         val undoStr = stringResource(R.string.undo)
                         LaunchedEffect(dismissBoxState.currentValue) {
                             val dv = dismissBoxState.currentValue
-                            if (!processedDismiss && (
-                                    dv == SwipeToDismissBoxValue.StartToEnd ||
-                                        dv == SwipeToDismissBoxValue.EndToStart
-                                )
-                            ) {
+                            if (swipeRemoveEnabled && !processedDismiss && dv == SwipeToDismissBoxValue.StartToEnd) {
                                 processedDismiss = true
                                 playerConnection.player.removeMediaItem(currentItem.firstPeriodIndex)
                                 dismissJob?.cancel()
@@ -712,12 +713,30 @@ fun Queue(
                             }
                         }
 
-                        if (locked) {
+                        if (locked || inSelectMode || !swipeRemoveEnabled) {
                             content()
                         } else {
                             SwipeToDismissBox(
                                 state = dismissBoxState,
-                                backgroundContent = {},
+                                enableDismissFromStartToEnd = true,
+                                enableDismissFromEndToStart = false,
+                                backgroundContent = {
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxSize()
+                                            .background(MaterialTheme.colorScheme.errorContainer),
+                                        contentAlignment = Alignment.CenterStart,
+                                    ) {
+                                        Icon(
+                                            painter = painterResource(id = R.drawable.delete),
+                                            contentDescription = null,
+                                            modifier = Modifier
+                                                .padding(horizontal = 24.dp)
+                                                .size(24.dp),
+                                            tint = MaterialTheme.colorScheme.onErrorContainer,
+                                        )
+                                    }
+                                },
                             ) {
                                 content()
                             }
