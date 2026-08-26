@@ -8,6 +8,16 @@
 
 package com.pokerlanka.mixora.ui.utils
 
+/**
+ * Edge length requested for now-playing artwork — the player pager, the queue, and whatever the
+ * media session hands to Coil.
+ *
+ * These URLs used to ask for 1080x1080, which decodes to ~4.6 MB of heap per track and is a
+ * noticeably slower download on a weak connection. Album art carries very little fine detail, so
+ * the cost was buying almost nothing on screen.
+ */
+const val PLAYER_ARTWORK_SIZE = 512
+
 fun String.resize(
     width: Int? = null,
     height: Int? = null,

@@ -14,6 +14,7 @@ import com.pokerlanka.innertube.models.SongItem
 import com.pokerlanka.mixora.db.entities.Song
 import com.pokerlanka.mixora.models.MediaMetadata
 import com.pokerlanka.mixora.models.toMediaMetadata
+import com.pokerlanka.mixora.ui.utils.PLAYER_ARTWORK_SIZE
 import com.pokerlanka.mixora.ui.utils.resize
 
 val MediaItem.metadata: MediaMetadata?
@@ -53,7 +54,7 @@ fun SongItem.toMediaItem() = MediaItem.Builder()
             .setTitle(title)
             .setSubtitle(artists.joinToString { it.name })
             .setArtist(artists.joinToString { it.name })
-            .setArtworkUri(thumbnail.resize(1080, 1080).toUri())
+            .setArtworkUri(thumbnail.resize(PLAYER_ARTWORK_SIZE, PLAYER_ARTWORK_SIZE).toUri())
             .setAlbumTitle(album?.name)
             .setAlbumArtist(artists.firstOrNull()?.name)
             .setDisplayTitle(title)
@@ -61,7 +62,7 @@ fun SongItem.toMediaItem() = MediaItem.Builder()
             .setIsBrowsable(false)
             .setIsPlayable(true)
             .setExtras(Bundle().apply {
-                putString("artwork_uri", thumbnail.resize(1080, 1080))
+                putString("artwork_uri", thumbnail.resize(PLAYER_ARTWORK_SIZE, PLAYER_ARTWORK_SIZE))
             })
             .build()
     )

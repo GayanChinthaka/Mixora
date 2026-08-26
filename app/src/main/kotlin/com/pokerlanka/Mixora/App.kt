@@ -21,6 +21,7 @@ import coil3.SingletonImageLoader
 import coil3.disk.DiskCache
 import coil3.disk.directory
 import coil3.memory.MemoryCache
+import coil3.network.okhttp.OkHttpNetworkFetcherFactory
 import coil3.request.CachePolicy
 import coil3.request.allowHardware
 import coil3.request.crossfade
@@ -50,13 +51,20 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
+import okhttp3.ConnectionPool
 import okhttp3.Credentials
+import okhttp3.Dispatcher
+import okhttp3.OkHttpClient
 import timber.log.Timber
 import java.io.File
 import java.io.IOException
 import java.net.Authenticator
 import java.net.PasswordAuthentication
 import java.net.Proxy
+import java.net.ProxySelector
+import java.net.SocketAddress
+import java.net.URI
+import java.util.concurrent.TimeUnit
 import java.util.Locale
 import javax.inject.Inject
 
@@ -308,20 +316,67 @@ class App :
     @Volatile
     private var singletonImageLoader: ImageLoader? = null
 
+    /**
+     * Coil ships an OkHttp fetcher through `META-INF/services`, but the client it builds is a
+     * bare `OkHttpClient()`. That costs two things: it ignores the app's proxy settings entirely
+     * (with a proxy on, artwork bypasses the tunnel every other request goes through), and it
+     * inherits OkHttp's per-host limit of five in-flight calls — which is what actually gates how
+     * many thumbnails can arrive at once, since all artwork comes from two or three
+     * googleusercontent hosts.
+     */
+    private val imageHttpClient: OkHttpClient by lazy {
+        OkHttpClient
+            .Builder()
+            // Read through a selector rather than `.proxy(...)`: the client is built lazily on the
+            // first image request, which can land before or after settings are applied, and the
+            // user can change the proxy at any point afterwards.
+            .proxySelector(
+                object : ProxySelector() {
+                    override fun select(uri: URI?): List<Proxy> = listOf(YouTube.proxy ?: Proxy.NO_PROXY)
+
+                    override fun connectFailed(
+                        uri: URI?,
+                        sa: SocketAddress?,
+                        ioe: java.io.IOException?,
+                    ) = Unit
+                },
+            ).proxyAuthenticator { _, response ->
+                YouTube.proxyAuth?.let { auth ->
+                    response.request
+                        .newBuilder()
+                        .header("Proxy-Authorization", auth)
+                        .build()
+                } ?: response.request
+            }.dispatcher(
+                Dispatcher().apply {
+                    // These hosts speak HTTP/2, so the extra calls multiplex over the existing
+                    // connection rather than opening more sockets.
+                    maxRequestsPerHost = 10
+                    maxRequests = 32
+                },
+            ).connectionPool(ConnectionPool(10, 5, TimeUnit.MINUTES))
+            .build()
+    }
+
     override fun newImageLoader(context: PlatformContext): ImageLoader {
         val cacheSize = cachedCoilCacheSize ?: runBlocking {
             dataStore.data.map { it[MaxImageCacheSizeKey] ?: 512 }.first()
         }
         return ImageLoader
             .Builder(this)
-            .apply {
+            .components {
+                add(OkHttpNetworkFetcherFactory(callFactory = { imageHttpClient }))
+            }.apply {
                 crossfade(true)
                 allowHardware(Build.VERSION.SDK_INT >= Build.VERSION_CODES.P)
-                // Memory cache for fast image loading (prevents network requests on recomposition)
+                // Memory cache for fast image loading (prevents network requests on recomposition).
+                // Coil's own default is 25%; the cap sat at 15% because nothing ever released it.
+                // onTrimMemory now hands it back under pressure, so the extra headroom buys fewer
+                // re-decodes when scrolling back through a list.
                 memoryCache {
                     MemoryCache
                         .Builder()
-                        .maxSizePercent(context, 0.15)
+                        .maxSizePercent(context, 0.25)
                         .build()
                 }
                 if (cacheSize == 0) {
@@ -342,7 +397,7 @@ class App :
     }
 
     /**
-     * Coil's memory cache is the largest thing this process holds — up to 15% of the heap. Nothing
+     * Coil's memory cache is the largest thing this process holds — up to 25% of the heap. Nothing
      * handed any of it back under memory pressure, which made the app an easy kill target while
      * backgrounded. Playback is unaffected either way: notification artwork reloads from disk.
      */

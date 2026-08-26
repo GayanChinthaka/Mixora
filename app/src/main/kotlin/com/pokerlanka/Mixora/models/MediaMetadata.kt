@@ -12,6 +12,7 @@ import com.pokerlanka.innertube.models.SongItem
 import com.pokerlanka.innertube.models.WatchEndpoint.WatchEndpointMusicSupportedConfigs.WatchEndpointMusicConfig.Companion.MUSIC_VIDEO_TYPE_ATV
 import com.pokerlanka.mixora.db.entities.Song
 import com.pokerlanka.mixora.db.entities.SongEntity
+import com.pokerlanka.mixora.ui.utils.PLAYER_ARTWORK_SIZE
 import com.pokerlanka.mixora.ui.utils.resize
 import java.io.Serializable
 import java.time.LocalDateTime
@@ -131,7 +132,7 @@ fun SongItem.toMediaMetadata() =
             )
         },
         duration = duration ?: -1,
-        thumbnailUrl = thumbnail.resize(1080, 1080),
+        thumbnailUrl = thumbnail.resize(PLAYER_ARTWORK_SIZE, PLAYER_ARTWORK_SIZE),
         album =
         album?.let {
             MediaMetadata.Album(
@@ -164,7 +165,7 @@ fun EpisodeItem.toMediaMetadata() =
             )
         },
         duration = duration ?: -1,
-        thumbnailUrl = thumbnail.resize(1080, 1080),
+        thumbnailUrl = thumbnail.resize(PLAYER_ARTWORK_SIZE, PLAYER_ARTWORK_SIZE),
         album = podcast?.let {
             MediaMetadata.Album(
                 id = it.id,

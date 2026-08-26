@@ -17,14 +17,18 @@ import com.pokerlanka.mixora.utils.reportException
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
 import timber.log.Timber
+import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 
 private const val MAX_LYRICS_FETCH_MS = 25000L
@@ -46,6 +50,9 @@ constructor(
     private val cache = LruCache<String, List<LyricsResult>>(MAX_CACHE_SIZE)
     private var currentLyricsJob: Job? = null
 
+    /** Track id -> the fetch already running for it, so duplicate callers share one round trip. */
+    private val inFlight = ConcurrentHashMap<String, Deferred<LyricsWithProvider>>()
+
     /**
      * Shared scope for lyrics fetch operations. Uses SupervisorJob so individual
      * provider failures don't cancel sibling providers. This scope lives for the
@@ -54,6 +61,13 @@ constructor(
      */
     private val fetchScope = CoroutineScope(SupervisorJob() + kotlinx.coroutines.Dispatchers.IO)
 
+    /**
+     * Resolves lyrics for one track, preferring the highest-priority provider that has them.
+     *
+     * Concurrent callers for the same track share one fetch: [MusicService] pre-fetches whenever
+     * the lyrics pane is enabled and [Player] fetches again for display, and previously each ran
+     * the whole provider fan-out on its own.
+     */
     suspend fun getLyrics(mediaMetadata: MediaMetadata): LyricsWithProvider {
         currentLyricsJob?.cancel()
 
@@ -62,6 +76,16 @@ constructor(
             return LyricsWithProvider(cached.lyrics, cached.providerName)
         }
 
+        val deferred =
+            inFlight.computeIfAbsent(mediaMetadata.id) { id ->
+                fetchScope.async { fetchLyrics(mediaMetadata) }.also { started ->
+                    started.invokeOnCompletion { inFlight.remove(id, started) }
+                }
+            }
+        return deferred.await()
+    }
+
+    private suspend fun fetchLyrics(mediaMetadata: MediaMetadata): LyricsWithProvider {
         val orderedProviders = context.dataStore.data
             .map { preferences -> resolveLyricsProviders(preferences) }
             .first()
@@ -78,46 +102,72 @@ constructor(
 
         val result = withTimeoutOrNull(MAX_LYRICS_FETCH_MS) {
             val cleanedTitle = LyricsUtils.cleanTitleForSearch(mediaMetadata.title)
+            val artists = mediaMetadata.artists.joinToString { it.name }
             val enabledProviders = orderedProviders.filter { it.isEnabled(context) }
 
-            Timber.tag("LyricsHelper").d("Starting sequential fetch for: $cleanedTitle by ${mediaMetadata.artists.joinToString { it.name }}")
+            Timber.tag("LyricsHelper").d("Starting fetch for: $cleanedTitle by $artists")
             Timber.tag("LyricsHelper").d("Enabled providers in order: ${enabledProviders.joinToString { it.name }}")
 
-            for (provider in enabledProviders) {
-                Timber.tag("LyricsHelper").d("Trying provider: ${provider.name}")
-                val providerResult = try {
-                    withTimeoutOrNull(PER_PROVIDER_TIMEOUT_MS) {
-                        provider.getLyrics(
-                            context,
-                            mediaMetadata.id,
-                            cleanedTitle,
-                            mediaMetadata.artists.joinToString { it.name },
-                            mediaMetadata.duration,
-                            mediaMetadata.album?.title,
-                        )
+            coroutineScope {
+                // Every provider starts at once, but the results are consumed in preference order,
+                // so the answer is still the highest-priority provider that succeeded. Walking them
+                // sequentially meant one unreachable provider burned its full
+                // PER_PROVIDER_TIMEOUT_MS before the next was even contacted.
+                val attempts =
+                    enabledProviders.map { provider ->
+                        provider to
+                            async {
+                                try {
+                                    withTimeoutOrNull(PER_PROVIDER_TIMEOUT_MS) {
+                                        provider.getLyrics(
+                                            context,
+                                            mediaMetadata.id,
+                                            cleanedTitle,
+                                            artists,
+                                            mediaMetadata.duration,
+                                            mediaMetadata.album?.title,
+                                        )
+                                    }
+                                } catch (e: CancellationException) {
+                                    throw e
+                                } catch (e: Exception) {
+                                    Timber.tag("LyricsHelper").w("${provider.name} threw: ${e.message}")
+                                    null
+                                }
+                            }
                     }
-                } catch (e: CancellationException) {
-                    throw e
-                } catch (e: Exception) {
-                    Timber.tag("LyricsHelper").w("${provider.name} threw: ${e.message}")
-                    null
-                }
 
-                if (providerResult != null && providerResult.isSuccess) {
-                    Timber.tag("LyricsHelper").i("Got lyrics from ${provider.name}")
-                    val filtered = LyricsUtils.filterLyricsCreditLines(providerResult.getOrNull()!!)
-                    return@withTimeoutOrNull LyricsWithProvider(filtered, provider.name)
-                } else {
+                var resolved: LyricsWithProvider? = null
+                for ((provider, attempt) in attempts) {
+                    val providerResult = attempt.await()
+                    if (providerResult != null && providerResult.isSuccess) {
+                        Timber.tag("LyricsHelper").i("Got lyrics from ${provider.name}")
+                        resolved =
+                            LyricsWithProvider(
+                                LyricsUtils.filterLyricsCreditLines(providerResult.getOrNull()!!),
+                                provider.name,
+                            )
+                        break
+                    }
                     val errorMsg = providerResult?.exceptionOrNull()?.message ?: "timeout or exception"
                     Timber.tag("LyricsHelper").w("${provider.name} failed: $errorMsg")
                 }
+
+                // coroutineScope only returns once every child is done, so the losers have to be
+                // cancelled or a slow straggler would hold up a result we already have.
+                attempts.forEach { (_, attempt) -> attempt.cancel() }
+
+                resolved ?: run {
+                    Timber.tag("LyricsHelper").w("No lyrics found after checking all providers")
+                    LyricsWithProvider(LYRICS_NOT_FOUND, PROVIDER_NONE)
+                }
             }
+        } ?: LyricsWithProvider(LYRICS_NOT_FOUND, PROVIDER_NONE)
 
-            Timber.tag("LyricsHelper").w("No lyrics found after checking all providers")
-            LyricsWithProvider(LYRICS_NOT_FOUND, PROVIDER_NONE)
+        if (result.lyrics != LYRICS_NOT_FOUND) {
+            cache.put(mediaMetadata.id, listOf(LyricsResult(result.provider, result.lyrics)))
         }
-
-        return result ?: LyricsWithProvider(LYRICS_NOT_FOUND, PROVIDER_NONE)
+        return result
     }
 
     suspend fun getAllLyrics(
@@ -214,7 +264,9 @@ constructor(
     }
 
     companion object {
-        private const val MAX_CACHE_SIZE = 3
+        // Lyrics are a few KB of text each; three entries meant re-fetching after skipping
+        // back two tracks. The Room LyricsEntity table is still the durable cache.
+        private const val MAX_CACHE_SIZE = 30
     }
 }
 
