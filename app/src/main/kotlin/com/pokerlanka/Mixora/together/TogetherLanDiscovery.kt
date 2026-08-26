@@ -206,23 +206,25 @@ object TogetherLanDiscovery {
         val subnetPrefix = localIp.substringBeforeLast('.') + "."
 
         val candidates = (1..254).map { "$subnetPrefix$it" }
-        val defaultPort = 42117
+        val portsToProbe = listOf(42117, 42118, 42119, 42120)
 
-        val jobs = candidates.map { ip ->
-            async(Dispatchers.IO) {
-                try {
-                    val responseText = httpClient.get("http://$ip:$defaultPort/together/info").bodyAsText()
-                    val roomInfo = TogetherJson.decodeFromString<TogetherRoomInfo>(responseText)
-                    if (roomInfo.code == targetCode) {
-                        TogetherJoinInfo(
-                            host = ip,
-                            port = defaultPort,
-                            sessionId = roomInfo.sessionId,
-                            sessionKey = roomInfo.sessionKey,
-                        )
-                    } else null
-                } catch (_: Exception) {
-                    null
+        val jobs = candidates.flatMap { ip ->
+            portsToProbe.map { port ->
+                async(Dispatchers.IO) {
+                    try {
+                        val responseText = httpClient.get("http://$ip:$port/together/info").bodyAsText()
+                        val roomInfo = TogetherJson.decodeFromString<TogetherRoomInfo>(responseText)
+                        if (roomInfo.code == targetCode) {
+                            TogetherJoinInfo(
+                                host = ip,
+                                port = port,
+                                sessionId = roomInfo.sessionId,
+                                sessionKey = roomInfo.sessionKey,
+                            )
+                        } else null
+                    } catch (_: Exception) {
+                        null
+                    }
                 }
             }
         }

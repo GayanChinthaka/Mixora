@@ -100,32 +100,50 @@ class TogetherServer(
 
     suspend fun currentSettings(): TogetherRoomSettings = mutex.withLock { settings }
 
-    suspend fun start(port: Int) {
-        mutex.withLock {
-            if (engine != null) return
-            engine =
-                embeddedServer(CIO, port = port, host = "0.0.0.0") {
-                    install(WebSockets)
-                    routing {
-                        get("/together/info") {
-                            val info =
-                                TogetherRoomInfo(
-                                    sessionId = sessionId,
-                                    sessionKey = sessionKey,
-                                    code = code,
-                                    hostDisplayName = hostDisplayName,
+    suspend fun start(requestedPort: Int = 42117): Int = mutex.withLock {
+        if (engine != null) return@withLock requestedPort
+
+        val portsToTry = listOf(requestedPort, requestedPort + 1, requestedPort + 2, requestedPort + 3, requestedPort + 4)
+        var lastException: Throwable? = null
+
+        for (p in portsToTry) {
+            try {
+                val srv =
+                    embeddedServer(CIO, port = p, host = "0.0.0.0") {
+                        install(WebSockets)
+                        routing {
+                            get("/together/info") {
+                                val info =
+                                    TogetherRoomInfo(
+                                        sessionId = sessionId,
+                                        sessionKey = sessionKey,
+                                        code = code,
+                                        hostDisplayName = hostDisplayName,
+                                    )
+                                call.respondText(
+                                    text = TogetherJson.encodeToString(TogetherRoomInfo.serializer(), info),
+                                    contentType = io.ktor.http.ContentType.Application.Json,
                                 )
-                            call.respondText(
-                                text = TogetherJson.encodeToString(TogetherRoomInfo.serializer(), info),
-                                contentType = io.ktor.http.ContentType.Application.Json,
-                            )
-                        }
-                        webSocket("/together") {
-                            handleClient()
+                            }
+                            webSocket("/together") {
+                                handleClient()
+                            }
                         }
                     }
-                }.also { it.start(wait = false) }
+                srv.start(wait = false)
+                engine = srv
+
+                val actualPort = runCatching {
+                    srv.engine.resolvedConnectors().firstOrNull()?.port
+                }.getOrNull() ?: p
+
+                return@withLock actualPort
+            } catch (t: Throwable) {
+                lastException = t
+                kotlinx.coroutines.delay(50)
+            }
         }
+        throw (lastException ?: IllegalStateException("Could not bind TogetherServer to port"))
     }
 
     suspend fun stop() {
@@ -141,7 +159,7 @@ class TogetherServer(
         }
         clients.clear()
 
-        runCatching { eng.stop(1000, 2000) }
+        runCatching { eng.stop(50, 200) }
     }
 
     suspend fun updateSettings(newSettings: TogetherRoomSettings) {

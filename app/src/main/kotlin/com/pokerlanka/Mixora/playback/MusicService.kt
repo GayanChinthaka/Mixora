@@ -230,6 +230,8 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.plus
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import timber.log.Timber
@@ -306,6 +308,8 @@ class MusicService :
 
     val openPlayerEvent = MutableSharedFlow<Unit>(extraBufferCapacity = 64)
     val togetherSessionState = MutableStateFlow<com.pokerlanka.mixora.together.TogetherSessionState>(com.pokerlanka.mixora.together.TogetherSessionState.Idle)
+    private val togetherMutex = Mutex()
+    private var togetherJob: Job? = null
     private var togetherServer: com.pokerlanka.mixora.together.TogetherServer? = null
     private var togetherClient: com.pokerlanka.mixora.together.TogetherClient? = null
     private var togetherHostingCode: String? = null
@@ -381,103 +385,148 @@ class MusicService :
         )
     }
 
+    private fun handleTogetherServerEvent(event: com.pokerlanka.mixora.together.TogetherServerEvent) {
+        when (event) {
+            is com.pokerlanka.mixora.together.TogetherServerEvent.JoinRequested,
+            is com.pokerlanka.mixora.together.TogetherServerEvent.ParticipantJoined,
+            is com.pokerlanka.mixora.together.TogetherServerEvent.ParticipantLeft,
+            is com.pokerlanka.mixora.together.TogetherServerEvent.HostTransferred,
+            -> {
+                updateAndBroadcastTogetherRoomState()
+            }
+
+            is com.pokerlanka.mixora.together.TogetherServerEvent.AddTrackRequested -> {
+                if (togetherHostingSettings.allowGuestsToAddTracks && ::player.isInitialized) {
+                    val track = event.request.track
+                    val mediaItem =
+                        com.pokerlanka.mixora.models.MediaMetadata(
+                            id = track.id,
+                            title = track.title,
+                            artists = track.artists.map { com.pokerlanka.mixora.models.MediaMetadata.Artist(id = null, name = it) },
+                            duration = track.durationSec,
+                            thumbnailUrl = track.thumbnailUrl,
+                        ).toMediaItem()
+                    if (event.request.mode == com.pokerlanka.mixora.together.AddTrackMode.PLAY_NEXT) {
+                        val nextIndex = (player.currentMediaItemIndex + 1).coerceAtMost(player.mediaItemCount)
+                        player.addMediaItem(nextIndex, mediaItem)
+                    } else {
+                        player.addMediaItem(mediaItem)
+                    }
+                    updateAndBroadcastTogetherRoomState()
+                }
+            }
+
+            is com.pokerlanka.mixora.together.TogetherServerEvent.ControlRequested -> {
+                if (togetherHostingSettings.allowGuestsToControlPlayback && ::player.isInitialized) {
+                    when (val action = event.request.action) {
+                        is com.pokerlanka.mixora.together.ControlAction.Play -> player.play()
+                        is com.pokerlanka.mixora.together.ControlAction.Pause -> player.pause()
+                        is com.pokerlanka.mixora.together.ControlAction.SkipNext -> player.seekToNextMediaItem()
+                        is com.pokerlanka.mixora.together.ControlAction.SkipPrevious -> player.seekToPreviousMediaItem()
+                        is com.pokerlanka.mixora.together.ControlAction.SeekTo -> player.seekTo(action.positionMs)
+                        is com.pokerlanka.mixora.together.ControlAction.SeekToIndex -> player.seekTo(action.index, action.positionMs)
+                        is com.pokerlanka.mixora.together.ControlAction.SeekToTrack -> {
+                            val index = (0 until player.mediaItemCount).indexOfFirst { player.getMediaItemAt(it).mediaId == action.trackId }
+                            if (index != -1) {
+                                player.seekTo(index, action.positionMs)
+                            }
+                        }
+                        is com.pokerlanka.mixora.together.ControlAction.SetRepeatMode -> player.repeatMode = action.repeatMode
+                        is com.pokerlanka.mixora.together.ControlAction.SetShuffleEnabled -> player.shuffleModeEnabled = action.shuffleEnabled
+                    }
+                    updateAndBroadcastTogetherRoomState()
+                }
+            }
+
+            else -> Unit
+        }
+    }
+
     fun startTogetherHost(
         displayName: String,
         settings: com.pokerlanka.mixora.together.TogetherRoomSettings,
         port: Int = 42117,
     ) {
-        leaveTogether()
-        val sessionId = java.util.UUID.randomUUID().toString()
-        val sessionKey = java.util.UUID.randomUUID().toString()
-        val code = (100000..999999).random().toString()
+        guestEventsJob?.cancel()
+        guestEventsJob = null
+        togetherJob?.cancel()
 
-        togetherHostingCode = code
-        togetherHostingPort = port
-        togetherHostingSessionId = sessionId
-        togetherHostingSettings = settings
+        val previousServer = togetherServer
+        togetherServer = null
+        val previousClient = togetherClient
+        togetherClient = null
 
-        val server =
-            com.pokerlanka.mixora.together.TogetherServer(
-                scope = scope,
-                sessionId = sessionId,
-                sessionKey = sessionKey,
-                code = code,
-                hostDisplayName = displayName,
-                initialSettings = settings,
-            )
-        togetherServer = server
+        togetherJob = scope.launch(Dispatchers.IO) {
+            togetherMutex.withLock {
+                try {
+                    com.pokerlanka.mixora.together.TogetherLanDiscovery.unregisterRoom()
+                } catch (e: Exception) {
+                    Timber.tag(TAG).e(e, "Error unregistering NSD room")
+                }
+                try {
+                    previousServer?.stop()
+                } catch (e: Exception) {
+                    Timber.tag(TAG).e(e, "Error stopping previous server")
+                }
+                try {
+                    previousClient?.disconnect()
+                } catch (e: Exception) {
+                    Timber.tag(TAG).e(e, "Error disconnecting previous client")
+                }
 
-        server.onEvent = { event ->
-            scope.launch(Dispatchers.Main) {
-                when (event) {
-                    is com.pokerlanka.mixora.together.TogetherServerEvent.JoinRequested,
-                    is com.pokerlanka.mixora.together.TogetherServerEvent.ParticipantJoined,
-                    is com.pokerlanka.mixora.together.TogetherServerEvent.ParticipantLeft,
-                    is com.pokerlanka.mixora.together.TogetherServerEvent.HostTransferred,
-                    -> {
+                val sessionId = java.util.UUID.randomUUID().toString()
+                val sessionKey = java.util.UUID.randomUUID().toString()
+                val code = (100000..999999).random().toString()
+
+                togetherHostingCode = code
+                togetherHostingSessionId = sessionId
+                togetherHostingSettings = settings
+
+                val server =
+                    com.pokerlanka.mixora.together.TogetherServer(
+                        scope = scope,
+                        sessionId = sessionId,
+                        sessionKey = sessionKey,
+                        code = code,
+                        hostDisplayName = displayName,
+                        initialSettings = settings,
+                    )
+                togetherServer = server
+
+                server.onEvent = { event ->
+                    scope.launch(Dispatchers.Main) {
+                        handleTogetherServerEvent(event)
+                    }
+                }
+
+                try {
+                    val boundPort = server.start(port)
+                    togetherHostingPort = boundPort
+                    com.pokerlanka.mixora.together.TogetherLanDiscovery.registerRoom(
+                        context = this@MusicService,
+                        code = code,
+                        port = boundPort,
+                        sessionId = sessionId,
+                        sessionKey = sessionKey,
+                        displayName = displayName,
+                    )
+                    withContext(Dispatchers.Main) {
                         updateAndBroadcastTogetherRoomState()
                     }
-
-                    is com.pokerlanka.mixora.together.TogetherServerEvent.AddTrackRequested -> {
-                        if (togetherHostingSettings.allowGuestsToAddTracks && ::player.isInitialized) {
-                            val track = event.request.track
-                            val mediaItem =
-                                com.pokerlanka.mixora.models.MediaMetadata(
-                                    id = track.id,
-                                    title = track.title,
-                                    artists = track.artists.map { com.pokerlanka.mixora.models.MediaMetadata.Artist(id = null, name = it) },
-                                    duration = track.durationSec,
-                                    thumbnailUrl = track.thumbnailUrl,
-                                ).toMediaItem()
-                            if (event.request.mode == com.pokerlanka.mixora.together.AddTrackMode.PLAY_NEXT) {
-                                val nextIndex = (player.currentMediaItemIndex + 1).coerceAtMost(player.mediaItemCount)
-                                player.addMediaItem(nextIndex, mediaItem)
-                            } else {
-                                player.addMediaItem(mediaItem)
-                            }
-                            updateAndBroadcastTogetherRoomState()
-                        }
+                } catch (e: Exception) {
+                    Timber.tag(TAG).e(e, "Failed to start Together host server")
+                    server.stop()
+                    if (togetherServer === server) {
+                        togetherServer = null
                     }
-
-                    is com.pokerlanka.mixora.together.TogetherServerEvent.ControlRequested -> {
-                        if (togetherHostingSettings.allowGuestsToControlPlayback && ::player.isInitialized) {
-                            when (val action = event.request.action) {
-                                is com.pokerlanka.mixora.together.ControlAction.Play -> player.play()
-                                is com.pokerlanka.mixora.together.ControlAction.Pause -> player.pause()
-                                is com.pokerlanka.mixora.together.ControlAction.SkipNext -> player.seekToNextMediaItem()
-                                is com.pokerlanka.mixora.together.ControlAction.SkipPrevious -> player.seekToPreviousMediaItem()
-                                is com.pokerlanka.mixora.together.ControlAction.SeekTo -> player.seekTo(action.positionMs)
-                                is com.pokerlanka.mixora.together.ControlAction.SeekToIndex -> player.seekTo(action.index, action.positionMs)
-                                is com.pokerlanka.mixora.together.ControlAction.SeekToTrack -> {
-                                    val index = (0 until player.mediaItemCount).indexOfFirst { player.getMediaItemAt(it).mediaId == action.trackId }
-                                    if (index != -1) {
-                                        player.seekTo(index, action.positionMs)
-                                    }
-                                }
-                                is com.pokerlanka.mixora.together.ControlAction.SetRepeatMode -> player.repeatMode = action.repeatMode
-                                is com.pokerlanka.mixora.together.ControlAction.SetShuffleEnabled -> player.shuffleModeEnabled = action.shuffleEnabled
-                            }
-                            updateAndBroadcastTogetherRoomState()
-                        }
+                    togetherHostingCode = null
+                    togetherHostingSessionId = null
+                    withContext(Dispatchers.Main) {
+                        togetherSessionState.value = com.pokerlanka.mixora.together.TogetherSessionState.Error(
+                            message = e.localizedMessage ?: "Failed to start host session"
+                        )
                     }
-
-                    else -> Unit
                 }
-            }
-        }
-
-        scope.launch(Dispatchers.IO) {
-            server.start(port)
-            com.pokerlanka.mixora.together.TogetherLanDiscovery.registerRoom(
-                context = this@MusicService,
-                code = code,
-                port = port,
-                sessionId = sessionId,
-                sessionKey = sessionKey,
-                displayName = displayName,
-            )
-            withContext(Dispatchers.Main) {
-                updateAndBroadcastTogetherRoomState()
             }
         }
     }
@@ -494,76 +543,117 @@ class MusicService :
         joinInfo: com.pokerlanka.mixora.together.TogetherJoinInfo,
         displayName: String,
     ) {
-        leaveTogether()
-        val client = com.pokerlanka.mixora.together.TogetherClient(externalScope = scope)
-        togetherClient = client
+        guestEventsJob?.cancel()
+        guestEventsJob = null
+        togetherJob?.cancel()
 
-        guestEventsJob =
-            scope.launch(Dispatchers.Main) {
-                client.events.collect { event ->
-                    when (event) {
-                        is com.pokerlanka.mixora.together.TogetherClientEvent.Welcome -> {
-                            // Welcomed as guest
-                        }
+        val serverToStop = togetherServer
+        togetherServer = null
+        val clientToStop = togetherClient
+        togetherClient = null
+        togetherHostingCode = null
+        togetherHostingSessionId = null
 
-                        is com.pokerlanka.mixora.together.TogetherClientEvent.RoomState -> {
-                            val selfId =
-                                client.state.value.let {
-                                    if (it is com.pokerlanka.mixora.together.TogetherClientState.Connected) it.session.sessionId else ""
+        togetherJob = scope.launch(Dispatchers.IO) {
+            togetherMutex.withLock {
+                try {
+                    com.pokerlanka.mixora.together.TogetherLanDiscovery.unregisterRoom()
+                } catch (e: Exception) {
+                    Timber.tag(TAG).e(e, "Error unregistering room before join")
+                }
+                try {
+                    serverToStop?.stop()
+                } catch (e: Exception) {
+                    Timber.tag(TAG).e(e, "Error stopping server before join")
+                }
+                try {
+                    clientToStop?.disconnect()
+                } catch (e: Exception) {
+                    Timber.tag(TAG).e(e, "Error disconnecting client before join")
+                }
+
+                val client = com.pokerlanka.mixora.together.TogetherClient(externalScope = scope)
+                togetherClient = client
+
+                withContext(Dispatchers.Main) {
+                    guestEventsJob =
+                        scope.launch(Dispatchers.Main) {
+                            client.events.collect { event ->
+                                when (event) {
+                                    is com.pokerlanka.mixora.together.TogetherClientEvent.Welcome -> Unit
+                                    is com.pokerlanka.mixora.together.TogetherClientEvent.RoomState -> {
+                                        val selfId =
+                                            client.state.value.let {
+                                                if (it is com.pokerlanka.mixora.together.TogetherClientState.Connected) it.session.sessionId else ""
+                                            }
+                                        togetherSessionState.value =
+                                            com.pokerlanka.mixora.together.TogetherSessionState.Joined(
+                                                role = com.pokerlanka.mixora.together.TogetherRole.Guest,
+                                                sessionId = event.state.sessionId,
+                                                selfParticipantId = selfId,
+                                                roomState = event.state,
+                                            )
+                                    }
+                                    is com.pokerlanka.mixora.together.TogetherClientEvent.JoinDecision -> {
+                                        if (!event.decision.approved) {
+                                            togetherSessionState.value =
+                                                com.pokerlanka.mixora.together.TogetherSessionState.Error("Join request rejected by host")
+                                        }
+                                    }
+                                    is com.pokerlanka.mixora.together.TogetherClientEvent.Error -> {
+                                        togetherSessionState.value =
+                                            com.pokerlanka.mixora.together.TogetherSessionState.Error(event.message)
+                                    }
+                                    is com.pokerlanka.mixora.together.TogetherClientEvent.ServerIssue -> {
+                                        togetherSessionState.value =
+                                            com.pokerlanka.mixora.together.TogetherSessionState.Error(event.message)
+                                    }
+                                    is com.pokerlanka.mixora.together.TogetherClientEvent.Disconnected -> {
+                                        togetherSessionState.value =
+                                            com.pokerlanka.mixora.together.TogetherSessionState.Idle
+                                    }
+                                    else -> Unit
                                 }
-                            togetherSessionState.value =
-                                com.pokerlanka.mixora.together.TogetherSessionState.Joined(
-                                    role = com.pokerlanka.mixora.together.TogetherRole.Guest,
-                                    sessionId = event.state.sessionId,
-                                    selfParticipantId = selfId,
-                                    roomState = event.state,
-                                )
-                            // Note: Audio plays exclusively on Host device. Guest does not stream audio locally.
-                        }
-
-                        is com.pokerlanka.mixora.together.TogetherClientEvent.JoinDecision -> {
-                            if (!event.decision.approved) {
-                                togetherSessionState.value =
-                                    com.pokerlanka.mixora.together.TogetherSessionState.Error("Join request rejected by host")
                             }
                         }
-
-                        is com.pokerlanka.mixora.together.TogetherClientEvent.Error -> {
-                            togetherSessionState.value =
-                                com.pokerlanka.mixora.together.TogetherSessionState.Error(event.message)
-                        }
-
-                        is com.pokerlanka.mixora.together.TogetherClientEvent.ServerIssue -> {
-                            togetherSessionState.value =
-                                com.pokerlanka.mixora.together.TogetherSessionState.Error(event.message)
-                        }
-
-                        is com.pokerlanka.mixora.together.TogetherClientEvent.Disconnected -> {
-                            togetherSessionState.value =
-                                com.pokerlanka.mixora.together.TogetherSessionState.Idle
-                        }
-
-                        else -> Unit
-                    }
+                    client.connect(joinInfo, displayName)
                 }
             }
-
-        client.connect(joinInfo, displayName)
+        }
     }
 
     fun leaveTogether() {
         guestEventsJob?.cancel()
         guestEventsJob = null
+        togetherJob?.cancel()
+
+        val serverToStop = togetherServer
+        togetherServer = null
+        val clientToStop = togetherClient
+        togetherClient = null
         togetherHostingCode = null
         togetherHostingSessionId = null
-        scope.launch(Dispatchers.IO) {
-            com.pokerlanka.mixora.together.TogetherLanDiscovery.unregisterRoom()
-            togetherServer?.stop()
-            togetherServer = null
-            togetherClient?.disconnect()
-            togetherClient = null
-            withContext(Dispatchers.Main) {
-                togetherSessionState.value = com.pokerlanka.mixora.together.TogetherSessionState.Idle
+
+        togetherJob = scope.launch(Dispatchers.IO) {
+            togetherMutex.withLock {
+                try {
+                    com.pokerlanka.mixora.together.TogetherLanDiscovery.unregisterRoom()
+                } catch (e: Exception) {
+                    Timber.tag(TAG).e(e, "Error unregistering room on leave")
+                }
+                try {
+                    serverToStop?.stop()
+                } catch (e: Exception) {
+                    Timber.tag(TAG).e(e, "Error stopping server on leave")
+                }
+                try {
+                    clientToStop?.disconnect()
+                } catch (e: Exception) {
+                    Timber.tag(TAG).e(e, "Error disconnecting client on leave")
+                }
+                withContext(Dispatchers.Main) {
+                    togetherSessionState.value = com.pokerlanka.mixora.together.TogetherSessionState.Idle
+                }
             }
         }
     }
@@ -4115,7 +4205,17 @@ class MusicService :
         playerSilenceProcessors.remove(player)
         initialBufferRecoveryJob?.cancel()
         controllerFuture?.let { MediaController.releaseFuture(it) }
-        controllerFuture = null
+        runCatching {
+            runBlocking(Dispatchers.IO) {
+                togetherJob?.cancel()
+                com.pokerlanka.mixora.together.TogetherLanDiscovery.unregisterRoom()
+                togetherServer?.stop()
+                togetherServer = null
+                togetherClient?.disconnect()
+                togetherClient = null
+            }
+        }
+
         player.release()
         scope.cancel()
         super.onDestroy()
