@@ -526,7 +526,7 @@ fun DailyDiscoverCard(
                 model =
                     ImageRequest
                         .Builder(LocalContext.current)
-                        .data(dailyDiscover.recommendation.thumbnail?.resize(1080, 1080))
+                        .data(dailyDiscover.recommendation.thumbnail?.resize(com.pokerlanka.mixora.ui.utils.HEADER_ARTWORK_SIZE, com.pokerlanka.mixora.ui.utils.HEADER_ARTWORK_SIZE))
                         .crossfade(true)
                         .build(),
                 contentDescription = null,

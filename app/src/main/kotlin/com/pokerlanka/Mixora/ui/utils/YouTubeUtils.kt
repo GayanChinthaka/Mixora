@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Mixora Project (C) 2026
  * Author : Gayan Chinthaka
  * Company: Pokerlanka
@@ -9,14 +9,14 @@
 package com.pokerlanka.mixora.ui.utils
 
 /**
- * Edge length requested for now-playing artwork — the player pager, the queue, and whatever the
- * media session hands to Coil.
- *
- * These URLs used to ask for 1080x1080, which decodes to ~4.6 MB of heap per track and is a
- * noticeably slower download on a weak connection. Album art carries very little fine detail, so
- * the cost was buying almost nothing on screen.
+ * Standardized thumbnail edge lengths across the app to balance crisp visual clarity
+ * with low memory consumption and fast loading.
  */
 const val PLAYER_ARTWORK_SIZE = 512
+const val HEADER_ARTWORK_SIZE = 512
+const val GRID_THUMBNAIL_SIZE = 288
+const val LIST_THUMBNAIL_SIZE = 200
+const val MINI_PLAYER_THUMBNAIL_SIZE = 120
 
 fun String.resize(
     width: Int? = null,

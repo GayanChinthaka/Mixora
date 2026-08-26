@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Mixora Project (C) 2026
  * Author : Gayan Chinthaka
  * Company: Pokerlanka
@@ -83,7 +83,7 @@ class AccountViewModel @Inject constructor(
             YouTube.library("FEmusic_library_corpus_artists").completed().onSuccess {
                 artists.value = it.items.filterIsInstance<ArtistItem>().map { artist ->
                     artist.copy(
-                        thumbnail = artist.thumbnail?.resize(544, 544)
+                        thumbnail = artist.thumbnail?.resize(com.pokerlanka.mixora.ui.utils.GRID_THUMBNAIL_SIZE, com.pokerlanka.mixora.ui.utils.GRID_THUMBNAIL_SIZE)
                     )
                 }
             }.onFailure {

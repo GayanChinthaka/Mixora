@@ -1871,7 +1871,7 @@ interface DatabaseDao {
         update(
             artist.copy(
                 name = artistPage.artist.title,
-                thumbnailUrl = artistPage.artist.thumbnail?.resize(1080, 1080),
+                thumbnailUrl = artistPage.artist.thumbnail?.resize(com.pokerlanka.mixora.ui.utils.HEADER_ARTWORK_SIZE, com.pokerlanka.mixora.ui.utils.HEADER_ARTWORK_SIZE),
                 lastUpdateTime = LocalDateTime.now()
             )
         )

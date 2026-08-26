@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Mixora Project (C) 2026
  * Author : Gayan Chinthaka
  * Company: Pokerlanka
@@ -300,7 +300,7 @@ fun ArtistScreen(
                                         },
                             ) {
                                 AsyncImage(
-                                    model = thumbnail.resize(1200, 1200),
+                                    model = thumbnail.resize(com.pokerlanka.mixora.ui.utils.HEADER_ARTWORK_SIZE, com.pokerlanka.mixora.ui.utils.HEADER_ARTWORK_SIZE),
                                     contentDescription = null,
                                     contentScale = ContentScale.Crop,
                                     modifier =

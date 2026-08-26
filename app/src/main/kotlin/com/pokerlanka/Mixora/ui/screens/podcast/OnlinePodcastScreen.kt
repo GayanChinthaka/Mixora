@@ -1,4 +1,4 @@
-﻿package com.pokerlanka.mixora.ui.screens.podcast
+package com.pokerlanka.mixora.ui.screens.podcast
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -317,7 +317,7 @@ private fun PodcastHeader(
     ) {
         AsyncImage(
             model = ImageRequest.Builder(context)
-                .data(podcast.thumbnail?.resize(1080, 1080))
+                .data(podcast.thumbnail?.resize(com.pokerlanka.mixora.ui.utils.HEADER_ARTWORK_SIZE, com.pokerlanka.mixora.ui.utils.HEADER_ARTWORK_SIZE))
                 .build(),
             contentDescription = null,
             contentScale = ContentScale.Crop,

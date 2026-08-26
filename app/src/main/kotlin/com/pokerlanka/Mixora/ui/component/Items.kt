@@ -712,7 +712,7 @@ fun ArtistGridItem(
     thumbnailContent = {
         AsyncImage(
             model = ImageRequest.Builder(LocalContext.current)
-                .data(artist.artist.thumbnailUrl?.resize(544, 544))
+                .data(artist.artist.thumbnailUrl?.resize(com.pokerlanka.mixora.ui.utils.GRID_THUMBNAIL_SIZE, com.pokerlanka.mixora.ui.utils.GRID_THUMBNAIL_SIZE))
                 .memoryCachePolicy(coil3.request.CachePolicy.ENABLED)
                 .diskCachePolicy(coil3.request.CachePolicy.ENABLED)
                 .networkCachePolicy(coil3.request.CachePolicy.ENABLED)
@@ -1453,7 +1453,7 @@ fun ItemThumbnail(
         if (albumIndex == null) {
             AsyncImage(
                 model = ImageRequest.Builder(LocalContext.current)
-                    .data(thumbnailUrl?.resize(544, 544))
+                    .data(thumbnailUrl?.resize(com.pokerlanka.mixora.ui.utils.GRID_THUMBNAIL_SIZE, com.pokerlanka.mixora.ui.utils.GRID_THUMBNAIL_SIZE))
                     .memoryCachePolicy(coil3.request.CachePolicy.ENABLED)
                     .diskCachePolicy(coil3.request.CachePolicy.ENABLED)
                     .networkCachePolicy(coil3.request.CachePolicy.ENABLED)
