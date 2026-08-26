@@ -237,6 +237,7 @@ import okhttp3.OkHttpClient
 import timber.log.Timber
 import java.io.ObjectInputStream
 import java.io.ObjectOutputStream
+import java.io.Serializable
 import java.time.LocalDateTime
 import javax.inject.Inject
 import kotlin.random.Random
@@ -309,6 +310,10 @@ class MusicService :
     val openPlayerEvent = MutableSharedFlow<Unit>(extraBufferCapacity = 64)
     val togetherSessionState = MutableStateFlow<com.pokerlanka.mixora.together.TogetherSessionState>(com.pokerlanka.mixora.together.TogetherSessionState.Idle)
     private val togetherMutex = Mutex()
+
+    // Serializes disk writes so a periodic save and a queue-change save cannot
+    // interleave writes into the same persisted files.
+    private val queueSaveMutex = Mutex()
     private var togetherJob: Job? = null
     private var togetherServer: com.pokerlanka.mixora.together.TogetherServer? = null
     private var togetherClient: com.pokerlanka.mixora.together.TogetherClient? = null
@@ -1520,15 +1525,6 @@ class MusicService :
                 if (currentMetadata?.isEpisode == true && player.isPlaying && player.currentPosition > 0) {
                     previousEpisodePosition = player.currentPosition
                     saveEpisodePosition(currentMetadata.id, player.currentPosition)
-                }
-            }
-        }
-
-        scope.launch {
-            while (isActive) {
-                delay(10.seconds)
-                if (cachedPersistentQueue && player.isPlaying) {
-                    saveQueueToDisk()
                 }
             }
         }
@@ -4005,78 +4001,102 @@ class MusicService :
         }
     }
 
-    private fun saveQueueToDisk() {
+    /**
+     * Everything a persisted save needs, captured off the live player.
+     *
+     * ExoPlayer state has to be read on the application thread, but Java serialization plus
+     * three file writes is far too much work to keep there — it ran on [scope]'s Main
+     * dispatcher on every queue change and twice a minute during playback. Only the cheap
+     * reads happen on the player thread now; [writeQueueSnapshot] takes the rest to IO.
+     */
+    private class QueueSnapshot(
+        val queue: PersistQueue,
+        val automix: PersistQueue,
+        val playerState: PersistPlayerState,
+    )
+
+    /** Must be called on the application thread — it reads [player] directly. */
+    private fun buildQueueSnapshot(): QueueSnapshot? {
         if (player.mediaItemCount == 0) {
             Timber.tag(TAG).d("Skipping queue save - no media items")
-            return
+            return null
         }
 
-        try {
-            val persistQueue =
-                currentQueue.toPersistQueue(
-                    title = queueTitle.value,
-                    items = player.mediaItems.mapNotNull { it.metadata },
-                    mediaItemIndex = player.currentMediaItemIndex,
-                    position = player.currentPosition,
-                )
+        return runCatching {
+            QueueSnapshot(
+                queue =
+                    currentQueue.toPersistQueue(
+                        title = queueTitle.value,
+                        items = player.mediaItems.mapNotNull { it.metadata },
+                        mediaItemIndex = player.currentMediaItemIndex,
+                        position = player.currentPosition,
+                    ),
+                automix =
+                    PersistQueue(
+                        title = "automix",
+                        items = automixItems.value.mapNotNull { it.metadata },
+                        mediaItemIndex = 0,
+                        position = 0,
+                    ),
+                playerState =
+                    PersistPlayerState(
+                        playWhenReady = player.playWhenReady,
+                        repeatMode = player.repeatMode,
+                        shuffleModeEnabled = player.shuffleModeEnabled,
+                        volume = playerVolume.value,
+                        currentPosition = player.currentPosition,
+                        currentMediaItemIndex = player.currentMediaItemIndex,
+                        playbackState = player.playbackState,
+                    ),
+            )
+        }.onFailure {
+            Timber.tag(TAG).e(it, "Error during queue save operation")
+            reportException(it)
+        }.getOrNull()
+    }
 
-            val persistAutomix =
-                PersistQueue(
-                    title = "automix",
-                    items = automixItems.value.mapNotNull { it.metadata },
-                    mediaItemIndex = 0,
-                    position = 0,
-                )
+    /** Blocking; call from IO only. */
+    private fun writeQueueSnapshot(snapshot: QueueSnapshot) {
+        writePersistedFile(PERSISTENT_QUEUE_FILE, snapshot.queue, "Queue")
+        writePersistedFile(PERSISTENT_AUTOMIX_FILE, snapshot.automix, "Automix")
+        writePersistedFile(PERSISTENT_PLAYER_STATE_FILE, snapshot.playerState, "Player state")
+    }
 
-            val persistPlayerState =
-                PersistPlayerState(
-                    playWhenReady = player.playWhenReady,
-                    repeatMode = player.repeatMode,
-                    shuffleModeEnabled = player.shuffleModeEnabled,
-                    volume = playerVolume.value,
-                    currentPosition = player.currentPosition,
-                    currentMediaItemIndex = player.currentMediaItemIndex,
-                    playbackState = player.playbackState,
-                )
-
-            runCatching {
-                filesDir.resolve(PERSISTENT_QUEUE_FILE).outputStream().use { fos ->
-                    ObjectOutputStream(fos).use { oos ->
-                        oos.writeObject(persistQueue)
-                    }
+    private fun writePersistedFile(
+        fileName: String,
+        value: Serializable,
+        label: String,
+    ) {
+        runCatching {
+            filesDir.resolve(fileName).outputStream().use { fos ->
+                ObjectOutputStream(fos).use { oos ->
+                    oos.writeObject(value)
                 }
-                Timber.tag(TAG).d("Queue saved successfully")
-            }.onFailure {
-                Timber.tag(TAG).e(it, "Failed to save queue")
-                reportException(it)
             }
+            Timber.tag(TAG).d("$label saved successfully")
+        }.onFailure {
+            Timber.tag(TAG).e(it, "Failed to save $label")
+            reportException(it)
+        }
+    }
 
-            runCatching {
-                filesDir.resolve(PERSISTENT_AUTOMIX_FILE).outputStream().use { fos ->
-                    ObjectOutputStream(fos).use { oos ->
-                        oos.writeObject(persistAutomix)
-                    }
-                }
-                Timber.tag(TAG).d("Automix saved successfully")
-            }.onFailure {
-                Timber.tag(TAG).e(it, "Failed to save automix")
-                reportException(it)
-            }
+    /**
+     * Snapshots on the caller's (application) thread and writes on IO. The write itself has no
+     * suspension points, so a [scope] cancellation can only drop the save before it starts —
+     * never halfway through a file.
+     */
+    private fun saveQueueToDisk() {
+        val snapshot = buildQueueSnapshot() ?: return
+        scope.launch(Dispatchers.IO) {
+            queueSaveMutex.withLock { writeQueueSnapshot(snapshot) }
+        }
+    }
 
-            runCatching {
-                filesDir.resolve(PERSISTENT_PLAYER_STATE_FILE).outputStream().use { fos ->
-                    ObjectOutputStream(fos).use { oos ->
-                        oos.writeObject(persistPlayerState)
-                    }
-                }
-                Timber.tag(TAG).d("Player state saved successfully")
-            }.onFailure {
-                Timber.tag(TAG).e(it, "Failed to save player state")
-                reportException(it)
-            }
-        } catch (e: Exception) {
-            Timber.tag(TAG).e(e, "Error during queue save operation")
-            reportException(e)
+    /** [onDestroy] cannot return before the queue reaches disk, so this one waits. */
+    private fun saveQueueToDiskBlocking() {
+        val snapshot = buildQueueSnapshot() ?: return
+        runBlocking(Dispatchers.IO) {
+            queueSaveMutex.withLock { writeQueueSnapshot(snapshot) }
         }
     }
 
@@ -4192,7 +4212,7 @@ class MusicService :
         audioManager.unregisterAudioDeviceCallback(audioDeviceCallback)
         castConnectionHandler?.release()
         if (dataStore.get(PersistentQueueKey, true)) {
-            saveQueueToDisk()
+            saveQueueToDiskBlocking()
         }
         connectivityObserver.unregister()
         abandonAudioFocus()

@@ -501,6 +501,11 @@ class MainActivity : ComponentActivity() {
                                         ImageRequest
                                             .Builder(this@MainActivity)
                                             .data(song.thumbnailUrl)
+                                            // Only Palette reads this bitmap, and Palette samples
+                                            // down to ~112x112 anyway. Decoding the full-size
+                                            // artwork as a software bitmap cost ~5 MB of heap per
+                                            // track change for eight colours.
+                                            .size(100, 100)
                                             .allowHardware(false)
                                             .memoryCachePolicy(CachePolicy.ENABLED)
                                             .diskCachePolicy(CachePolicy.ENABLED)

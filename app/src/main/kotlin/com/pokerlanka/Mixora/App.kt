@@ -10,6 +10,7 @@ import android.app.Application
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.ComponentName
+import android.content.ComponentCallbacks2
 import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
@@ -299,6 +300,14 @@ class App :
     @Volatile
     private var cachedCoilCacheSize: Int? = null
 
+    /**
+     * Set by [newImageLoader]. Read by [onTrimMemory] so a trim callback can release the image
+     * cache without *constructing* the loader (which would hit `runBlocking` on the main thread
+     * before [cachedCoilCacheSize] is warm).
+     */
+    @Volatile
+    private var singletonImageLoader: ImageLoader? = null
+
     override fun newImageLoader(context: PlatformContext): ImageLoader {
         val cacheSize = cachedCoilCacheSize ?: runBlocking {
             dataStore.data.map { it[MaxImageCacheSizeKey] ?: 512 }.first()
@@ -329,6 +338,26 @@ class App :
                     networkCachePolicy(CachePolicy.ENABLED)
                 }
             }.build()
+            .also { singletonImageLoader = it }
+    }
+
+    /**
+     * Coil's memory cache is the largest thing this process holds — up to 15% of the heap. Nothing
+     * handed any of it back under memory pressure, which made the app an easy kill target while
+     * backgrounded. Playback is unaffected either way: notification artwork reloads from disk.
+     */
+    override fun onTrimMemory(level: Int) {
+        super.onTrimMemory(level)
+        val memoryCache = singletonImageLoader?.memoryCache ?: return
+        when {
+            level >= ComponentCallbacks2.TRIM_MEMORY_RUNNING_CRITICAL -> memoryCache.clear()
+            level >= ComponentCallbacks2.TRIM_MEMORY_RUNNING_LOW -> memoryCache.trimToSize(memoryCache.size / 2)
+        }
+    }
+
+    override fun onLowMemory() {
+        super.onLowMemory()
+        singletonImageLoader?.memoryCache?.clear()
     }
 
     companion object {

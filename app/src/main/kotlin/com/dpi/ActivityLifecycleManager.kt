@@ -4,44 +4,13 @@ import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.Application
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
 import timber.log.Timber
-import java.util.Collections
-import java.util.concurrent.ConcurrentHashMap
 
 /**
  * Manages activity lifecycle events and associated logic.
  * Provides hooks for monitoring and responding to activity lifecycle changes.
  */
 abstract class ActivityLifecycleManager : BaseLifecycleContentProvider() {
-
-    private val activeActivities: MutableSet<Activity> =
-        Collections.newSetFromMap(ConcurrentHashMap())
-
-    private val handler = Handler(Looper.getMainLooper())
-
-    private val activityTimerRunnable: Runnable = object : Runnable {
-        override fun run() {
-            try {
-                activeActivities.forEach { activity ->
-                    try {
-                        onActivityTimer(activity)
-                    } catch (e: Exception) {
-                        Timber.tag(TAG).w(e, "Error in activity timer")
-                    }
-                }
-                handler.postDelayed(this, activityTimerDelayMillis.toLong())
-            } catch (e: Exception) {
-                Timber.tag(TAG).w(e, "Error in activity timer runnable")
-            }
-        }
-    }
-
-    protected open val activityTimerDelayMillis: Int
-        get() = 3000
-
-    protected open fun onActivityTimer(activity: Activity) {}
 
     override fun onCreate(): Boolean {
         val application = getApplication() ?: return true
@@ -60,14 +29,10 @@ abstract class ActivityLifecycleManager : BaseLifecycleContentProvider() {
             }
 
             override fun onActivityResumed(activity: Activity) {
-                activeActivities.add(activity)
-                handler.removeCallbacksAndMessages(null)
-                handler.post(activityTimerRunnable)
                 this@ActivityLifecycleManager.onActivityResumed(activity)
             }
 
             override fun onActivityPaused(activity: Activity) {
-                activeActivities.remove(activity)
                 this@ActivityLifecycleManager.onActivityPaused(activity)
             }
 
@@ -95,8 +60,6 @@ abstract class ActivityLifecycleManager : BaseLifecycleContentProvider() {
     protected open fun onActivityDestroyed(activity: Activity) {}
 
     companion object {
-        private val TAG = ActivityLifecycleManager::class.java.simpleName
-
         @SuppressLint("PrivateApi")
         private fun getApplication(): Application? {
             return try {
