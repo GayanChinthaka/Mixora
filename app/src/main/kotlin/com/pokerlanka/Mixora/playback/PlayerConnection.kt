@@ -371,7 +371,13 @@ class PlayerConnection(
                 castHandler.skipToNext()
                 return
             }
-            player.seekToNext()
+            if (player.hasNextMediaItem()) {
+                player.seekToNextMediaItem()
+            } else if (player.mediaItemCount > 0 && player.repeatMode == Player.REPEAT_MODE_ALL) {
+                player.seekTo(0, 0)
+            } else {
+                player.seekToNext()
+            }
             if (player.playbackState == Player.STATE_IDLE || player.playbackState == Player.STATE_ENDED) {
                 player.prepare()
             }

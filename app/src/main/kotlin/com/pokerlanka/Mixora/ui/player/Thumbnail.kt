@@ -12,6 +12,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.interaction.collectIsDraggedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -176,31 +177,44 @@ fun Thumbnail(
         pageCount = { if (queueWindows.isNotEmpty()) queueWindows.size else 1 }
     )
 
+    val isDragged by pagerState.interactionSource.collectIsDraggedAsState()
+    var userSwiped by remember { mutableStateOf(false) }
+
+    LaunchedEffect(isDragged) {
+        if (isDragged) {
+            userSwiped = true
+        }
+    }
+
     // Synchronize pager when currentWindowIndex changes externally
     LaunchedEffect(currentWindowIndex) {
-        if (currentWindowIndex in 0 until pagerState.pageCount && !pagerState.isScrollInProgress) {
+        if (currentWindowIndex in 0 until pagerState.pageCount && !userSwiped) {
             if (pagerState.currentPage != currentWindowIndex) {
                 pagerState.animateScrollToPage(currentWindowIndex)
             }
         }
     }
 
-    // Synchronize playback position when user swipes to a settled page
-    LaunchedEffect(pagerState.settledPage, queueWindows) {
-        val targetPage = pagerState.settledPage
-        if (targetPage in queueWindows.indices && targetPage != currentWindowIndex) {
-            val window = queueWindows[targetPage]
-            val isCasting = playerConnection.service.castConnectionHandler?.isCasting?.value == true
-            val castHandler = playerConnection.service.castConnectionHandler
-            if (isCasting) {
-                val mediaId = window.mediaItem.mediaId
-                val navigated = castHandler?.navigateToMediaIfInQueue(mediaId) ?: false
-                if (!navigated) {
+    // Synchronize playback position only when user swipes to a settled page
+    LaunchedEffect(pagerState.isScrollInProgress) {
+        if (!pagerState.isScrollInProgress && userSwiped) {
+            userSwiped = false
+            val targetPage = pagerState.settledPage
+            val currentIdx = playerConnection.currentWindowIndex.value
+            if (targetPage in queueWindows.indices && targetPage != currentIdx) {
+                val window = queueWindows[targetPage]
+                val isCasting = playerConnection.service.castConnectionHandler?.isCasting?.value == true
+                val castHandler = playerConnection.service.castConnectionHandler
+                if (isCasting) {
+                    val mediaId = window.mediaItem.mediaId
+                    val navigated = castHandler?.navigateToMediaIfInQueue(mediaId) ?: false
+                    if (!navigated) {
+                        playerConnection.player.seekToDefaultPosition(window.firstPeriodIndex)
+                    }
+                } else {
                     playerConnection.player.seekToDefaultPosition(window.firstPeriodIndex)
+                    playerConnection.player.playWhenReady = true
                 }
-            } else {
-                playerConnection.player.seekToDefaultPosition(window.firstPeriodIndex)
-                playerConnection.player.playWhenReady = true
             }
         }
     }
