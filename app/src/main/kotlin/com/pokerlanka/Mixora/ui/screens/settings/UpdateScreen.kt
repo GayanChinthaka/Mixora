@@ -62,7 +62,6 @@ import com.pokerlanka.mixora.LocalPlayerAwareWindowInsets
 import com.pokerlanka.mixora.R
 import com.pokerlanka.mixora.constants.CheckForUpdatesKey
 import com.pokerlanka.mixora.constants.LastUpdateCheckTimeKey
-import com.pokerlanka.mixora.constants.UpdateNotificationsEnabledKey
 import com.pokerlanka.mixora.ui.component.IconButton
 import com.pokerlanka.mixora.ui.component.Material3SettingsGroup
 import com.pokerlanka.mixora.ui.component.Material3SettingsItem
@@ -82,10 +81,6 @@ fun UpdateScreen(
 
     val (autoCheckUpdates, onAutoCheckUpdatesChange) = rememberPreference(
         CheckForUpdatesKey,
-        defaultValue = true
-    )
-    val (updateNotifications, onUpdateNotificationsChange) = rememberPreference(
-        UpdateNotificationsEnabledKey,
         defaultValue = true
     )
     val (_, onLastUpdateCheckTimeChange) = rememberPreference(
@@ -326,6 +321,7 @@ fun UpdateScreen(
                     Material3SettingsItem(
                         icon = painterResource(R.drawable.sync),
                         title = { Text(stringResource(R.string.check_for_updates)) },
+                        description = { Text("Periodically check for updates and notify when a new version is available") },
                         trailingContent = {
                             Switch(
                                 checked = autoCheckUpdates,
@@ -334,25 +330,6 @@ fun UpdateScreen(
                                     Icon(
                                         painter = painterResource(
                                             id = if (autoCheckUpdates) R.drawable.check else R.drawable.close
-                                        ),
-                                        contentDescription = null,
-                                        modifier = Modifier.size(SwitchDefaults.IconSize)
-                                    )
-                                }
-                            )
-                        }
-                    ),
-                    Material3SettingsItem(
-                        icon = painterResource(R.drawable.notification),
-                        title = { Text(stringResource(R.string.update_notifications)) },
-                        trailingContent = {
-                            Switch(
-                                checked = updateNotifications,
-                                onCheckedChange = onUpdateNotificationsChange,
-                                thumbContent = {
-                                    Icon(
-                                        painter = painterResource(
-                                            id = if (updateNotifications) R.drawable.check else R.drawable.close
                                         ),
                                         contentDescription = null,
                                         modifier = Modifier.size(SwitchDefaults.IconSize)

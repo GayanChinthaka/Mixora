@@ -197,11 +197,13 @@ import com.pokerlanka.mixora.utils.safeDataStoreEdit
 import com.pokerlanka.mixora.utils.get
 import com.pokerlanka.mixora.utils.rememberEnumPreference
 import com.pokerlanka.mixora.utils.rememberPreference
+import com.pokerlanka.mixora.utils.Updater
 import com.pokerlanka.mixora.utils.reportException
 import com.pokerlanka.mixora.widget.PlaylistWidgetReceiver
 import com.valentinilk.shimmer.LocalShimmerTheme
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -220,6 +222,7 @@ class MainActivity : ComponentActivity() {
         private const val ACTION_LIBRARY = "com.pokerlanka.mixora.action.LIBRARY"
         const val ACTION_RECOGNITION = "com.pokerlanka.mixora.action.RECOGNITION"
         const val ACTION_OPEN_WIDGET_TARGET = "com.pokerlanka.mixora.action.OPEN_WIDGET_TARGET"
+        const val ACTION_UPDATES = "com.pokerlanka.mixora.action.UPDATES"
         const val EXTRA_AUTO_START_RECOGNITION = "auto_start_recognition"
         const val EXTRA_WIDGET_TARGET_TYPE = "widget_target_type"
         const val EXTRA_WIDGET_TARGET_ID = "widget_target_id"
@@ -351,6 +354,7 @@ class MainActivity : ComponentActivity() {
         super.onNewIntent(intent)
         if (::navController.isInitialized) {
             handleWidgetTargetIntent(intent, navController)
+            handleUpdatesIntent(intent, navController)
             handleDeepLinkIntent(intent, navController)
         } else {
             pendingIntent = intent
@@ -391,6 +395,14 @@ class MainActivity : ComponentActivity() {
                     }
                     settings[SimpMusicMigrationDoneKey] = true
                     settings[LastSeenVersionKey] = currentVersion
+                }
+            }
+
+            // Check for updates automatically in background after slight startup delay
+            delay(1200)
+            Updater.checkAutoUpdate(this@MainActivity) { newVersion ->
+                runOnUiThread {
+                    latestVersionName = newVersion
                 }
             }
         }
@@ -772,11 +784,13 @@ class MainActivity : ComponentActivity() {
                     if (pendingIntent != null) {
                         handleWidgetTargetIntent(pendingIntent!!, navController)
                         handleRecognitionIntent(pendingIntent!!, navController)
+                        handleUpdatesIntent(pendingIntent!!, navController)
                         handleDeepLinkIntent(pendingIntent!!, navController)
                         pendingIntent = null
                     } else {
                         handleWidgetTargetIntent(intent, navController)
                         handleRecognitionIntent(intent, navController)
+                        handleUpdatesIntent(intent, navController)
                         handleDeepLinkIntent(intent, navController)
                     }
                 }
@@ -786,6 +800,7 @@ class MainActivity : ComponentActivity() {
                         Consumer<Intent> { intent ->
                             handleWidgetTargetIntent(intent, navController)
                             handleRecognitionIntent(intent, navController)
+                            handleUpdatesIntent(intent, navController)
                             handleDeepLinkIntent(intent, navController)
                         }
 
@@ -1199,6 +1214,17 @@ class MainActivity : ComponentActivity() {
         intent.action = null
         intent.removeExtra(EXTRA_AUTO_START_RECOGNITION)
         navController.navigate(if (autoStart) "recognition?autoStart=true" else "recognition") {
+            launchSingleTop = true
+        }
+    }
+
+    private fun handleUpdatesIntent(
+        intent: Intent,
+        navController: NavHostController,
+    ) {
+        if (intent.action != ACTION_UPDATES) return
+        intent.action = null
+        navController.navigate("settings/updates") {
             launchSingleTop = true
         }
     }
