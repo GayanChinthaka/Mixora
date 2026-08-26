@@ -9,11 +9,9 @@ package com.pokerlanka.mixora.ui.player
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -26,26 +24,20 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyHorizontalGrid
-import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.lazy.grid.rememberLazyGridState
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import com.pokerlanka.mixora.utils.makeTimeString
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -67,7 +59,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.media3.common.C
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import coil3.compose.AsyncImage
@@ -83,6 +75,7 @@ import com.pokerlanka.mixora.constants.PlayerHorizontalPadding
 import com.pokerlanka.mixora.constants.SwipeThumbnailKey
 import com.pokerlanka.mixora.constants.ThumbnailCornerRadius
 import com.pokerlanka.mixora.ui.component.CastButton
+import com.pokerlanka.mixora.utils.makeTimeString
 import com.pokerlanka.mixora.utils.rememberEnumPreference
 import com.pokerlanka.mixora.utils.rememberPreference
 import kotlinx.coroutines.delay
@@ -97,15 +90,6 @@ data class ThumbnailDimensions(
     val containerSize: Dp,
     val thumbnailSize: Dp,
     val cornerRadius: Dp
-)
-
-/**
- * Cached media items data to prevent recalculation on every recomposition.
- */
-@Immutable
-data class MediaItemsData(
-    val items: List<MediaItem>,
-    val currentIndex: Int
 )
 
 /**
@@ -136,51 +120,6 @@ private fun calculateThumbnailDimensions(
 }
 
 /**
- * Get media items for the thumbnail carousel.
- * Calculates previous, current, and next items based on shuffle mode.
- */
-@Stable
-private fun getMediaItems(
-    player: Player,
-    swipeThumbnail: Boolean
-): MediaItemsData {
-    val timeline = player.currentTimeline
-    val currentIndex = player.currentMediaItemIndex
-    val shuffleModeEnabled = player.shuffleModeEnabled
-    
-    val currentMediaItem = try {
-        player.currentMediaItem
-    } catch (e: Exception) { null }
-    
-    val previousMediaItem = if (swipeThumbnail && !timeline.isEmpty) {
-        val previousIndex = timeline.getPreviousWindowIndex(
-            currentIndex,
-            Player.REPEAT_MODE_OFF,
-            shuffleModeEnabled
-        )
-        if (previousIndex != C.INDEX_UNSET) {
-            try { player.getMediaItemAt(previousIndex) } catch (e: Exception) { null }
-        } else null
-    } else null
-
-    val nextMediaItem = if (swipeThumbnail && !timeline.isEmpty) {
-        val nextIndex = timeline.getNextWindowIndex(
-            currentIndex,
-            Player.REPEAT_MODE_OFF,
-            shuffleModeEnabled
-        )
-        if (nextIndex != C.INDEX_UNSET) {
-            try { player.getMediaItemAt(nextIndex) } catch (e: Exception) { null }
-        } else null
-    } else null
-
-    val items = listOfNotNull(previousMediaItem, currentMediaItem, nextMediaItem)
-    val currentMediaIndex = items.indexOf(currentMediaItem)
-    
-    return MediaItemsData(items, currentMediaIndex)
-}
-
-/**
  * Get text color based on player background style.
  * Computed once per background style change.
  */
@@ -194,7 +133,6 @@ private fun getTextColor(playerBackground: PlayerBackgroundStyle): Color {
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun Thumbnail(
     sliderPositionProvider: () -> Long?,
@@ -209,83 +147,61 @@ fun Thumbnail(
     val context = LocalContext.current
     val layoutDirection = LocalLayoutDirection.current
 
-    // Collect states
+    // Collect states from PlayerConnection
     val mediaMetadata by playerConnection.mediaMetadata.collectAsState()
     val error by playerConnection.error.collectAsState()
     val queueTitle by playerConnection.queueTitle.collectAsStateWithLifecycle()
-    val canSkipPrevious by playerConnection.canSkipPrevious.collectAsStateWithLifecycle()
-    val canSkipNext by playerConnection.canSkipNext.collectAsStateWithLifecycle()
+    val queueWindows by playerConnection.queueWindows.collectAsStateWithLifecycle()
+    val currentWindowIndex by playerConnection.currentWindowIndex.collectAsStateWithLifecycle()
 
-    // Preferences - computed once
+    // Preferences
     val swipeThumbnail by rememberPreference(SwipeThumbnailKey, true)
+    val cropArtwork by rememberPreference(CropAlbumArtKey, false)
+    val hidePlayerThumbnail by rememberPreference(HidePlayerThumbnailKey, false)
     val playerBackground by rememberEnumPreference(
         key = PlayerBackgroundStyleKey,
         defaultValue = PlayerBackgroundStyle.DEFAULT
     )
-    
+
     // Pre-calculate text color based on background style
     val textBackgroundColor = getTextColor(playerBackground)
-    
-    // Grid state
-    val thumbnailLazyGridState = rememberLazyGridState()
-    
-    // Calculate media items data - memoized
-    val mediaItemsData by remember(
-        playerConnection.player.currentMediaItemIndex,
-        playerConnection.player.shuffleModeEnabled,
-        swipeThumbnail,
-        mediaMetadata
-    ) {
-        derivedStateOf {
-            getMediaItems(playerConnection.player, swipeThumbnail)
-        }
+
+    // Pager state
+    val pageCount = if (queueWindows.isNotEmpty()) queueWindows.size else 1
+    val initialPage = remember {
+        currentWindowIndex.coerceIn(0, (pageCount - 1).coerceAtLeast(0))
     }
-    
-    val mediaItems = mediaItemsData.items
-    val currentMediaIndex = mediaItemsData.currentIndex
+    val pagerState = rememberPagerState(
+        initialPage = initialPage,
+        pageCount = { if (queueWindows.isNotEmpty()) queueWindows.size else 1 }
+    )
 
-    // Snap behavior - created once per grid state
-    val thumbnailSnapLayoutInfoProvider = remember(thumbnailLazyGridState) {
-        ThumbnailSnapLayoutInfoProvider(
-            lazyGridState = thumbnailLazyGridState,
-            positionInLayout = { layoutSize, itemSize ->
-                (layoutSize / 2f - itemSize / 2f)
-            },
-            velocityThreshold = 500f
-        )
-    }
-
-    // Current item tracking - derived state for efficiency
-    val currentItem by remember { derivedStateOf { thumbnailLazyGridState.firstVisibleItemIndex } }
-    val itemScrollOffset by remember { derivedStateOf { thumbnailLazyGridState.firstVisibleItemScrollOffset } }
-
-    // Handle swipe to change song
-    LaunchedEffect(itemScrollOffset) {
-        if (!thumbnailLazyGridState.isScrollInProgress || !swipeThumbnail || itemScrollOffset != 0 || currentMediaIndex < 0) return@LaunchedEffect
-
-        if (currentItem > currentMediaIndex && canSkipNext) {
-            playerConnection.player.seekToNext()
-        } else if (currentItem < currentMediaIndex && canSkipPrevious) {
-            playerConnection.player.seekToPreviousMediaItem()
-        }
-    }
-
-    // Update position when song changes
-    LaunchedEffect(mediaMetadata, canSkipPrevious, canSkipNext) {
-        val index = maxOf(0, currentMediaIndex)
-        if (index >= 0 && index < mediaItems.size) {
-            try {
-                thumbnailLazyGridState.animateScrollToItem(index)
-            } catch (e: Exception) {
-                thumbnailLazyGridState.scrollToItem(index)
+    // Synchronize pager when currentWindowIndex changes externally
+    LaunchedEffect(currentWindowIndex) {
+        if (currentWindowIndex in 0 until pagerState.pageCount && !pagerState.isScrollInProgress) {
+            if (pagerState.currentPage != currentWindowIndex) {
+                pagerState.animateScrollToPage(currentWindowIndex)
             }
         }
     }
 
-    LaunchedEffect(playerConnection.player.currentMediaItemIndex) {
-        val index = mediaItemsData.currentIndex
-        if (index >= 0 && index != currentItem) {
-            thumbnailLazyGridState.scrollToItem(index)
+    // Synchronize playback position when user swipes to a settled page
+    LaunchedEffect(pagerState.settledPage, queueWindows) {
+        val targetPage = pagerState.settledPage
+        if (targetPage in queueWindows.indices && targetPage != currentWindowIndex) {
+            val window = queueWindows[targetPage]
+            val isCasting = playerConnection.service.castConnectionHandler?.isCasting?.value == true
+            val castHandler = playerConnection.service.castConnectionHandler
+            if (isCasting) {
+                val mediaId = window.mediaItem.mediaId
+                val navigated = castHandler?.navigateToMediaIfInQueue(mediaId) ?: false
+                if (!navigated) {
+                    playerConnection.player.seekToDefaultPosition(window.firstPeriodIndex)
+                }
+            } else {
+                playerConnection.player.seekToDefaultPosition(window.firstPeriodIndex)
+                playerConnection.player.playWhenReady = true
+            }
         }
     }
 
@@ -342,7 +258,7 @@ fun Thumbnail(
                         sleepTimerTimeLeft = sleepTimerTimeLeft,
                     )
                 }
-                
+
                 // Thumbnail content
                 BoxWithConstraints(
                     contentAlignment = Alignment.Center,
@@ -352,7 +268,6 @@ fun Thumbnail(
                         Modifier.fillMaxSize()
                     }
                 ) {
-                    // Calculate dimensions once per size change, considering landscape mode
                     val dimensions = remember(maxWidth, maxHeight, isLandscape) {
                         calculateThumbnailDimensions(
                             containerWidth = maxWidth,
@@ -361,48 +276,61 @@ fun Thumbnail(
                         )
                     }
 
-                    // Remember the onSeek callback to prevent recomposition
                     val onSeekCallback = remember {
                         { direction: String, showEffect: Boolean ->
                             seekDirection = direction
                             showSeekEffect = showEffect
                         }
                     }
-                    
-                    // Derive scroll enabled state to prevent unnecessary recomposition
+
                     val isScrollEnabled by remember(swipeThumbnail) {
                         derivedStateOf { swipeThumbnail && isPlayerExpanded() }
                     }
-                    
-                    LazyHorizontalGrid(
-                        state = thumbnailLazyGridState,
-                        rows = GridCells.Fixed(1),
-                        flingBehavior = rememberSnapFlingBehavior(thumbnailSnapLayoutInfoProvider),
-                        userScrollEnabled = isScrollEnabled,
-                        modifier = if (isLandscape) {
-                            Modifier.size(dimensions.thumbnailSize + (PlayerHorizontalPadding * 2))
-                        } else {
-                            Modifier.fillMaxSize()
-                        }
-                    ) {
-                        items(
-                            items = mediaItems,
-                            key = { item -> 
-                                item.mediaId.ifEmpty { "unknown_${item.hashCode()}" }
+
+                    if (hidePlayerThumbnail) {
+                        HiddenThumbnailPlaceholder(
+                            textBackgroundColor = textBackgroundColor
+                        )
+                    } else {
+                        HorizontalPager(
+                            state = pagerState,
+                            userScrollEnabled = isScrollEnabled,
+                            beyondViewportPageCount = 1,
+                            key = { page ->
+                                if (page in queueWindows.indices) {
+                                    val window = queueWindows[page]
+                                    "${window.firstPeriodIndex}_${window.mediaItem.mediaId}_$page"
+                                } else {
+                                    mediaMetadata?.id ?: page.toString()
+                                }
+                            },
+                            modifier = if (isLandscape) {
+                                Modifier.size(dimensions.thumbnailSize + (PlayerHorizontalPadding * 2))
+                            } else {
+                                Modifier.fillMaxSize()
                             }
-                        ) { item ->
-                            ThumbnailItem(
-                                item = item,
-                                dimensions = dimensions,
-                                textBackgroundColor = textBackgroundColor,
-                                layoutDirection = layoutDirection,
-                                onSeek = onSeekCallback,
-                                playerConnection = playerConnection,
-                                context = context,
-                                isLandscape = isLandscape,
-                                currentMediaId = mediaMetadata?.id,
-                                currentMediaThumbnail = mediaMetadata?.thumbnailUrl
-                            )
+                        ) { page ->
+                            val window = queueWindows.getOrNull(page)
+                            val mediaItem = window?.mediaItem ?: playerConnection.player.currentMediaItem
+                            if (mediaItem != null) {
+                                ThumbnailItem(
+                                    item = mediaItem,
+                                    dimensions = dimensions,
+                                    textBackgroundColor = textBackgroundColor,
+                                    layoutDirection = layoutDirection,
+                                    onSeek = onSeekCallback,
+                                    playerConnection = playerConnection,
+                                    context = context,
+                                    isLandscape = isLandscape,
+                                    cropArtwork = cropArtwork,
+                                    currentMediaId = mediaMetadata?.id,
+                                    currentMediaThumbnail = mediaMetadata?.thumbnailUrl
+                                )
+                            } else {
+                                HiddenThumbnailPlaceholder(
+                                    textBackgroundColor = textBackgroundColor
+                                )
+                            }
                         }
                     }
                 }
@@ -512,6 +440,7 @@ private fun ThumbnailItem(
     playerConnection: com.pokerlanka.mixora.playback.PlayerConnection,
     context: android.content.Context,
     isLandscape: Boolean = false,
+    cropArtwork: Boolean = false,
     currentMediaId: String? = null,
     currentMediaThumbnail: String? = null,
     modifier: Modifier = Modifier,
@@ -586,9 +515,9 @@ private fun ThumbnailItem(
 
             ThumbnailImage(
                 artworkUri = artworkUriToUse,
-                cropArtwork = false
+                cropArtwork = cropArtwork
             )
-            
+
             // Cast button at top-right corner of thumbnail
             CastButton(
                 modifier = Modifier
