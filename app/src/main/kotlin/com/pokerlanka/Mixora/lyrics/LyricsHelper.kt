@@ -108,60 +108,38 @@ constructor(
             Timber.tag("LyricsHelper").d("Starting fetch for: $cleanedTitle by $artists")
             Timber.tag("LyricsHelper").d("Enabled providers in order: ${enabledProviders.joinToString { it.name }}")
 
-            coroutineScope {
-                // Every provider starts at once, but the results are consumed in preference order,
-                // so the answer is still the highest-priority provider that succeeded. Walking them
-                // sequentially meant one unreachable provider burned its full
-                // PER_PROVIDER_TIMEOUT_MS before the next was even contacted.
-                val attempts =
-                    enabledProviders.map { provider ->
-                        provider to
-                            async {
-                                try {
-                                    withTimeoutOrNull(PER_PROVIDER_TIMEOUT_MS) {
-                                        provider.getLyrics(
-                                            context,
-                                            mediaMetadata.id,
-                                            cleanedTitle,
-                                            artists,
-                                            mediaMetadata.duration,
-                                            mediaMetadata.album?.title,
-                                        )
-                                    }
-                                } catch (e: CancellationException) {
-                                    throw e
-                                } catch (e: Exception) {
-                                    Timber.tag("LyricsHelper").w("${provider.name} threw: ${e.message}")
-                                    null
-                                }
-                            }
+            for (provider in enabledProviders) {
+                Timber.tag("LyricsHelper").d("Trying provider: ${provider.name}")
+                val providerResult = try {
+                    withTimeoutOrNull(PER_PROVIDER_TIMEOUT_MS) {
+                        provider.getLyrics(
+                            context,
+                            mediaMetadata.id,
+                            cleanedTitle,
+                            artists,
+                            mediaMetadata.duration,
+                            mediaMetadata.album?.title,
+                        )
                     }
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (e: Exception) {
+                    Timber.tag("LyricsHelper").w("${provider.name} threw: ${e.message}")
+                    null
+                }
 
-                var resolved: LyricsWithProvider? = null
-                for ((provider, attempt) in attempts) {
-                    val providerResult = attempt.await()
-                    if (providerResult != null && providerResult.isSuccess) {
-                        Timber.tag("LyricsHelper").i("Got lyrics from ${provider.name}")
-                        resolved =
-                            LyricsWithProvider(
-                                LyricsUtils.filterLyricsCreditLines(providerResult.getOrNull()!!),
-                                provider.name,
-                            )
-                        break
-                    }
-                    val errorMsg = providerResult?.exceptionOrNull()?.message ?: "timeout or exception"
+                if (providerResult != null && providerResult.isSuccess) {
+                    Timber.tag("LyricsHelper").i("Got lyrics from ${provider.name}")
+                    val filtered = LyricsUtils.filterLyricsCreditLines(providerResult.getOrNull()!!)
+                    return@withTimeoutOrNull LyricsWithProvider(filtered, provider.name)
+                } else {
+                    val errorMsg = providerResult?.exceptionOrNull()?.message ?: "timeout or not found"
                     Timber.tag("LyricsHelper").w("${provider.name} failed: $errorMsg")
                 }
-
-                // coroutineScope only returns once every child is done, so the losers have to be
-                // cancelled or a slow straggler would hold up a result we already have.
-                attempts.forEach { (_, attempt) -> attempt.cancel() }
-
-                resolved ?: run {
-                    Timber.tag("LyricsHelper").w("No lyrics found after checking all providers")
-                    LyricsWithProvider(LYRICS_NOT_FOUND, PROVIDER_NONE)
-                }
             }
+
+            Timber.tag("LyricsHelper").w("No lyrics found after checking all providers")
+            LyricsWithProvider(LYRICS_NOT_FOUND, PROVIDER_NONE)
         } ?: LyricsWithProvider(LYRICS_NOT_FOUND, PROVIDER_NONE)
 
         if (result.lyrics != LYRICS_NOT_FOUND) {
