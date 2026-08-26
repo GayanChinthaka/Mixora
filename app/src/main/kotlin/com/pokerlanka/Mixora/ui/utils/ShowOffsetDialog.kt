@@ -37,8 +37,8 @@ import kotlinx.coroutines.FlowPreview
 import java.util.Locale
 import kotlin.math.roundToInt
 
-private const val MIN_OFFSET_MS = -20000
-private const val MAX_OFFSET_MS = 20000
+private const val MIN_OFFSET_MS = -60000
+private const val MAX_OFFSET_MS = 60000
 private const val STEP_MS = 500
 
 @OptIn(FlowPreview::class)
@@ -206,7 +206,7 @@ fun ShowOffsetDialog(songProvider: () -> SongEntity?) {
                 .padding(horizontal = 4.dp)
         )
 
-        // Range Labels: -20s | 0s | +20s
+        // Range Labels: -60s | 0s | +60s
         Row(
             horizontalArrangement = Arrangement.SpaceBetween,
             modifier = Modifier
@@ -214,7 +214,7 @@ fun ShowOffsetDialog(songProvider: () -> SongEntity?) {
                 .padding(horizontal = 8.dp)
         ) {
             Text(
-                text = "-20s",
+                text = "-60s",
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
             )
@@ -225,7 +225,7 @@ fun ShowOffsetDialog(songProvider: () -> SongEntity?) {
                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
             )
             Text(
-                text = "+20s",
+                text = "+60s",
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
             )
