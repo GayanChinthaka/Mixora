@@ -76,7 +76,17 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.ui.draw.clip
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import dagger.hilt.android.EntryPointAccessors
+import com.pokerlanka.mixora.di.LyricsHelperEntryPoint
 import com.pokerlanka.mixora.LocalDatabase
 import com.pokerlanka.mixora.LocalPlayerConnection
 import com.pokerlanka.mixora.R
@@ -158,6 +168,15 @@ fun ExperimentalLyrics(
         }
     }
     
+    val entryPoint = remember(context) {
+        EntryPointAccessors.fromApplication(
+            context.applicationContext,
+            LyricsHelperEntryPoint::class.java,
+        )
+    }
+    val lyricsHelper = remember(entryPoint) { entryPoint.lyricsHelper() }
+    val currentSearchingProvider by lyricsHelper.currentSearchingProvider.collectAsStateWithLifecycle(initialValue = null)
+
     val lyricsEntity = currentLyricsEntity
     val currentSong by playerConnection.currentSong.collectAsStateWithLifecycle(initialValue = null)
     val lyrics = remember(lyricsEntity) { lyricsEntity?.lyrics?.trim() }
@@ -501,11 +520,36 @@ fun ExperimentalLyrics(
                 Text(text = stringResource(R.string.lyrics_not_found), fontSize = 20.sp, color = textColorOverride ?: MaterialTheme.colorScheme.secondary, modifier = Modifier.alpha(0.5f))
             }
         } else if (lyrics == null) {
-             Column(modifier = Modifier.padding(top = 100.dp)) {
-                 ShimmerHost { repeat(10) { Box(contentAlignment = when (lyricsTextPosition) {
-                     LyricsPosition.LEFT -> Alignment.CenterStart; LyricsPosition.CENTER -> Alignment.Center; else -> Alignment.CenterEnd
-                 }, modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 4.dp)) { TextPlaceholder() } } }
-             }
+            Column(
+                modifier = Modifier.fillMaxWidth().padding(top = 80.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                if (!currentSearchingProvider.isNullOrBlank()) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier
+                            .padding(bottom = 16.dp)
+                            .clip(RoundedCornerShape(16.dp))
+                            .background((textColorOverride ?: MaterialTheme.colorScheme.surfaceVariant).copy(alpha = 0.15f))
+                            .padding(horizontal = 14.dp, vertical = 6.dp)
+                    ) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(12.dp),
+                            strokeWidth = 2.dp,
+                            color = textColorOverride ?: MaterialTheme.colorScheme.primary
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "Searching lyrics on : $currentSearchingProvider",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = textColorOverride ?: MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                }
+                ShimmerHost { repeat(10) { Box(contentAlignment = when (lyricsTextPosition) {
+                    LyricsPosition.LEFT -> Alignment.CenterStart; LyricsPosition.CENTER -> Alignment.Center; else -> Alignment.CenterEnd
+                }, modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 4.dp)) { TextPlaceholder() } } }
+            }
         } else {
             Box(
                 modifier = Modifier

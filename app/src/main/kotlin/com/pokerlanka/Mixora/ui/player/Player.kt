@@ -1905,17 +1905,19 @@ fun InlineLyricsView(
     val context = LocalContext.current
     val database = LocalDatabase.current
     val coroutineScope = rememberCoroutineScope()
+    val entryPoint = remember(context) {
+        EntryPointAccessors.fromApplication(
+            context.applicationContext,
+            com.pokerlanka.mixora.di.LyricsHelperEntryPoint::class.java,
+        )
+    }
+    val lyricsHelper = remember(entryPoint) { entryPoint.lyricsHelper() }
+    val currentSearchingProvider by lyricsHelper.currentSearchingProvider.collectAsStateWithLifecycle(initialValue = null)
 
     LaunchedEffect(mediaMetadata?.id, currentLyrics) {
         if (mediaMetadata != null && currentLyrics == null) {
             coroutineScope.launch(Dispatchers.IO) {
                 try {
-                    val entryPoint =
-                        EntryPointAccessors.fromApplication(
-                            context.applicationContext,
-                            com.pokerlanka.mixora.di.LyricsHelperEntryPoint::class.java,
-                        )
-                    val lyricsHelper = entryPoint.lyricsHelper()
                     val fetchedLyricsWithProvider = lyricsHelper.getLyrics(mediaMetadata)
                     database.query {
                         upsert(LyricsEntity(mediaMetadata.id, fetchedLyricsWithProvider.lyrics, fetchedLyricsWithProvider.provider))
@@ -1936,13 +1938,27 @@ fun InlineLyricsView(
     ) {
         when {
             lyrics == null -> {
-                if (lyricsTextColor != null) {
-                    ContainedLoadingIndicator(
-                        indicatorColor = lyricsTextColor,
-                        containerColor = Color.White.copy(alpha = 0.16f),
-                    )
-                } else {
-                    ContainedLoadingIndicator()
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center,
+                ) {
+                    if (lyricsTextColor != null) {
+                        ContainedLoadingIndicator(
+                            indicatorColor = lyricsTextColor,
+                            containerColor = Color.White.copy(alpha = 0.16f),
+                        )
+                    } else {
+                        ContainedLoadingIndicator()
+                    }
+                    if (!currentSearchingProvider.isNullOrBlank()) {
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Text(
+                            text = "Searching lyrics on : $currentSearchingProvider",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = (lyricsTextColor ?: MaterialTheme.colorScheme.onSurface).copy(alpha = 0.8f),
+                            textAlign = TextAlign.Center,
+                        )
+                    }
                 }
             }
 

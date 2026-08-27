@@ -22,6 +22,9 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
@@ -47,6 +50,9 @@ constructor(
                 resolveLyricsProviders(preferences)
             }.distinctUntilChanged()
 
+    private val _currentSearchingProvider = MutableStateFlow<String?>(null)
+    val currentSearchingProvider: StateFlow<String?> = _currentSearchingProvider.asStateFlow()
+
     private val cache = LruCache<String, List<LyricsResult>>(MAX_CACHE_SIZE)
     private var currentLyricsJob: Job? = null
 
@@ -61,6 +67,17 @@ constructor(
      */
     private val fetchScope = CoroutineScope(SupervisorJob() + kotlinx.coroutines.Dispatchers.IO)
 
+    fun clearCache(mediaId: String? = null) {
+        if (mediaId != null) {
+            cache.remove(mediaId)
+            inFlight.remove(mediaId)?.cancel()
+        } else {
+            cache.evictAll()
+            inFlight.values.forEach { it.cancel() }
+            inFlight.clear()
+        }
+    }
+
     /**
      * Resolves lyrics for one track, preferring the highest-priority provider that has them.
      *
@@ -68,12 +85,17 @@ constructor(
      * the lyrics pane is enabled and [Player] fetches again for display, and previously each ran
      * the whole provider fan-out on its own.
      */
-    suspend fun getLyrics(mediaMetadata: MediaMetadata): LyricsWithProvider {
+    suspend fun getLyrics(mediaMetadata: MediaMetadata, skipCache: Boolean = false): LyricsWithProvider {
         currentLyricsJob?.cancel()
 
-        val cached = cache.get(mediaMetadata.id)?.firstOrNull()
-        if (cached != null) {
-            return LyricsWithProvider(cached.lyrics, cached.providerName)
+        if (!skipCache) {
+            val cached = cache.get(mediaMetadata.id)?.firstOrNull()
+            if (cached != null) {
+                return LyricsWithProvider(cached.lyrics, cached.providerName)
+            }
+        } else {
+            cache.remove(mediaMetadata.id)
+            inFlight.remove(mediaMetadata.id)?.cancel()
         }
 
         val deferred =
@@ -108,34 +130,39 @@ constructor(
             Timber.tag("LyricsHelper").d("Starting fetch for: $cleanedTitle by $artists")
             Timber.tag("LyricsHelper").d("Enabled providers in order: ${enabledProviders.joinToString { it.name }}")
 
-            for (provider in enabledProviders) {
-                Timber.tag("LyricsHelper").d("Trying provider: ${provider.name}")
-                val providerResult = try {
-                    withTimeoutOrNull(PER_PROVIDER_TIMEOUT_MS) {
-                        provider.getLyrics(
-                            context,
-                            mediaMetadata.id,
-                            cleanedTitle,
-                            artists,
-                            mediaMetadata.duration,
-                            mediaMetadata.album?.title,
-                        )
+            try {
+                for (provider in enabledProviders) {
+                    _currentSearchingProvider.value = provider.name
+                    Timber.tag("LyricsHelper").d("Trying provider: ${provider.name}")
+                    val providerResult = try {
+                        withTimeoutOrNull(PER_PROVIDER_TIMEOUT_MS) {
+                            provider.getLyrics(
+                                context,
+                                mediaMetadata.id,
+                                cleanedTitle,
+                                artists,
+                                mediaMetadata.duration,
+                                mediaMetadata.album?.title,
+                            )
+                        }
+                    } catch (e: CancellationException) {
+                        throw e
+                    } catch (e: Exception) {
+                        Timber.tag("LyricsHelper").w("${provider.name} threw: ${e.message}")
+                        null
                     }
-                } catch (e: CancellationException) {
-                    throw e
-                } catch (e: Exception) {
-                    Timber.tag("LyricsHelper").w("${provider.name} threw: ${e.message}")
-                    null
-                }
 
-                if (providerResult != null && providerResult.isSuccess) {
-                    Timber.tag("LyricsHelper").i("Got lyrics from ${provider.name}")
-                    val filtered = LyricsUtils.filterLyricsCreditLines(providerResult.getOrNull()!!)
-                    return@withTimeoutOrNull LyricsWithProvider(filtered, provider.name)
-                } else {
-                    val errorMsg = providerResult?.exceptionOrNull()?.message ?: "timeout or not found"
-                    Timber.tag("LyricsHelper").w("${provider.name} failed: $errorMsg")
+                    if (providerResult != null && providerResult.isSuccess) {
+                        Timber.tag("LyricsHelper").i("Got lyrics from ${provider.name}")
+                        val filtered = LyricsUtils.filterLyricsCreditLines(providerResult.getOrNull()!!)
+                        return@withTimeoutOrNull LyricsWithProvider(filtered, provider.name)
+                    } else {
+                        val errorMsg = providerResult?.exceptionOrNull()?.message ?: "timeout or not found"
+                        Timber.tag("LyricsHelper").w("${provider.name} failed: $errorMsg")
+                    }
                 }
+            } finally {
+                _currentSearchingProvider.value = null
             }
 
             Timber.tag("LyricsHelper").w("No lyrics found after checking all providers")
