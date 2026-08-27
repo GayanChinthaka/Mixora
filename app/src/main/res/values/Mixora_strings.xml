@@ -260,7 +260,6 @@
     <!-- Updater -->
     <string name="updater">Updater</string>
     <string name="check_for_updates">Automatically check for updates</string>
-    <string name="update_notifications">Enable update notifications</string>
     <string name="update_available_title">Update available</string>
     <string name="update_channel_name">App updates</string>
     <string name="update_channel_desc">Notifications about new app versions</string>
@@ -551,12 +550,6 @@
     <string name="android_auto_search_local_songs_limit_desc">Limit the number of local songs shown in the search results. It is recommended to not set unlimited to prevent memory crashes</string>
 
     <!-- Stats time transfer -->
-    <string name="time_transfer_title">Time transfer</string>
-    <string name="time_transfer_warning">WARNING: This action cannot be undone once completed. Create a backup before proceeding. Only songs with at least one registered play are eligible</string>
-    <string name="time_transfer_source_song">Source song</string>
-    <string name="time_transfer_target_song">Target song</string>
-    <string name="time_transfer_listen_time_label">Listen time: </string>
-    <string name="time_transfer_convert">Convert</string>
     <string name="song_dropdown_more_results">Keep typing to narrow results (%d more)</string>
 
     <!-- Player and Audio Settings -->
