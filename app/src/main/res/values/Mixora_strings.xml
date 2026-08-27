@@ -98,9 +98,9 @@
     <string name="enable_lrclib_desc">Community-driven synchronized lyrics database</string>
     <string name="enable_kugou_desc">Pulls lyrics from KuGou, a popular Chinese music platform</string>
     <string name="youtube_music_lyrics_note">NOTE: YouTube Music lyrics will be shown automatically when no other source is available. They are usually not synchronized</string>
-    <string name="enable_better_lyrics_desc">Syllable-synced lyrics for any song, perfect for karaoke</string>
     <string name="enable_paxsenix_desc">High-quality synchronized lyrics from Paxsenix API</string>
-    <string name="enable_lyricsplus_desc">Synchronized lyrics from multiple sources</string>
+    <string name="enable_musixmatch_desc">Largest global database with synchronized lyrics</string>
+    <string name="enable_deezer_desc">Synchronized lyrics from Deezer</string>
     <string name="lyrics_provider_selection">Provider selection</string>
     <string name="auto_scroll">Re-sync</string>
     <string name="slim">Slim</string>
@@ -667,6 +667,19 @@
     <!-- Player, Cache, Selection & Backup -->
     <string name="cache_songs">Cache Songs</string>
     <string name="selection">Selection</string>
+    <string name="lyrics_services">Lyrics Services</string>
+    <string name="musixmatch_integration">Musixmatch</string>
+    <string name="musixmatch_integration_desc">Largest synchronized lyrics database</string>
+    <string name="deezer_integration">Deezer</string>
+    <string name="deezer_integration_desc">Synchronized lyrics from Deezer catalog</string>
+    <string name="auto_connect">Auto Connect</string>
+    <string name="connecting">Connecting...</string>
+    <string name="connected">Connected</string>
+    <string name="not_configured">Setup Required</string>
+    <string name="token_input_label">User / ARL Token</string>
+    <string name="setup_required_title">Setup Required</string>
+    <string name="setup_required_desc">To enable %1$s lyrics, please connect your account or generate a token in Settings → Account → Integrations.</string>
+    <string name="set_up_now">Set Up Now</string>
     <string name="casting">Casting</string>
     <string name="failed_preview_csv">Failed to preview CSV file</string>
     <string name="no_songs_found_csv">No songs found. Invalid file, or perhaps no song matches were found.</string>

@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Mixora Project (C) 2026
  * Author : Gayan Chinthaka
  * Company: Pokerlanka
@@ -8,11 +8,11 @@ package com.pokerlanka.mixora.lyrics
 
 object LyricsProviderRegistry {
     private val providerMap = mapOf(
-        "BetterLyrics" to BetterLyricsProvider,
         "Paxsenix" to PaxsenixLyricsProvider,
+        "Musixmatch" to MusixmatchLyricsProvider,
         "LrcLib" to LrcLibLyricsProvider,
+        "Deezer" to DeezerLyricsProvider,
         "KuGou" to KuGouLyricsProvider,
-        "LyricsPlus" to LyricsPlusProvider,
         "YouTubeSubtitle" to YouTubeSubtitleLyricsProvider,
         "YouTube" to YouTubeLyricsProvider,
     )
@@ -36,11 +36,11 @@ object LyricsProviderRegistry {
     }
 
     fun getDefaultProviderOrder(): List<String> = listOf(
-        "BetterLyrics",
-        "LrcLib",
-        "KuGou",
         "Paxsenix",
-        "LyricsPlus",
+        "Musixmatch",
+        "LrcLib",
+        "Deezer",
+        "KuGou",
         "YouTubeSubtitle",
         "YouTube",
     )

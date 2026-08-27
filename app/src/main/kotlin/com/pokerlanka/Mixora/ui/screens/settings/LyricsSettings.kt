@@ -47,7 +47,6 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.pokerlanka.mixora.LocalPlayerAwareWindowInsets
 import com.pokerlanka.mixora.R
-import com.pokerlanka.mixora.constants.EnableBetterLyricsKey
 import com.pokerlanka.mixora.constants.AiApiKeyKey
 import com.pokerlanka.mixora.constants.AiCustomEndpointKey
 import com.pokerlanka.mixora.constants.AiCustomModelKey
@@ -58,7 +57,10 @@ import com.pokerlanka.mixora.constants.AiSelectedModelKey
 import com.pokerlanka.mixora.constants.EnableKugouKey
 import com.pokerlanka.mixora.constants.EnableLrcLibKey
 import com.pokerlanka.mixora.constants.EnablePaxsenixKey
-import com.pokerlanka.mixora.constants.EnableLyricsPlus
+import com.pokerlanka.mixora.constants.EnableMusixmatchKey
+import com.pokerlanka.mixora.constants.MusixmatchUserTokenKey
+import com.pokerlanka.mixora.constants.EnableDeezerKey
+import com.pokerlanka.mixora.constants.DeezerUserTokenKey
 import com.pokerlanka.mixora.constants.HideStatusBarOnFullscreenKey
 import com.pokerlanka.mixora.constants.LyricsBackgroundStyle
 import com.pokerlanka.mixora.constants.LyricsBackgroundStyleKey
@@ -76,6 +78,7 @@ import com.pokerlanka.mixora.ui.component.EnumDialog
 import com.pokerlanka.mixora.ui.component.IconButton
 import com.pokerlanka.mixora.ui.component.Material3SettingsGroup
 import com.pokerlanka.mixora.ui.component.RomanizationSetupDialog
+import com.pokerlanka.mixora.ui.component.LyricsSetupRequiredDialog
 import com.pokerlanka.mixora.ui.component.Material3SettingsItem
 import com.pokerlanka.mixora.ui.utils.backToMain
 import com.pokerlanka.mixora.utils.rememberEnumPreference
@@ -96,9 +99,11 @@ fun LyricsSettings(
 ) {
     val (enableKugou, onEnableKugouChange) = rememberPreference(key = EnableKugouKey, defaultValue = true)
     val (enableLrclib, onEnableLrclibChange) = rememberPreference(key = EnableLrcLibKey, defaultValue = true)
-    val (enableBetterLyrics, onEnableBetterLyricsChange) = rememberPreference(key = EnableBetterLyricsKey, defaultValue = true)
     val (enablePaxsenix, onEnablePaxsenixChange) = rememberPreference(key = EnablePaxsenixKey, defaultValue = true)
-    val (enableLyricsPlus, onEnableLyricsPlusChange) = rememberPreference(key = EnableLyricsPlus, defaultValue = true)
+    val (enableMusixmatch, onEnableMusixmatchChange) = rememberPreference(key = EnableMusixmatchKey, defaultValue = false)
+    val (enableDeezer, onEnableDeezerChange) = rememberPreference(key = EnableDeezerKey, defaultValue = false)
+    val (musixmatchToken, _) = rememberPreference(key = MusixmatchUserTokenKey, defaultValue = "")
+    val (deezerToken, _) = rememberPreference(key = DeezerUserTokenKey, defaultValue = "")
     val (lyricsProviderOrder, onLyricsProviderOrderChange) = rememberPreference(
         key = LyricsProviderOrderKey,
         defaultValue = LyricsProviderRegistry.serializeProviderOrder(LyricsProviderRegistry.getDefaultProviderOrder())
@@ -146,6 +151,7 @@ fun LyricsSettings(
             aiModel.isNotBlank() &&
             (aiProvider != AiProvider.CUSTOM || aiCustomEndpoint.isNotBlank())
     var showRomanizationSetupDialog by rememberSaveable { mutableStateOf(false) }
+    var showLyricsSetupRequiredDialogFor by rememberSaveable { mutableStateOf<String?>(null) }
     val (lyricsTextSize, onLyricsTextSizeChange) = rememberPreference(LyricsTextSizeKey, defaultValue = 36f)
     val (lyricsLineSpacing, onLyricsLineSpacingChange) = rememberPreference(LyricsLineSpacingKey, defaultValue = 1.3f)
 
@@ -157,11 +163,11 @@ fun LyricsSettings(
 
     val providerDisplayNames =
         mapOf(
-            "BetterLyrics" to "Better Lyrics",
             "Paxsenix" to "Paxsenix",
+            "Musixmatch" to "Musixmatch",
             "LrcLib" to "LrcLib",
+            "Deezer" to "Deezer",
             "KuGou" to "KuGou",
-            "LyricsPlus" to "LyricsPlus",
             "YouTubeSubtitle" to "YouTube Subtitles",
             "YouTube" to "YouTube",
         )
@@ -176,59 +182,79 @@ fun LyricsSettings(
         )
     }
 
+    showLyricsSetupRequiredDialogFor?.let { providerName ->
+        LyricsSetupRequiredDialog(
+            providerName = providerName,
+            onDismiss = { showLyricsSetupRequiredDialogFor = null },
+            onSetUp = {
+                showLyricsSetupRequiredDialogFor = null
+                showProviderDialog = false
+                navController.navigate("settings/integrations")
+            },
+        )
+    }
+
     if (showProviderDialog) {
         val defaultOrder = LyricsProviderRegistry.getDefaultProviderOrder()
         val currentOrder = LyricsProviderRegistry.deserializeProviderOrder(lyricsProviderOrder)
         val normalizedOrder = currentOrder.filter { it in defaultOrder } +
             defaultOrder.filter { it !in currentOrder }
 
-        // Only these five have an enable preference. The YouTube providers are always-available
-        // fallbacks with no switch, so they stay out of the list and keep their trailing position
-        // in the saved order (the note under the list explains that).
-        val toggleableProviders = listOf("LrcLib", "KuGou", "BetterLyrics", "Paxsenix", "LyricsPlus")
+        val toggleableProviders = listOf("Paxsenix", "Musixmatch", "LrcLib", "Deezer", "KuGou")
 
         val isProviderEnabled: (String) -> Boolean = { id ->
             when (id) {
-                "LrcLib" -> enableLrclib
-                "KuGou" -> enableKugou
-                "BetterLyrics" -> enableBetterLyrics
                 "Paxsenix" -> enablePaxsenix
-                "LyricsPlus" -> enableLyricsPlus
+                "Musixmatch" -> enableMusixmatch && musixmatchToken.isNotBlank()
+                "LrcLib" -> enableLrclib
+                "Deezer" -> enableDeezer && deezerToken.isNotBlank()
+                "KuGou" -> enableKugou
                 else -> true
             }
         }
         val setProviderEnabled: (String, Boolean) -> Unit = { id, value ->
             when (id) {
-                "LrcLib" -> onEnableLrclibChange(value)
-                "KuGou" -> onEnableKugouChange(value)
-                "BetterLyrics" -> onEnableBetterLyricsChange(value)
                 "Paxsenix" -> onEnablePaxsenixChange(value)
-                "LyricsPlus" -> onEnableLyricsPlusChange(value)
+                "Musixmatch" -> {
+                    if (value && musixmatchToken.isBlank()) {
+                        showLyricsSetupRequiredDialogFor = "Musixmatch"
+                    } else {
+                        onEnableMusixmatchChange(value)
+                    }
+                }
+                "LrcLib" -> onEnableLrclibChange(value)
+                "Deezer" -> {
+                    if (value && deezerToken.isBlank()) {
+                        showLyricsSetupRequiredDialogFor = "Deezer"
+                    } else {
+                        onEnableDeezerChange(value)
+                    }
+                }
+                "KuGou" -> onEnableKugouChange(value)
                 else -> Unit
             }
         }
 
         val providerDescriptions =
             mapOf(
-                "LrcLib" to stringResource(R.string.enable_lrclib_desc),
-                "KuGou" to stringResource(R.string.enable_kugou_desc),
-                "BetterLyrics" to stringResource(R.string.enable_better_lyrics_desc),
                 "Paxsenix" to stringResource(R.string.enable_paxsenix_desc),
-                "LyricsPlus" to stringResource(R.string.enable_lyricsplus_desc),
+                "Musixmatch" to stringResource(R.string.enable_musixmatch_desc),
+                "LrcLib" to stringResource(R.string.enable_lrclib_desc),
+                "Deezer" to stringResource(R.string.enable_deezer_desc),
+                "KuGou" to stringResource(R.string.enable_kugou_desc),
             )
         val lyricsIcon = painterResource(R.drawable.lyrics)
         val draggableItems = remember { mutableStateListOf<DraggableLyricsProviderItem>() }
 
-        // Every toggleable provider is listed regardless of state, so the order can be arranged
-        // before one is switched on. The previous priority dialog listed only enabled providers,
-        // which made reordering a disabled provider impossible.
         LaunchedEffect(
             normalizedOrder,
-            enableLrclib,
-            enableKugou,
-            enableBetterLyrics,
             enablePaxsenix,
-            enableLyricsPlus,
+            enableMusixmatch,
+            musixmatchToken,
+            enableLrclib,
+            enableDeezer,
+            deezerToken,
+            enableKugou,
         ) {
             val ordered = normalizedOrder.filter { it in toggleableProviders } +
                 toggleableProviders.filter { it !in normalizedOrder }

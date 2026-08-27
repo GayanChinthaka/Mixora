@@ -1,4 +1,4 @@
-﻿package com.pokerlanka.paxsenix
+package com.pokerlanka.paxsenix
 
 import android.content.Context
 import com.pokerlanka.mixora.betterlyrics.TTMLParser
@@ -223,13 +223,17 @@ object Paxsenix {
         var bestLyrics: String? = null
         var bestQuality = 0
 
-        for ((result, score) in allResults.take(10)) {
-            Timber.d("Trying: ${result.displayName} (ID: ${result.id}, dur: ${result.duration}, score: $score)")
+        // Take top candidate results that closely match the best score
+        val topScore = allResults.first().second
+        val candidates = allResults.filter { it.second >= topScore - 30 }
+
+        for ((result, score) in candidates) {
+            Timber.d("Trying candidate: ${result.displayName} (ID: ${result.id}, dur: ${result.duration}, score: $score)")
             val lrc = fetchLyricsForTrack(result.id).getOrNull() ?: continue
             if (lrc.isEmpty()) continue
             
             val quality = getQuality(lrc)
-            Timber.d("Got lyrics, quality=$quality")
+            Timber.d("Got lyrics for ${result.displayName}, quality=$quality")
             
             if (quality > bestQuality) {
                 bestQuality = quality
@@ -239,9 +243,18 @@ object Paxsenix {
             if (bestQuality == 3) break // Word-synced is best we can get
         }
 
+        // If top candidates had lyrics, return them
         bestLyrics?.let {
             Timber.d("Using Paxsenix lyrics with quality $bestQuality (respects provider order)")
             return Result.success(it)
+        }
+
+        // Otherwise try any remaining results
+        for ((result, score) in allResults.drop(candidates.size).take(5)) {
+            val lrc = fetchLyricsForTrack(result.id).getOrNull() ?: continue
+            if (lrc.isNotEmpty()) {
+                return Result.success(lrc)
+            }
         }
         
         Timber.w("No lyrics content from Paxsenix for matched tracks")
@@ -268,7 +281,6 @@ object Paxsenix {
         artist: String,
         duration: Int
     ): List<Pair<SearchResult, Double>> {
-        val durationMs = duration * 1000
         val cleanupRegex = Regex("""\s*\(.*?\)|\s*\[.*?\]""")
         
         // Cleaned versions for fuzzy matching
@@ -285,21 +297,24 @@ object Paxsenix {
             val resultTitle = result.displayName
             val resultArtist = result.displayArtist
             
-            result.duration?.let { d ->
-                val diff = abs(d - durationMs)
-                when {
-                    diff <= 2000 -> score += 100 // Excellent match
-                    diff <= 5000 -> score += 50  // Good match
-                    diff <= 10000 -> score += 10 // Acceptable match
-                    else -> score -= 50          // Likely wrong version (Mixed/Edit/etc)
-                }
-            }
-            
             val resultTitleCleaned = resultTitle.replace(cleanupRegex, "").lowercase().trim()
             
             when {
                 resultTitleCleaned == cleanedTitle -> score += 80
                 resultTitleCleaned.contains(cleanedTitle) || cleanedTitle.contains(resultTitleCleaned) -> score += 40
+                else -> score -= 100 // Heavy penalty if title does not match at all
+            }
+            
+            if (duration > 0) {
+                result.duration?.let { d ->
+                    val diff = abs(d - duration)
+                    when {
+                        diff <= 2 -> score += 100 // Excellent match
+                        diff <= 5 -> score += 50  // Good match
+                        diff <= 10 -> score += 10 // Acceptable match
+                        else -> score -= 50          // Likely wrong version (Mixed/Edit/etc)
+                    }
+                }
             }
             
             // Penalize version mismatch
@@ -330,12 +345,17 @@ object Paxsenix {
     private suspend fun fetchLyricsForTrack(id: String): Result<String> = runCatching {
         Timber.d("Fetching lyrics for track ID: $id")
         
-        val response = httpClient.get("/apple-music/lyrics") {
-            parameter("id", id)
-        }.body<LyricsResponse>()
+        val response = try {
+            httpClient.get("/apple-music/lyrics") {
+                parameter("id", id)
+            }.body<LyricsResponse>()
+        } catch (e: Exception) {
+            Timber.e(e, "HTTP / JSON parsing error for track ID: $id")
+            throw e
+        }
         
         val lyricsType = response.type
-        Timber.d("Lyrics response: type=$lyricsType")
+        Timber.d("Lyrics response for $id: type=$lyricsType, hasLrc=${!response.lrc.isNullOrBlank()}, hasTtml=${!response.ttmlContent.isNullOrBlank()}")
         
         // Prioritize ttmlContent using the robust TTMLParser
         if (!response.ttmlContent.isNullOrBlank()) {
@@ -346,7 +366,13 @@ object Paxsenix {
             }
         }
 
-        // Fallback to ELRC formats if TTML failed or is missing
+        // Direct lrc from Paxsenix API
+        if (!response.lrc.isNullOrBlank()) {
+            Timber.d("Using direct lrc field from Paxsenix")
+            return@runCatching response.lrc
+        }
+
+        // Fallback to ELRC formats if TTML/LRC failed or is missing
         if (!response.elrcMultiPerson.isNullOrBlank()) {
             Timber.d("Using elrcMultiPerson as fallback")
             return@runCatching response.elrcMultiPerson
@@ -474,42 +500,52 @@ object Paxsenix {
     }
 
     private class AppleTokenManager(private val httpClient: HttpClient) {
-        private var cachedToken: String? = null
+        @Volatile
+        private var cachedToken: String? = FALLBACK_TOKEN
         private val mutex = Mutex()
 
-        suspend fun getToken(): String = mutex.withLock {
+        suspend fun getToken(): String {
             cachedToken?.let { return it }
+            return mutex.withLock {
+                cachedToken?.let { return@withLock it }
 
-            try {
-                val mainPageResponse = httpClient.get("https://beta.music.apple.com")
-                val mainPageBody = mainPageResponse.bodyAsText()
+                try {
+                    val mainPageResponse = httpClient.get("https://beta.music.apple.com")
+                    val mainPageBody = mainPageResponse.bodyAsText()
 
-                val indexJsRegex = Regex("""/assets/index~[^/]+\.js""")
-                val indexJsMatch = indexJsRegex.find(mainPageBody)
-                    ?: throw Exception("Could not find index JS URL")
+                    val indexJsRegex = Regex("""/assets/index~[^/]+\.js""")
+                    val indexJsMatch = indexJsRegex.find(mainPageBody)
+                        ?: throw Exception("Could not find index JS URL")
 
-                val indexJsUri = indexJsMatch.value
+                    val indexJsUri = indexJsMatch.value
 
-                val indexJsResponse = httpClient.get("https://beta.music.apple.com$indexJsUri")
-                val indexJsBody = indexJsResponse.bodyAsText()
+                    val indexJsResponse = httpClient.get("https://beta.music.apple.com$indexJsUri")
+                    val indexJsBody = indexJsResponse.bodyAsText()
 
-                val tokenRegex = Regex("""eyJ[A-Za-z0-9\-_=]+\.[A-Za-z0-9\-_=]+\.[A-Za-z0-9\-_=]+""")
-                val tokenMatch = tokenRegex.find(indexJsBody)
-                    ?: throw Exception("Could not find token")
+                    val tokenRegex = Regex("""eyJ[A-Za-z0-9\-_=]+\.[A-Za-z0-9\-_=]+\.[A-Za-z0-9\-_=]+""")
+                    val tokenMatch = tokenRegex.find(indexJsBody)
+                        ?: throw Exception("Could not find token")
 
-                val token = tokenMatch.value
-                cachedToken = token
-                Timber.d("Fetched new Apple Music token")
-                return token
-            } catch (e: Exception) {
-                Timber.e(e, "Error fetching Apple Music token")
-                throw Exception("Error fetching Apple Music token: ${e.message}", e)
+                    val token = tokenMatch.value
+                    cachedToken = token
+                    Timber.d("Fetched new Apple Music token")
+                    token
+                } catch (e: Exception) {
+                    Timber.e(e, "Error fetching Apple Music token, using fallback")
+                    cachedToken = FALLBACK_TOKEN
+                    FALLBACK_TOKEN
+                }
             }
         }
 
         fun clearToken() {
             cachedToken = null
             Timber.d("Cleared cached Apple Music token")
+        }
+
+        companion object {
+            private const val FALLBACK_TOKEN =
+                "eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiIsImtpZCI6IldlYlBsYXlLaWQifQ.eyJpc3MiOiJBTVBXZWJQbGF5IiwiaWF0IjoxNzg2MzYyMTUwLCJleHAiOjE3OTI0MTAxNTAsInJvb3RfaHR0cHNfb3JpZ2luIjpbImFwcGxlLmNvbSJdfQ.wmgvODbrLN8VxNt45wP6fxrI-U2PJhDD1Y1ZokU1ZqAKg_2F8rB30P_MwzPlQ0SyEGPXNg8Pfh7HUsO1cBv3cQ"
         }
     }
 }
