@@ -100,6 +100,7 @@ import com.pokerlanka.mixora.constants.AiCustomModelKey
 import com.pokerlanka.mixora.constants.AiProvider
 import com.pokerlanka.mixora.constants.AiProviderKey
 import com.pokerlanka.mixora.constants.AiSelectedModelKey
+import com.pokerlanka.mixora.constants.AppConstants
 import com.pokerlanka.mixora.ui.component.DefaultDialog
 import com.pokerlanka.mixora.ui.component.IconButton
 import com.pokerlanka.mixora.ui.component.Material3SettingsGroup

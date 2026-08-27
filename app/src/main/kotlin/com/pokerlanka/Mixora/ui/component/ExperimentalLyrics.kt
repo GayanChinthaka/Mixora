@@ -8,10 +8,7 @@ package com.pokerlanka.mixora.ui.component
 
 import android.annotation.SuppressLint
 import android.app.Activity
-import android.content.Intent
 import android.view.WindowManager
-import android.widget.Toast
-import androidx.activity.compose.BackHandler
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.AnimationState
 import androidx.compose.animation.core.FastOutSlowInEasing
@@ -30,9 +27,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentWidth
-import androidx.compose.material3.BasicAlertDialog
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialTheme
@@ -47,7 +41,6 @@ import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -76,7 +69,6 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
-import android.text.Layout
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.Velocity
@@ -104,7 +96,6 @@ import com.pokerlanka.mixora.ui.component.shimmer.ShimmerHost
 import com.pokerlanka.mixora.ui.component.shimmer.TextPlaceholder
 import com.pokerlanka.mixora.ui.screens.settings.LyricsPosition
 import com.pokerlanka.mixora.ui.utils.fadingEdge
-import com.pokerlanka.mixora.utils.ComposeToImage
 import com.pokerlanka.mixora.utils.rememberEnumPreference
 import com.pokerlanka.mixora.utils.rememberPreference
 import com.pokerlanka.mixora.viewmodels.LyricsViewModel
@@ -205,28 +196,8 @@ fun ExperimentalLyrics(
     var deferredCurrentLineIndex by rememberSaveable { mutableIntStateOf(0) }
     var lastPreviewTime by rememberSaveable { mutableLongStateOf(0L) }
     var isSeeking by remember { mutableStateOf(false) }
-    var showProgressDialog by remember { mutableStateOf(false) }
-    var showShareDialog by remember { mutableStateOf(false) }
-    var showColorPickerDialog by remember { mutableStateOf(false) }
-    var shareDialogData by remember { mutableStateOf<Triple<String, String, String>?>(null) }
-    var isSelectionModeActive by rememberSaveable { mutableStateOf(false) }
-    val selectedIndices = remember { mutableStateListOf<Int>() }
-    var showMaxSelectionToast by remember { mutableStateOf(false) }
-    val isLyricsProviderShown = lyricsEntity != null && lyricsEntity.provider != "Unknown" && lyricsEntity.provider != "Manual" && !isSelectionModeActive
+    val isLyricsProviderShown = lyricsEntity != null && lyricsEntity.provider != "Unknown" && lyricsEntity.provider != "Manual"
     var isAutoScrollEnabled by rememberSaveable { mutableStateOf(true) }
-
-    BackHandler(enabled = isSelectionModeActive) {
-        isSelectionModeActive = false
-        selectedIndices.clear()
-    }
-
-    val maxSelectionLimit = 5
-    LaunchedEffect(showMaxSelectionToast) {
-        if (showMaxSelectionToast) {
-            Toast.makeText(context, context.getString(R.string.max_selection_limit, maxSelectionLimit), Toast.LENGTH_SHORT).show()
-            showMaxSelectionToast = false
-        }
-    }
 
     var lastMainMaxSeen by remember(lyrics, lines) { mutableIntStateOf(-1) }
     var smoothPositionForSync by remember { mutableLongStateOf(0L) }
@@ -361,8 +332,6 @@ fun ExperimentalLyrics(
         userManualOffset = 0f
         scrollTargetIndex = -1
         deferredCurrentLineIndex = 0
-        isSelectionModeActive = false
-        selectedIndices.clear()
         previousScrollActiveIndices = emptySet()
     }
     
@@ -547,12 +516,12 @@ fun ExperimentalLyrics(
                         object : NestedScrollConnection {
                             override fun onPostScroll(consumed: Offset, available: Offset, source: NestedScrollSource): Offset {
                                 if (source == NestedScrollSource.UserInput) isAutoScrollEnabled = false
-                                if (!isSelectionModeActive) lastPreviewTime = System.currentTimeMillis()
+                                lastPreviewTime = System.currentTimeMillis()
                                 return super.onPostScroll(consumed, available, source)
                             }
                             override suspend fun onPostFling(consumed: Velocity, available: Velocity): Velocity {
                                 isAutoScrollEnabled = false
-                                if (!isSelectionModeActive) lastPreviewTime = System.currentTimeMillis()
+                                lastPreviewTime = System.currentTimeMillis()
                                 return super.onPostFling(consumed, available)
                             }
                         }
@@ -570,7 +539,7 @@ fun ExperimentalLyrics(
                                     if (!hasDragged) {
                                         hasDragged = true
                                         isAutoScrollEnabled = false
-                                        if (!isSelectionModeActive) lastPreviewTime = System.currentTimeMillis()
+                                        lastPreviewTime = System.currentTimeMillis()
                                     }
                                     userManualOffset = (userManualOffset + change.positionChange().y).coerceIn(scrollClampMin, scrollClampMax)
                                     velocityTracker.addPosition(change.uptimeMillis, change.position)
@@ -658,8 +627,8 @@ fun ExperimentalLyrics(
                                     LyricsLine(
                                         index = index, item = item, isSynced = isSynced,
                                         isActiveLine = isActiveLine,
-                                        bgVisible = bgVisible, isSelected = selectedIndices.contains(index),
-                                        isSelectionModeActive = isSelectionModeActive, currentPositionState = currentPositionState,
+                                        bgVisible = bgVisible,
+                                        currentPositionState = currentPositionState,
                                         lyricsOffset = (currentSong?.song?.lyricsOffset ?: 0).toLong(),
                                         playerConnection = playerConnection, lyricsTextSize = lyricsTextSize,
                                         lyricsLineSpacing = lyricsLineSpacing,
@@ -672,13 +641,7 @@ fun ExperimentalLyrics(
                                         romanizeLyrics = romanizeThisSong,
                                         onSizeChanged = { itemHeights[listIndex] = it },
                                         onClick = {
-                                            if (isSelectionModeActive) {
-                                                if (selectedIndices.contains(index)) {
-                                                    selectedIndices.remove(index)
-                                                    if (selectedIndices.isEmpty()) isSelectionModeActive = false
-                                                } else if (selectedIndices.size < maxSelectionLimit) selectedIndices.add(index)
-                                                else showMaxSelectionToast = true
-                                            } else if (changeLyrics) {
+                                            if (changeLyrics) {
                                                 if (item.time < playerConnection.player.duration + 30000L) {
                                                     playerConnection.seekTo((item.time - (currentSong?.song?.lyricsOffset ?: 0)).coerceAtLeast(0))
                                                 } else {
@@ -687,12 +650,6 @@ fun ExperimentalLyrics(
                                                 }
                                                 isAutoScrollEnabled = true
                                                 lastPreviewTime = 0L
-                                            }
-                                        },
-                                        onLongClick = {
-                                            if (!isSelectionModeActive) {
-                                                isSelectionModeActive = true
-                                                selectedIndices.add(index)
                                             }
                                         }
                                     )
@@ -716,82 +673,9 @@ fun ExperimentalLyrics(
 
         LyricsActionOverlay(
             modifier = Modifier.align(Alignment.BottomCenter),
-            isAutoScrollEnabled = isAutoScrollEnabled, isSynced = isSynced,
-            isSelectionModeActive = isSelectionModeActive, anySelected = selectedIndices.isNotEmpty(),
+            isAutoScrollEnabled = isAutoScrollEnabled,
+            isSynced = isSynced,
             onSyncClick = latestResyncLyrics,
-            onCancelSelection = { isSelectionModeActive = false; selectedIndices.clear() },
-            onShareSelection = {
-                val text = selectedIndices.sorted().mapNotNull { lines.getOrNull(it)?.text }.joinToString("\n")
-                if (text.isNotBlank()) {
-                    shareDialogData = Triple(text, mediaMetadata?.title ?: "", mediaMetadata?.artists?.joinToString { it.name } ?: "")
-                    showShareDialog = true
-                }
-                isSelectionModeActive = false; selectedIndices.clear()
-            }
-        )
-    }
-
-    if (showProgressDialog) {
-        BasicAlertDialog(onDismissRequest = {}) {
-            Card(shape = MaterialTheme.shapes.medium, colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
-                Box(Modifier.padding(32.dp)) { Text(stringResource(R.string.generating_image) + "\n" + stringResource(R.string.please_wait)) }
-            }
-        }
-    }
-
-    if (showShareDialog && shareDialogData != null) {
-        val (txt, title, arts) = shareDialogData!!
-        LyricsShareDialog(
-            txt = txt, title = title, arts = arts, songId = mediaMetadata?.id ?: "",
-            onDismiss = { showShareDialog = false },
-            onShareAsImage = {
-                showShareDialog = false
-                showColorPickerDialog = true
-            }
-        )
-    }
-
-    if (showColorPickerDialog && shareDialogData != null) {
-        val (txt, title, arts) = shareDialogData!!
-        LyricsColorPickerDialog(
-            txt = txt, title = title, arts = arts, thumbnailUrl = mediaMetadata?.thumbnailUrl,
-            lyricsTextPosition = lyricsTextPosition,
-            onDismiss = { showColorPickerDialog = false },
-            onShare = { bgColor, textColor, secTextColor, style ->
-                showColorPickerDialog = false
-                showProgressDialog = true
-                scope.launch {
-                    try {
-                        val image = ComposeToImage.createLyricsImage(
-                            context, mediaMetadata?.thumbnailUrl, title, arts, txt,
-                            (configuration.screenWidthDp * density.density).toInt(),
-                            (configuration.screenHeightDp * density.density).toInt(),
-                            bgColor.toArgb(),
-                            when(style) {
-                                LyricsBackgroundStyle.SOLID -> LyricsBackgroundStyle.SOLID
-                                LyricsBackgroundStyle.BLUR -> LyricsBackgroundStyle.BLUR
-                                LyricsBackgroundStyle.GRADIENT -> LyricsBackgroundStyle.GRADIENT
-                            },
-                            textColor.toArgb(), secTextColor.toArgb(),
-                            when (lyricsTextPosition) {
-                                LyricsPosition.LEFT -> Layout.Alignment.ALIGN_NORMAL
-                                LyricsPosition.CENTER -> Layout.Alignment.ALIGN_CENTER
-                                else -> Layout.Alignment.ALIGN_OPPOSITE
-                            }
-                        )
-                        val uri = ComposeToImage.saveBitmapAsFile(context, image, "lyrics_${System.currentTimeMillis()}")
-                        context.startActivity(Intent.createChooser(Intent(Intent.ACTION_SEND).apply {
-                            type = "image/png"
-                            putExtra(Intent.EXTRA_STREAM, uri)
-                            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                        }, context.getString(R.string.share_lyrics)))
-                    } catch (e: Exception) {
-                        Toast.makeText(context, context.getString(R.string.failed_to_create_image, e.message), Toast.LENGTH_SHORT).show()
-                    } finally {
-                        showProgressDialog = false
-                    }
-                }
-            }
         )
     }
 }

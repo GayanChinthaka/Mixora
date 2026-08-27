@@ -28,18 +28,7 @@
     <string name="allows_for_sync_witch_youtube">NOTE: This option enables syncing with YouTube Music and CANNOT be changed later</string>
 
     <string name="and">and</string>
-    <string name="generating_image">Generating image…</string>
-    <string name="please_wait">Please wait</string>
     <string name="cancel">Cancel</string>
-    <string name="share_lyrics">Share lyrics</string>
-    <string name="share_as_text">Share as text</string>
-    <string name="share_as_image">Share as image</string>
-    <string name="max_selection_limit">Maximum selection limit reached</string>
-    <string name="share_selected">Share selected</string>
-    <string name="customize_colors">Customize colors</string>
-    <string name="text_color">Text color</string>
-    <string name="secondary_text_color">Secondary text color</string>
-    <string name="background_color">Background color</string>
 
     <string name="remove_from_cache">Remove from cache</string>
 
@@ -83,11 +72,6 @@
     <string name="seek_backward_dynamic">-%1$d seconds backward</string>
 
     <string name="similar_content">Similar content</string>
-
-    <string name="player_background_style">Player background style</string>
-    <string name="player_background_solid">Solid</string>
-    <string name="gradient">Gradient</string>
-    <string name="player_background_blur">Blur</string>
     <string name="display_density">Display density</string>
     <string name="restart">Restart</string>
     <string name="restart_required">Restart required!</string>
@@ -358,7 +342,6 @@
     <string name="your_daily_discover">Your daily discover</string>
     <string name="plays">plays</string>
     <string name="progress_percent">Progress %s%%</string>
-    <string name="failed_to_create_image">Failed to create image: %s</string>
     <string name="copied_title">Title copied</string>
     <string name="copied_artist">Artist copied</string>
     <string name="error_playing">Playback error</string>
