@@ -70,7 +70,6 @@ import com.pokerlanka.mixora.constants.EnableLandscapeScalingKey
 import com.pokerlanka.mixora.ui.theme.ThemePalettes
 import com.pokerlanka.mixora.ui.theme.ThemeSeedPaletteCodec
 import com.pokerlanka.mixora.ui.theme.toThemePalette
-import com.pokerlanka.mixora.constants.HidePlayerThumbnailKey
 import com.pokerlanka.mixora.constants.LyricsClickKey
 import com.pokerlanka.mixora.constants.LyricsLineSpacingKey
 import com.pokerlanka.mixora.constants.LyricsScrollKey

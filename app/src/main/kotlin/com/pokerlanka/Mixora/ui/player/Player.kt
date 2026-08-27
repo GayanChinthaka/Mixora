@@ -146,7 +146,6 @@ import com.pokerlanka.mixora.R
 import com.pokerlanka.mixora.constants.CropAlbumArtKey
 import com.pokerlanka.mixora.constants.DarkModeKey
 import com.pokerlanka.mixora.constants.DisableBlurKey
-import com.pokerlanka.mixora.constants.HidePlayerThumbnailKey
 import com.pokerlanka.mixora.constants.HideStatusBarOnFullscreenKey
 import com.pokerlanka.mixora.constants.KeepScreenOn
 import com.pokerlanka.mixora.constants.LyricsBackgroundStyle

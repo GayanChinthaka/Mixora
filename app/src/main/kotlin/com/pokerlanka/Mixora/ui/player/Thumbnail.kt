@@ -69,7 +69,6 @@ import coil3.request.ImageRequest
 import com.pokerlanka.mixora.LocalPlayerConnection
 import com.pokerlanka.mixora.R
 import com.pokerlanka.mixora.constants.CropAlbumArtKey
-import com.pokerlanka.mixora.constants.HidePlayerThumbnailKey
 import com.pokerlanka.mixora.constants.PlayerBackgroundStyle
 import com.pokerlanka.mixora.constants.PlayerBackgroundStyleKey
 import com.pokerlanka.mixora.constants.PlayerHorizontalPadding
@@ -158,7 +157,6 @@ fun Thumbnail(
     // Preferences
     val swipeThumbnail by rememberPreference(SwipeThumbnailKey, true)
     val cropArtwork by rememberPreference(CropAlbumArtKey, false)
-    val hidePlayerThumbnail by rememberPreference(HidePlayerThumbnailKey, false)
     val playerBackground by rememberEnumPreference(
         key = PlayerBackgroundStyleKey,
         defaultValue = PlayerBackgroundStyle.DEFAULT
@@ -301,50 +299,44 @@ fun Thumbnail(
                         derivedStateOf { swipeThumbnail && isPlayerExpanded() }
                     }
 
-                    if (hidePlayerThumbnail) {
-                        HiddenThumbnailPlaceholder(
-                            textBackgroundColor = textBackgroundColor
-                        )
-                    } else {
-                        HorizontalPager(
-                            state = pagerState,
-                            userScrollEnabled = isScrollEnabled,
-                            beyondViewportPageCount = 1,
-                            key = { page ->
-                                if (page in queueWindows.indices) {
-                                    val window = queueWindows[page]
-                                    "${window.firstPeriodIndex}_${window.mediaItem.mediaId}_$page"
-                                } else {
-                                    mediaMetadata?.id ?: page.toString()
-                                }
-                            },
-                            modifier = if (isLandscape) {
-                                Modifier.size(dimensions.thumbnailSize + (PlayerHorizontalPadding * 2))
+                    HorizontalPager(
+                        state = pagerState,
+                        userScrollEnabled = isScrollEnabled,
+                        beyondViewportPageCount = 1,
+                        key = { page ->
+                            if (page in queueWindows.indices) {
+                                val window = queueWindows[page]
+                                "${window.firstPeriodIndex}_${window.mediaItem.mediaId}_$page"
                             } else {
-                                Modifier.fillMaxSize()
+                                mediaMetadata?.id ?: page.toString()
                             }
-                        ) { page ->
-                            val window = queueWindows.getOrNull(page)
-                            val mediaItem = window?.mediaItem ?: playerConnection.player.currentMediaItem
-                            if (mediaItem != null) {
-                                ThumbnailItem(
-                                    item = mediaItem,
-                                    dimensions = dimensions,
-                                    textBackgroundColor = textBackgroundColor,
-                                    layoutDirection = layoutDirection,
-                                    onSeek = onSeekCallback,
-                                    playerConnection = playerConnection,
-                                    context = context,
-                                    isLandscape = isLandscape,
-                                    cropArtwork = cropArtwork,
-                                    currentMediaId = mediaMetadata?.id,
-                                    currentMediaThumbnail = mediaMetadata?.thumbnailUrl
-                                )
-                            } else {
-                                HiddenThumbnailPlaceholder(
-                                    textBackgroundColor = textBackgroundColor
-                                )
-                            }
+                        },
+                        modifier = if (isLandscape) {
+                            Modifier.size(dimensions.thumbnailSize + (PlayerHorizontalPadding * 2))
+                        } else {
+                            Modifier.fillMaxSize()
+                        }
+                    ) { page ->
+                        val window = queueWindows.getOrNull(page)
+                        val mediaItem = window?.mediaItem ?: playerConnection.player.currentMediaItem
+                        if (mediaItem != null) {
+                            ThumbnailItem(
+                                item = mediaItem,
+                                dimensions = dimensions,
+                                textBackgroundColor = textBackgroundColor,
+                                layoutDirection = layoutDirection,
+                                onSeek = onSeekCallback,
+                                playerConnection = playerConnection,
+                                context = context,
+                                isLandscape = isLandscape,
+                                cropArtwork = cropArtwork,
+                                currentMediaId = mediaMetadata?.id,
+                                currentMediaThumbnail = mediaMetadata?.thumbnailUrl
+                            )
+                        } else {
+                            HiddenThumbnailPlaceholder(
+                                textBackgroundColor = textBackgroundColor
+                            )
                         }
                     }
                 }
@@ -559,7 +551,7 @@ private fun HiddenThumbnailPlaceholder(
     ) {
         Icon(
             painter = painterResource(R.drawable.small_icon),
-            contentDescription = stringResource(R.string.hide_player_thumbnail),
+            contentDescription = null,
             modifier = Modifier.size(120.dp)
         )
     }
