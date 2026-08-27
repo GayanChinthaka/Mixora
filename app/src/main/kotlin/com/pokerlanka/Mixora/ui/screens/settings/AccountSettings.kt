@@ -290,7 +290,7 @@ fun AccountSettings(
                             ExpressiveSwitchRow(
                                 icon = painterResource(R.drawable.add_circle),
                                 title = stringResource(R.string.more_content),
-                                subtitle = "Show more content on home and search",
+                                subtitle = stringResource(R.string.show_more_content_desc),
                                 checked = useLoginForBrowse,
                                 onCheckedChange = onUseLoginForBrowseChange,
                                 index = 0,
@@ -300,7 +300,7 @@ fun AccountSettings(
                             ExpressiveSwitchRow(
                                 icon = painterResource(R.drawable.cached),
                                 title = stringResource(R.string.yt_sync),
-                                subtitle = "Sync your history and likes with YouTube",
+                                subtitle = stringResource(R.string.sync_youtube_desc),
                                 checked = ytmSync,
                                 onCheckedChange = onYtmSyncChange,
                                 index = 1,
@@ -315,7 +315,7 @@ fun AccountSettings(
                         ExpressiveActionRow(
                             icon = painterResource(R.drawable.integration),
                             title = stringResource(R.string.integrations),
-                            subtitle = "Manage external service integrations",
+                            subtitle = stringResource(R.string.integrations_desc),
                             onClick = { navController.navigate("settings/integrations") },
                             index = 0,
                             count = 2,
@@ -323,8 +323,8 @@ fun AccountSettings(
 
                         ExpressiveActionRow(
                             icon = painterResource(R.drawable.discover_tune),
-                            title = "AI Integration",
-                            subtitle = "Provider and model for lyrics romanization",
+                            title = stringResource(R.string.ai_integration),
+                            subtitle = stringResource(R.string.ai_integration_desc),
                             onClick = { navController.navigate("settings/ai_integration") },
                             index = 1,
                             count = 2,
@@ -337,7 +337,7 @@ fun AccountSettings(
                         ExpressiveActionRow(
                             icon = painterResource(R.drawable.security),
                             title = stringResource(R.string.privacy),
-                            subtitle = "Manage your data and privacy settings",
+                            subtitle = stringResource(R.string.privacy_desc),
                             onClick = { navController.navigate("settings/privacy") },
                             index = 0,
                             count = 1,
@@ -548,7 +548,7 @@ private fun AccountSummaryCard(
                             contentColor = MaterialTheme.colorScheme.primary
                         ),
                     ) {
-                        Text(text = "Advanced Login")
+                        Text(text = stringResource(R.string.advanced_login))
                     }
 
                     if (isLoggedIn) {
@@ -584,7 +584,7 @@ private fun AccountSwitcherSheet(
         sheetState = sheetState,
     ) {
         Text(
-            text = "Saved Accounts",
+            text = stringResource(R.string.saved_accounts),
             style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Bold,
             modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp),
@@ -616,7 +616,7 @@ private fun AccountSwitcherSheet(
                             )
                         },
                     ) {
-                        Text(text = "No saved accounts")
+                        Text(text = stringResource(R.string.no_saved_accounts))
                     }
                 }
             } else {
@@ -667,7 +667,7 @@ private fun AccountSwitcherSheet(
                                 ) {
                                     Icon(
                                         painter = painterResource(R.drawable.delete),
-                                        contentDescription = "Remove Account",
+                                        contentDescription = stringResource(R.string.remove_account),
                                     )
                                 }
                             }
@@ -713,7 +713,7 @@ private fun AccountSwitcherSheet(
                                 contentDescription = null,
                             )
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text(text = "Save Current Account")
+                            Text(text = stringResource(R.string.save_current_account))
                         }
                         OutlinedButton(
                             onClick = onAddAnotherAccount,
@@ -724,7 +724,7 @@ private fun AccountSwitcherSheet(
                                 contentDescription = null,
                             )
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text(text = "Add Another Account")
+                            Text(text = stringResource(R.string.add_another_account))
                         }
                     }
                 }

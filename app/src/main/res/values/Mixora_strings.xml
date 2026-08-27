@@ -644,4 +644,48 @@
     <string name="romanization_setup_title">AI provider required</string>
     <string name="romanization_setup_message">Romanization converts non-Latin lyrics into Latin script using an AI model. Add a provider, API key and model under Account &#8594; AI Integration to turn this on.</string>
     <string name="romanization_setup_action">Set up</string>
+
+    <!-- Settings Screen Descriptions -->
+    <string name="settings_account_desc">Account, integrations and security</string>
+    <string name="settings_mix_together_desc">Listen together in real-time with friends</string>
+    <string name="settings_stats_desc">Listening habits and statistics</string>
+    <string name="settings_appearance_desc">Theme, colors and visual settings</string>
+    <string name="settings_player_desc">Audio quality, playback and equalizer</string>
+    <string name="settings_lyrics_desc">Lyrics providers and display options</string>
+    <string name="settings_content_desc">Location and content preferences</string>
+    <string name="settings_android_auto_desc">Car media player and navigation settings</string>
+    <string name="settings_storage_desc">Cache, downloads and storage usage</string>
+    <string name="settings_backup_desc">Backup and restore app settings and data</string>
+    <string name="settings_proxy_desc">Network proxy settings</string>
+    <string name="settings_links_desc">Open supported links in app</string>
+    <string name="settings_updates_desc">Check for application updates</string>
+    <string name="settings_about_desc">App version, license and links</string>
+
+    <!-- Account & Login UI Strings -->
+    <string name="show_more_content_desc">Show more content on home and search</string>
+    <string name="sync_youtube_desc">Sync your history and likes with YouTube</string>
+    <string name="integrations_desc">Manage external service integrations</string>
+    <string name="ai_integration_desc">Provider and model for lyrics romanization</string>
+    <string name="privacy_desc">Manage your data and privacy settings</string>
+    <string name="advanced_login">Advanced Login</string>
+    <string name="saved_accounts">Saved Accounts</string>
+    <string name="no_saved_accounts">No saved accounts</string>
+    <string name="remove_account">Remove Account</string>
+    <string name="save_current_account">Save Current Account</string>
+    <string name="add_another_account">Add Another Account</string>
+
+    <!-- About & Updates -->
+    <string name="developer">Developer</string>
+    <string name="company">Company</string>
+    <string name="app_up_to_date">Mixora is up to date!</string>
+    <string name="could_not_fetch_updates">Could not fetch updates</string>
+    <string name="download_update">Download Update</string>
+    <string name="auto_check_updates_desc">Periodically check for updates and notify when a new version is available</string>
+
+    <!-- Player, Cache, Selection & Backup -->
+    <string name="cache_songs">Cache Songs</string>
+    <string name="selection">Selection</string>
+    <string name="casting">Casting</string>
+    <string name="failed_preview_csv">Failed to preview CSV file</string>
+    <string name="no_songs_found_csv">No songs found. Invalid file, or perhaps no song matches were found.</string>
 </resources>

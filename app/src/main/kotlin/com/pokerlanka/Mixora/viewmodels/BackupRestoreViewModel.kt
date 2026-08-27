@@ -517,7 +517,7 @@ class BackupRestoreViewModel @Inject constructor(
             }
         }.onFailure {
             reportException(it)
-            Toast.makeText(context, "Failed to preview CSV file", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, R.string.failed_preview_csv, Toast.LENGTH_SHORT).show()
         }
         return CsvImportState()
     }
@@ -640,7 +640,7 @@ class BackupRestoreViewModel @Inject constructor(
         if (songs.isEmpty()) {
             Toast.makeText(
                 context,
-                "No songs found. Invalid file, or perhaps no song matches were found.",
+                R.string.no_songs_found_csv,
                 Toast.LENGTH_SHORT
             ).show()
         }

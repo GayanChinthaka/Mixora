@@ -587,7 +587,7 @@ private fun CustomEndpointDialog(
             singleLine = true,
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
             label = { Text(stringResource(R.string.ai_custom_endpoint)) },
-            placeholder = { Text("https://api.openai.com/v1/chat/completions") }
+            placeholder = { Text(AppConstants.DEFAULT_OPENAI_ENDPOINT) }
         )
     }
 }
@@ -621,7 +621,7 @@ private fun CustomModelDialog(
             singleLine = true,
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
             label = { Text(stringResource(R.string.ai_model)) },
-            placeholder = { Text("gpt-4o") }
+            placeholder = { Text(AppConstants.DEFAULT_AI_MODEL) }
         )
     }
 }

@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Mixora Project (C) 2026
  * Author : Gayan Chinthaka
  * Company: Pokerlanka
@@ -303,7 +303,7 @@ fun CachePlaylistScreen(
                                     } else {
                                         playerConnection.playQueue(
                                             ListQueue(
-                                                title = "Cache Songs",
+                                                title = context.getString(R.string.cache_songs),
                                                 items = cachedSongs.map { it.toMediaItem() },
                                                 startIndex = cachedSongs.indexOfFirst { it.id == song.id }
                                             )
@@ -539,7 +539,7 @@ private fun CachePlaylistHeader(
                 onClick = {
                     playerConnection.playQueue(
                         ListQueue(
-                            title = "Cache Songs",
+                            title = context.getString(R.string.cache_songs),
                             items = songs.shuffled().map { it.toMediaItem() },
                         )
                     )
@@ -565,7 +565,7 @@ private fun CachePlaylistHeader(
                 onClick = {
                     playerConnection.playQueue(
                         ListQueue(
-                            title = "Cache Songs",
+                            title = context.getString(R.string.cache_songs),
                             items = songs.map { it.toMediaItem() },
                         )
                     )

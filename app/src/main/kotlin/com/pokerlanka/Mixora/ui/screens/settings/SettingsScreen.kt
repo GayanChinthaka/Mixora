@@ -97,19 +97,19 @@ fun SettingsScreen(
                         Material3SettingsItem(
                             icon = painterResource(R.drawable.account),
                             title = { Text(stringResource(R.string.account)) },
-                            description = { Text("Account, integrations and security") },
+                            description = { Text(stringResource(R.string.settings_account_desc)) },
                             onClick = { navController.navigate("settings/account") }
                         ),
                         Material3SettingsItem(
                             icon = painterResource(R.drawable.group),
-                            title = { Text("Mix Together") },
-                            description = { Text("Listen together in real-time with friends") },
+                            title = { Text(stringResource(R.string.music_together)) },
+                            description = { Text(stringResource(R.string.settings_mix_together_desc)) },
                             onClick = { navController.navigate("settings/music_together") }
                         ),
                         Material3SettingsItem(
                             icon = painterResource(R.drawable.stats),
                             title = { Text(stringResource(R.string.stats)) },
-                            description = { Text("Listening habits and statistics") },
+                            description = { Text(stringResource(R.string.settings_stats_desc)) },
                             onClick = { navController.navigate("stats") }
                         )
                     )
@@ -125,7 +125,7 @@ fun SettingsScreen(
                         Material3SettingsItem(
                             icon = painterResource(R.drawable.palette),
                             title = { Text(stringResource(R.string.appearance)) },
-                            description = { Text("Theme, colors and visual settings") },
+                            description = { Text(stringResource(R.string.settings_appearance_desc)) },
                             onClick = { navController.navigate("settings/appearance") }
                         )
                     )
@@ -141,7 +141,7 @@ fun SettingsScreen(
                         Material3SettingsItem(
                             icon = painterResource(R.drawable.play),
                             title = { Text(stringResource(R.string.player_and_audio)) },
-                            description = { Text("Audio quality, playback and equalizer") },
+                            description = { Text(stringResource(R.string.settings_player_desc)) },
                             onClick = { navController.navigate("settings/player") }
                         ),
                         Material3SettingsItem(
@@ -153,13 +153,13 @@ fun SettingsScreen(
                         Material3SettingsItem(
                             icon = painterResource(R.drawable.lyrics),
                             title = { Text(stringResource(R.string.lyrics)) },
-                            description = { Text("Lyrics providers and display options") },
+                            description = { Text(stringResource(R.string.settings_lyrics_desc)) },
                             onClick = { navController.navigate("settings/lyrics") }
                         ),
                         Material3SettingsItem(
                             icon = painterResource(R.drawable.language),
                             title = { Text(stringResource(R.string.content)) },
-                            description = { Text("Location and content preferences") },
+                            description = { Text(stringResource(R.string.settings_content_desc)) },
                             onClick = { navController.navigate("settings/content") }
                         )
                     )
@@ -171,12 +171,12 @@ fun SettingsScreen(
             if (hasAndroidAuto) {
                 item {
                     Material3SettingsGroup(
-                        title = "Android Auto",
+                        title = stringResource(R.string.android_auto),
                         items = listOf(
                             Material3SettingsItem(
                                 icon = painterResource(R.drawable.ic_android_auto),
                                 title = { Text(stringResource(R.string.android_auto)) },
-                                description = { Text("Car media player and navigation settings") },
+                                description = { Text(stringResource(R.string.settings_android_auto_desc)) },
                                 onClick = { navController.navigate("settings/android_auto") }
                             )
                         )
@@ -192,13 +192,13 @@ fun SettingsScreen(
                         Material3SettingsItem(
                             icon = painterResource(R.drawable.storage),
                             title = { Text(stringResource(R.string.storage)) },
-                            description = { Text("Cache, downloads and storage usage") },
+                            description = { Text(stringResource(R.string.settings_storage_desc)) },
                             onClick = { navController.navigate("settings/storage") }
                         ),
                         Material3SettingsItem(
                             icon = painterResource(R.drawable.restore),
                             title = { Text(stringResource(R.string.backup_restore)) },
-                            description = { Text("Backup and restore app settings and data") },
+                            description = { Text(stringResource(R.string.settings_backup_desc)) },
                             onClick = { navController.navigate("settings/backup_restore") }
                         )
                     )
@@ -214,8 +214,8 @@ fun SettingsScreen(
                         add(
                             Material3SettingsItem(
                                 icon = painterResource(R.drawable.wifi_proxy),
-                                title = { Text("Proxy") },
-                                description = { Text("Network proxy settings") },
+                                title = { Text(stringResource(R.string.proxy)) },
+                                description = { Text(stringResource(R.string.settings_proxy_desc)) },
                                 onClick = { navController.navigate("settings/internet") }
                             )
                         )
@@ -224,7 +224,7 @@ fun SettingsScreen(
                                 Material3SettingsItem(
                                     icon = painterResource(R.drawable.link),
                                     title = { Text(stringResource(R.string.default_links)) },
-                                    description = { Text("Open supported links in app") },
+                                    description = { Text(stringResource(R.string.settings_links_desc)) },
                                     onClick = {
                                         try {
                                             val intent = Intent(
@@ -248,8 +248,8 @@ fun SettingsScreen(
                         add(
                             Material3SettingsItem(
                                 icon = painterResource(R.drawable.update),
-                                title = { Text("Updates") },
-                                description = { Text("Check for application updates") },
+                                title = { Text(stringResource(R.string.updater)) },
+                                description = { Text(stringResource(R.string.settings_updates_desc)) },
                                 onClick = { navController.navigate("settings/updates") }
                             )
                         )
@@ -257,7 +257,7 @@ fun SettingsScreen(
                             Material3SettingsItem(
                                 icon = painterResource(R.drawable.info),
                                 title = { Text(stringResource(R.string.about)) },
-                                description = { Text("App version, license and links") },
+                                description = { Text(stringResource(R.string.settings_about_desc)) },
                                 onClick = { navController.navigate("settings/about") }
                             )
                         )

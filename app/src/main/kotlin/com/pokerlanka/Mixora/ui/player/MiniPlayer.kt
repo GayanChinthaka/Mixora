@@ -474,7 +474,7 @@ private fun NewMiniPlayer(
                     Spacer(modifier = Modifier.width(6.dp))
                     Icon(
                         painter = painterResource(R.drawable.cast_connected),
-                        contentDescription = "Casting",
+                        contentDescription = stringResource(R.string.casting),
                         tint = primaryColor,
                         modifier = Modifier.size(20.dp),
                     )

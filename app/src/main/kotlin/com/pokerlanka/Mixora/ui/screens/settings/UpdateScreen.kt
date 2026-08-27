@@ -110,12 +110,12 @@ fun UpdateScreen(
                     latestRelease = release
                     onLastUpdateCheckTimeChange(System.currentTimeMillis())
                     if (!silent && !Updater.isUpdateAvailable(release.tagName, BuildConfig.VERSION_NAME)) {
-                        Toast.makeText(context, "Mixora is up to date!", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, R.string.app_up_to_date, Toast.LENGTH_SHORT).show()
                     }
                 }.onFailure { error ->
                     checkError = error.message ?: "Failed to check for updates"
                     if (!silent) {
-                        Toast.makeText(context, "Could not fetch updates", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, R.string.could_not_fetch_updates, Toast.LENGTH_SHORT).show()
                     }
                 }
             } catch (e: Exception) {
@@ -276,7 +276,7 @@ fun UpdateScreen(
                                     modifier = Modifier.size(18.dp)
                                 )
                                 Spacer(Modifier.width(8.dp))
-                                Text("Download Update")
+                                Text(stringResource(R.string.download_update))
                             }
 
                             OutlinedButton(
@@ -321,7 +321,7 @@ fun UpdateScreen(
                     Material3SettingsItem(
                         icon = painterResource(R.drawable.sync),
                         title = { Text(stringResource(R.string.check_for_updates)) },
-                        description = { Text("Periodically check for updates and notify when a new version is available") },
+                        description = { Text(stringResource(R.string.auto_check_updates_desc)) },
                         trailingContent = {
                             Switch(
                                 checked = autoCheckUpdates,

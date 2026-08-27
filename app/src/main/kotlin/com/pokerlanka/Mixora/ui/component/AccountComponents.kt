@@ -86,7 +86,7 @@ fun TokenEditorDialog(
         """.trimIndent()
 
     TextFieldDialog(
-        title = { Text("Advanced Login") },
+        title = { Text(stringResource(R.string.advanced_login)) },
         initialTextFieldValue = TextFieldValue(text),
         onDone = { data ->
             data.split("\n").forEach {
@@ -339,7 +339,7 @@ fun AccountSwitcherSheet(
                         ) {
                             Icon(painterResource(R.drawable.star), contentDescription = null)
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text("Save Current Account")
+                            Text(stringResource(R.string.save_current_account))
                         }
                     }
                     TextButton(
@@ -348,7 +348,7 @@ fun AccountSwitcherSheet(
                     ) {
                         Icon(painterResource(R.drawable.add_circle), contentDescription = null)
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("Add Another Account")
+                        Text(stringResource(R.string.add_another_account))
                     }
                 }
             }

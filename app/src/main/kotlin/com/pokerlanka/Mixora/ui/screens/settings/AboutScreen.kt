@@ -46,11 +46,9 @@ import coil3.compose.AsyncImage
 import com.pokerlanka.mixora.BuildConfig
 import com.pokerlanka.mixora.LocalPlayerAwareWindowInsets
 import com.pokerlanka.mixora.R
+import com.pokerlanka.mixora.constants.AppConstants
 import com.pokerlanka.mixora.ui.component.IconButton
 import com.pokerlanka.mixora.ui.utils.backToMain
-
-private const val DEVELOPER_GITHUB_HANDLE = "GayanChinthaka"
-private const val DEVELOPER_AVATAR_URL = "https://github.com/$DEVELOPER_GITHUB_HANDLE.png"
 
 @Composable
 private fun ContributorAvatar(
@@ -171,14 +169,14 @@ fun AboutScreen(
 
         // Developer Info Card
         InfoCard(
-            title = "Developer",
-            value = "Gayan Chinthaka",
+            title = stringResource(R.string.developer),
+            value = AppConstants.DEVELOPER_NAME,
             leadingContent = {
                 ContributorAvatar(
-                    avatarUrl = DEVELOPER_AVATAR_URL,
+                    avatarUrl = AppConstants.DEVELOPER_AVATAR_URL,
                     sizeDp = 44,
                     shape = CircleShape,
-                    contentDescription = "Gayan Chinthaka",
+                    contentDescription = AppConstants.DEVELOPER_NAME,
                 )
             }
         )
@@ -187,8 +185,8 @@ fun AboutScreen(
 
         // Company Info Card
         InfoCard(
-            title = "Company",
-            value = "Pokerlanka",
+            title = stringResource(R.string.company),
+            value = AppConstants.COMPANY_NAME,
             leadingContent = {
                 Surface(
                     modifier = Modifier.size(44.dp),
@@ -198,7 +196,7 @@ fun AboutScreen(
                     Box(contentAlignment = Alignment.Center) {
                         Icon(
                             painter = painterResource(R.drawable.business),
-                            contentDescription = "Pokerlanka",
+                            contentDescription = AppConstants.COMPANY_NAME,
                             tint = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.size(24.dp)
                         )
@@ -211,7 +209,7 @@ fun AboutScreen(
 
         // Copyright Footer
         Text(
-            text = "© 2026 Pokerlanka. All rights reserved.",
+            text = AppConstants.COPYRIGHT_TEXT,
             style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
