@@ -330,7 +330,6 @@ fun LibraryMixScreen(
                                 is Song -> first.song.title
                                 is Artist -> first.artist.name
                                 is Album -> first.album.title
-                                else -> ""
                             }
                         val secondName =
                             when (second) {
@@ -338,7 +337,6 @@ fun LibraryMixScreen(
                                 is Song -> second.song.title
                                 is Artist -> second.artist.name
                                 is Album -> second.album.title
-                                else -> ""
                             }
                         collator.compare(firstName, secondName)
                     }

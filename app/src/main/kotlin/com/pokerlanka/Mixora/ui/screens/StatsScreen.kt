@@ -558,7 +558,7 @@ fun StatsScreen(
                                     subtitle =
                                         joinByBullet(
                                             pluralStringResource(R.plurals.n_time, playCount, playCount),
-                                            makeTimeString(album.timeListened?.toLong()),
+                                            makeTimeString(album.timeListened),
                                         ),
                                     thumbnailUrl = album.album.thumbnailUrl,
                                     isActive = album.id == mediaMetadata?.album?.id,
@@ -1046,7 +1046,7 @@ private fun StatsListeningTimeHero(
                 color = MaterialTheme.colorScheme.onPrimaryContainer,
             )
             Text(
-                text = makeTimeString(summary.totalTimeListened) ?: "-",
+                text = makeTimeString(summary.totalTimeListened),
                 style = MaterialTheme.typography.displaySmall,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onPrimaryContainer,
@@ -1319,7 +1319,7 @@ private fun SegmentedArtistChart(
                 }
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = makeTimeString(displayTotalTime) ?: "-",
+                    text = makeTimeString(displayTotalTime),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.primary,

@@ -4,6 +4,7 @@
  * Company: Pokerlanka
  */
 
+@file:Suppress("DEPRECATION")
 package com.pokerlanka.mixora.ui.theme
 
 import android.graphics.Bitmap

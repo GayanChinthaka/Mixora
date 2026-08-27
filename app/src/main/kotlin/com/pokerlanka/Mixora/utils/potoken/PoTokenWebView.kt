@@ -1,4 +1,4 @@
-﻿package com.pokerlanka.mixora.utils.potoken
+package com.pokerlanka.mixora.utils.potoken
 
 import android.content.Context
 import android.os.Handler
@@ -386,7 +386,7 @@ class PoTokenWebView private constructor(
             // otherwise strand its connection).
             val (httpCode, body) = withContext(Dispatchers.IO) {
                 httpClient.newCall(requestBuilder.build()).execute().use { response ->
-                    response.code to if (response.code == 200) response.body?.string() else null
+                    response.code to if (response.code == 200) response.body.string() else null
                 }
             }
             // Treat an empty 200 body as a failure too: handleResponseBody would otherwise pass

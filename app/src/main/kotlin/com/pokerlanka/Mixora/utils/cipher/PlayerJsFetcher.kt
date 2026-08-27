@@ -1,4 +1,4 @@
-﻿package com.pokerlanka.mixora.utils.cipher
+package com.pokerlanka.mixora.utils.cipher
 
 import com.pokerlanka.innertube.YouTube
 import kotlinx.coroutines.Dispatchers
@@ -219,11 +219,7 @@ object PlayerJsFetcher {
                 Timber.tag(TAG).e("iframe_api HTTP ${response.code}")
                 return null
             }
-            response.body?.string()
-        }
-        if (body == null) {
-            Timber.tag(TAG).e("iframe_api response body is null")
-            return null
+            response.body.string()
         }
 
         Timber.tag(TAG).d("iframe_api body length: ${body.length}")
@@ -256,11 +252,7 @@ object PlayerJsFetcher {
                 Timber.tag(TAG).e("player.js download HTTP ${response.code}")
                 return null
             }
-            response.body?.string()
-        }
-        if (body == null) {
-            Timber.tag(TAG).e("player.js response body is null")
-            return null
+            response.body.string()
         }
 
         Timber.tag(TAG).d("player.js downloaded: ${body.length} chars")

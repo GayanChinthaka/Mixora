@@ -440,7 +440,8 @@ fun BottomSheetPlayer(
     val themeOnBackgroundColor =
         when (playerBackground) {
             PlayerBackgroundStyle.DEFAULT -> MaterialTheme.colorScheme.secondary
-            else -> MaterialTheme.colorScheme.onSurface
+            PlayerBackgroundStyle.GRADIENT,
+            PlayerBackgroundStyle.BLUR -> MaterialTheme.colorScheme.onSurface
         }
     val onBackgroundColor = if (isLyricsThumbnailBg) Color.White else themeOnBackgroundColor
     val useBlackBackground =

@@ -452,9 +452,7 @@ class TogetherClient(
                                 _events.tryEmit(TogetherClientEvent.ServerIssue(message = message.message, code = message.code))
                             }
 
-                            else -> {
-                                Unit
-                            }
+                            else -> {}
                         }
                     }
                 } catch (t: Throwable) {

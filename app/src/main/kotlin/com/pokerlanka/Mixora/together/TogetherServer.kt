@@ -505,9 +505,7 @@ class TogetherServer(
                         }
                     }
 
-                    else -> {
-                        Unit
-                    }
+                    else -> {}
                 }
             }
         } catch (t: Throwable) {

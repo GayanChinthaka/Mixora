@@ -492,6 +492,7 @@ private fun ProviderSelectionDialog(
     }
 }
 
+@Suppress("DEPRECATION")
 @Composable
 private fun ApiKeyDialog(
     value: String,
@@ -720,6 +721,7 @@ private fun AiErrorHintRow(message: String) {
     }
 }
 
+@Suppress("DEPRECATION")
 @Composable
 private fun ModelPickerPreferenceSheet(
     selectedModel: String,

@@ -5,6 +5,7 @@
  */
 
 @file:OptIn(ExperimentalMaterial3ExpressiveApi::class, ExperimentalMaterial3Api::class)
+@file:Suppress("DEPRECATION")
 
 package com.pokerlanka.mixora.ui.screens.settings
 

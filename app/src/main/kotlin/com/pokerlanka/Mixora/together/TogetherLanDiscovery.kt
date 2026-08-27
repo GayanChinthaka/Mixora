@@ -149,6 +149,7 @@ object TogetherLanDiscovery {
                 val matchesName = name.contains(targetCode)
 
                 try {
+                    @Suppress("DEPRECATION")
                     nsdManager.resolveService(
                         service,
                         object : NsdManager.ResolveListener {
@@ -157,6 +158,7 @@ object TogetherLanDiscovery {
                             }
 
                             override fun onServiceResolved(resolved: NsdServiceInfo) {
+                                @Suppress("DEPRECATION")
                                 val host = resolved.host?.hostAddress ?: return
                                 val port = resolved.port
                                 val attrCode = resolved.attributes["code"]?.let { String(it, StandardCharsets.UTF_8) }

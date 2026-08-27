@@ -401,6 +401,7 @@ class App :
      * handed any of it back under memory pressure, which made the app an easy kill target while
      * backgrounded. Playback is unaffected either way: notification artwork reloads from disk.
      */
+    @Suppress("DEPRECATION")
     override fun onTrimMemory(level: Int) {
         super.onTrimMemory(level)
         val memoryCache = singletonImageLoader?.memoryCache ?: return
