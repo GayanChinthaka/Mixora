@@ -115,7 +115,6 @@ import com.pokerlanka.mixora.constants.PlayerHorizontalPadding
 import com.pokerlanka.mixora.constants.SwipeToRemoveSongKey
 import com.pokerlanka.mixora.constants.ThumbnailCornerRadius
 import com.pokerlanka.mixora.constants.QueueEditLockKey
-import com.pokerlanka.mixora.constants.UseNewPlayerDesignKey
 import com.pokerlanka.mixora.extensions.metadata
 import com.pokerlanka.mixora.extensions.move
 import com.pokerlanka.mixora.extensions.toggleRepeatMode

@@ -91,12 +91,10 @@ import androidx.compose.ui.platform.LocalView
 import com.pokerlanka.mixora.constants.CropAlbumArtKey
 import com.pokerlanka.mixora.constants.DarkModeKey
 import com.pokerlanka.mixora.constants.MiniPlayerHeight
-import com.pokerlanka.mixora.constants.PureBlackMiniPlayerKey
 import com.pokerlanka.mixora.constants.SwipeMiniPlayerKey
 import com.pokerlanka.mixora.constants.SwipeSensitivityKey
 import com.pokerlanka.mixora.constants.SwipeThumbnailKey
 import com.pokerlanka.mixora.constants.ThumbnailCornerRadius
-import com.pokerlanka.mixora.constants.UseNewMiniPlayerDesignKey
 import com.pokerlanka.mixora.db.entities.ArtistEntity
 import com.pokerlanka.mixora.models.MediaMetadata
 import com.pokerlanka.mixora.playback.CastConnectionHandler
@@ -110,21 +108,6 @@ import kotlinx.coroutines.launch
 import kotlin.math.absoluteValue
 import kotlin.math.roundToInt
 import com.pokerlanka.mixora.ui.component.Icon as MIcon
-import androidx.compose.ui.draw.blur
-import com.pokerlanka.mixora.constants.DisableBlurKey
-import com.pokerlanka.mixora.constants.MiniPlayerBackgroundStyle
-import com.pokerlanka.mixora.constants.MiniPlayerBackgroundStyleKey
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.platform.LocalContext
-import androidx.palette.graphics.Palette
-import coil3.imageLoader
-import coil3.request.ImageRequest
-import coil3.request.allowHardware
-import coil3.toBitmap
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
-import com.pokerlanka.mixora.ui.theme.PlayerColorExtractor
 import com.pokerlanka.mixora.ui.component.LocalMenuState
 import com.pokerlanka.mixora.ui.menu.AddToPlaylistDialog
 
@@ -174,13 +157,6 @@ private fun NewMiniPlayer(
     val playerConnection = LocalPlayerConnection.current ?: return
     val view = LocalView.current
 
-    // Theme settings - these rarely change
-    val miniPlayerBackground by rememberEnumPreference(
-        MiniPlayerBackgroundStyleKey,
-        defaultValue = MiniPlayerBackgroundStyle.DEFAULT,
-    )
-    val context = LocalContext.current
-    var gradientColors by remember { mutableStateOf<List<Color>>(emptyList()) }
     val isSystemInDarkTheme = isSystemInDarkTheme()
     val darkTheme by rememberEnumPreference(DarkModeKey, defaultValue = DarkMode.AUTO)
     val useDarkTheme =
@@ -209,7 +185,6 @@ private fun NewMiniPlayer(
     // Swipe settings
     val swipeSensitivity by rememberPreference(SwipeSensitivityKey, 0.73f)
     val swipeMiniPlayer by rememberPreference(SwipeMiniPlayerKey, true)
-    val (disableBlur) = rememberPreference(DisableBlurKey, false)
 
     val layoutDirection = LocalLayoutDirection.current
     val coroutineScope = rememberCoroutineScope()
@@ -237,61 +212,12 @@ private fun NewMiniPlayer(
             (600 / (1f + kotlin.math.exp(-(-11.44748 * swipeSensitivity + 9.04945)))).roundToInt()
         }
 
-    LaunchedEffect(mediaMetadata?.id, miniPlayerBackground) {
-        gradientColors = emptyList()
-        if (miniPlayerBackground == MiniPlayerBackgroundStyle.GRADIENT) {
-            val url = mediaMetadata?.thumbnailUrl
-            if (url != null) {
-                withContext(Dispatchers.IO) {
-                    val request = ImageRequest.Builder(context)
-                        .data(url)
-                        .size(100, 100)
-                        .allowHardware(false)
-                        .build()
-                    val result = runCatching { context.imageLoader.execute(request) }.getOrNull()
-                    val bitmap = result?.image?.toBitmap()
-                    if (bitmap != null) {
-                        val palette = withContext(Dispatchers.Default) {
-                            Palette.from(bitmap)
-                                .maximumColorCount(8)
-                                .resizeBitmapArea(100 * 100)
-                                .generate()
-                        }
-                        val extracted = PlayerColorExtractor.extractGradientColors(
-                            palette = palette,
-                            fallbackColor = 0xFF000000.toInt(),
-                        )
-                        withContext(Dispatchers.Main) {
-                            gradientColors = extracted
-                        }
-                    } else {
-                        withContext(Dispatchers.Main) {
-                            gradientColors = emptyList()
-                        }
-                    }
-                }
-            }
-        } else {
-            gradientColors = emptyList()
-        }
-    }
-
-    // Memoize colors
-    val backgroundColor = when (miniPlayerBackground) {
-        MiniPlayerBackgroundStyle.DEFAULT    -> MaterialTheme.colorScheme.surfaceContainer
-        MiniPlayerBackgroundStyle.TRANSPARENT -> Color.Black.copy(alpha = 0.25f)
-        MiniPlayerBackgroundStyle.BLUR       -> MaterialTheme.colorScheme.surfaceContainer
-        MiniPlayerBackgroundStyle.GRADIENT   -> MaterialTheme.colorScheme.surfaceContainer
-        MiniPlayerBackgroundStyle.PURE_BLACK -> Color.Black
-    }
-    val forceLightColors = !useDarkTheme && (miniPlayerBackground == MiniPlayerBackgroundStyle.PURE_BLACK ||
-            miniPlayerBackground == MiniPlayerBackgroundStyle.BLUR ||
-            miniPlayerBackground == MiniPlayerBackgroundStyle.GRADIENT)
-
-    val primaryColor = if (forceLightColors) Color.White else MaterialTheme.colorScheme.primary
-    val outlineColor = if (forceLightColors) Color.White else MaterialTheme.colorScheme.outline
-    val onSurfaceColor = if (forceLightColors) Color.White else MaterialTheme.colorScheme.onSurface
-    val errorColor = if (forceLightColors) Color(0xFFFF6B6B) else MaterialTheme.colorScheme.error
+    // Colors
+    val backgroundColor = MaterialTheme.colorScheme.surfaceContainer
+    val primaryColor = MaterialTheme.colorScheme.primary
+    val outlineColor = MaterialTheme.colorScheme.outline
+    val onSurfaceColor = MaterialTheme.colorScheme.onSurface
+    val errorColor = MaterialTheme.colorScheme.error
 
     Box(
         modifier =
@@ -406,43 +332,6 @@ private fun NewMiniPlayer(
                         }
                     },
         ) {
-            when (miniPlayerBackground) {
-                MiniPlayerBackgroundStyle.BLUR -> {
-                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
-                        mediaMetadata?.thumbnailUrl?.let { url ->
-                            AsyncImage(
-                                model = url,
-                                contentDescription = null,
-                                contentScale = ContentScale.Crop,
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .let { if (disableBlur) it else it.blur(60.dp) },
-                            )
-                            Box(
-                                Modifier
-                                    .fillMaxSize()
-                                    .background(Color.Black.copy(alpha = 0.45f)),
-                            )
-                        }
-                    }
-                }
-                MiniPlayerBackgroundStyle.GRADIENT -> {
-                    val colors = if (gradientColors.isNotEmpty()) gradientColors
-                    else listOf(
-                        MaterialTheme.colorScheme.surfaceContainer,
-                        MaterialTheme.colorScheme.surfaceContainer,
-                    )
-                    Box(
-                        Modifier
-                            .fillMaxSize()
-                            .background(
-                                Brush.horizontalGradient(colors)
-                            )
-                            .background(Color.Black.copy(alpha = 0.15f)),
-                    )
-                }
-                else -> {}
-            }
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.fillMaxSize().padding(horizontal = 8.dp, vertical = 6.dp),

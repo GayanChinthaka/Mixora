@@ -153,7 +153,6 @@ import com.pokerlanka.mixora.constants.LyricsBackgroundStyleKey
 import com.pokerlanka.mixora.constants.PlayerBackgroundStyle
 import com.pokerlanka.mixora.constants.PlayerBackgroundStyleKey
 import com.pokerlanka.mixora.constants.PlayerButtonsStyle
-import com.pokerlanka.mixora.constants.PlayerButtonsStyleKey
 import com.pokerlanka.mixora.constants.PlayerHorizontalPadding
 import com.pokerlanka.mixora.constants.QueuePeekHeight
 import com.pokerlanka.mixora.constants.SleepTimerDefaultKey
@@ -162,7 +161,6 @@ import com.pokerlanka.mixora.constants.SleepTimerStopAfterCurrentSongKey
 import com.pokerlanka.mixora.constants.SliderStyle
 import com.pokerlanka.mixora.constants.SliderStyleKey
 import com.pokerlanka.mixora.constants.ThumbnailCornerRadius
-import com.pokerlanka.mixora.constants.UseNewPlayerDesignKey
 import com.pokerlanka.mixora.db.entities.LyricsEntity
 import com.pokerlanka.mixora.extensions.metadata
 import com.pokerlanka.mixora.extensions.togglePlayPause

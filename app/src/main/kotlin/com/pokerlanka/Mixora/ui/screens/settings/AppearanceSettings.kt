@@ -75,13 +75,8 @@ import com.pokerlanka.mixora.constants.LyricsLineSpacingKey
 import com.pokerlanka.mixora.constants.LyricsScrollKey
 import com.pokerlanka.mixora.constants.LyricsTextPositionKey
 import com.pokerlanka.mixora.constants.LyricsTextSizeKey
-import com.pokerlanka.mixora.constants.MiniPlayerBackgroundStyle
-import com.pokerlanka.mixora.constants.MiniPlayerBackgroundStyleKey
 import com.pokerlanka.mixora.constants.PlayerBackgroundStyle
 import com.pokerlanka.mixora.constants.PlayerBackgroundStyleKey
-import com.pokerlanka.mixora.constants.PlayerButtonsStyle
-import com.pokerlanka.mixora.constants.PlayerButtonsStyleKey
-import com.pokerlanka.mixora.constants.PureBlackMiniPlayerKey
 import com.pokerlanka.mixora.constants.SelectedThemeColorKey
 import com.pokerlanka.mixora.constants.ShowCachedPlaylistKey
 import com.pokerlanka.mixora.constants.ShowDownloadedPlaylistKey
@@ -90,8 +85,6 @@ import com.pokerlanka.mixora.constants.ShowTopPlaylistKey
 import com.pokerlanka.mixora.constants.ShowUploadedPlaylistKey
 import com.pokerlanka.mixora.constants.SliderStyle
 import com.pokerlanka.mixora.constants.SliderStyleKey
-import com.pokerlanka.mixora.constants.UseNewMiniPlayerDesignKey
-import com.pokerlanka.mixora.constants.UseNewPlayerDesignKey
 import com.pokerlanka.mixora.ui.component.DefaultDialog
 import com.pokerlanka.mixora.ui.component.EnumDialog
 import com.pokerlanka.mixora.ui.component.IconButton
@@ -660,9 +653,4 @@ enum class NavigationTab {
     HOME,
     SEARCH,
     LIBRARY,
-}
-
-enum class PlayerTextAlignment {
-    SIDED,
-    CENTER,
 }

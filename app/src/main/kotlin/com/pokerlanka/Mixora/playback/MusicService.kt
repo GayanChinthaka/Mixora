@@ -142,7 +142,6 @@ import com.pokerlanka.mixora.constants.ResumeOnBluetoothConnectKey
 import com.pokerlanka.mixora.constants.ScrobbleDelayPercentKey
 import com.pokerlanka.mixora.constants.ScrobbleDelaySecondsKey
 import com.pokerlanka.mixora.constants.ScrobbleMinSongDurationKey
-import com.pokerlanka.mixora.constants.ShowLyricsKey
 import com.pokerlanka.mixora.constants.ShuffleModeKey
 import com.pokerlanka.mixora.constants.ShufflePlaylistFirstKey
 import com.pokerlanka.mixora.constants.SimilarContent
