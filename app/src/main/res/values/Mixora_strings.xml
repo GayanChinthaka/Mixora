@@ -86,8 +86,6 @@
     <string name="lyrics_click_change">Change lyrics on tap</string>
     <string name="lyrics_from_provider">Lyrics from %s</string>
     <string name="lyrics_auto_scroll">Auto-scroll lyrics</string>
-    <string name="hide_status_bar_fullscreen">Hide status bar on fullscreen</string>
-    <string name="hide_status_bar_fullscreen_desc">Hide the status bar when lyrics fullscreen mode is active</string>
     <string name="lyrics_background">Lyrics background</string>
     <string name="lyrics_background_theme">Theme</string>
     <string name="lyrics_background_theme_desc">Follow the app theme</string>
@@ -100,7 +98,6 @@
     <string name="youtube_music_lyrics_note">NOTE: YouTube Music lyrics will be shown automatically when no other source is available. They are usually not synchronized</string>
     <string name="enable_paxsenix_desc">High-quality synchronized lyrics from Paxsenix API</string>
     <string name="enable_musixmatch_desc">Largest global database with synchronized lyrics</string>
-    <string name="enable_deezer_desc">Synchronized lyrics from Deezer</string>
     <string name="lyrics_provider_selection">Provider selection</string>
     <string name="auto_scroll">Re-sync</string>
     <string name="slim">Slim</string>
@@ -670,8 +667,6 @@
     <string name="lyrics_services">Lyrics Services</string>
     <string name="musixmatch_integration">Musixmatch</string>
     <string name="musixmatch_integration_desc">Largest synchronized lyrics database</string>
-    <string name="deezer_integration">Deezer</string>
-    <string name="deezer_integration_desc">Synchronized lyrics from Deezer catalog</string>
     <string name="auto_connect">Auto Connect</string>
     <string name="connecting">Connecting...</string>
     <string name="connected">Connected</string>

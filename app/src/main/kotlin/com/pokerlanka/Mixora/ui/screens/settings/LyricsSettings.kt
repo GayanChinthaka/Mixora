@@ -59,9 +59,6 @@ import com.pokerlanka.mixora.constants.EnableLrcLibKey
 import com.pokerlanka.mixora.constants.EnablePaxsenixKey
 import com.pokerlanka.mixora.constants.EnableMusixmatchKey
 import com.pokerlanka.mixora.constants.MusixmatchUserTokenKey
-import com.pokerlanka.mixora.constants.EnableDeezerKey
-import com.pokerlanka.mixora.constants.DeezerUserTokenKey
-import com.pokerlanka.mixora.constants.HideStatusBarOnFullscreenKey
 import com.pokerlanka.mixora.constants.LyricsBackgroundStyle
 import com.pokerlanka.mixora.constants.LyricsBackgroundStyleKey
 import com.pokerlanka.mixora.constants.LyricsClickKey
@@ -101,9 +98,7 @@ fun LyricsSettings(
     val (enableLrclib, onEnableLrclibChange) = rememberPreference(key = EnableLrcLibKey, defaultValue = true)
     val (enablePaxsenix, onEnablePaxsenixChange) = rememberPreference(key = EnablePaxsenixKey, defaultValue = true)
     val (enableMusixmatch, onEnableMusixmatchChange) = rememberPreference(key = EnableMusixmatchKey, defaultValue = false)
-    val (enableDeezer, onEnableDeezerChange) = rememberPreference(key = EnableDeezerKey, defaultValue = false)
     val (musixmatchToken, _) = rememberPreference(key = MusixmatchUserTokenKey, defaultValue = "")
-    val (deezerToken, _) = rememberPreference(key = DeezerUserTokenKey, defaultValue = "")
     val (lyricsProviderOrder, onLyricsProviderOrderChange) = rememberPreference(
         key = LyricsProviderOrderKey,
         defaultValue = LyricsProviderRegistry.serializeProviderOrder(LyricsProviderRegistry.getDefaultProviderOrder())
@@ -119,11 +114,6 @@ fun LyricsSettings(
         rememberPreference(
             LyricsScrollKey,
             defaultValue = true,
-        )
-    val (hideStatusBarOnFullscreen, onHideStatusBarOnFullscreenChange) =
-        rememberPreference(
-            HideStatusBarOnFullscreenKey,
-            defaultValue = false,
         )
 
     val (lyricsBackgroundStyle, onLyricsBackgroundStyleChange) =
@@ -166,7 +156,6 @@ fun LyricsSettings(
             "Paxsenix" to "Paxsenix",
             "Musixmatch" to "Musixmatch",
             "LrcLib" to "LrcLib",
-            "Deezer" to "Deezer",
             "KuGou" to "KuGou",
             "YouTubeSubtitle" to "YouTube Subtitles",
             "YouTube" to "YouTube",
@@ -200,14 +189,13 @@ fun LyricsSettings(
         val normalizedOrder = currentOrder.filter { it in defaultOrder } +
             defaultOrder.filter { it !in currentOrder }
 
-        val toggleableProviders = listOf("Paxsenix", "Musixmatch", "LrcLib", "Deezer", "KuGou")
+        val toggleableProviders = listOf("LrcLib", "Musixmatch", "Paxsenix", "KuGou")
 
         val isProviderEnabled: (String) -> Boolean = { id ->
             when (id) {
                 "Paxsenix" -> enablePaxsenix
                 "Musixmatch" -> enableMusixmatch && musixmatchToken.isNotBlank()
                 "LrcLib" -> enableLrclib
-                "Deezer" -> enableDeezer && deezerToken.isNotBlank()
                 "KuGou" -> enableKugou
                 else -> true
             }
@@ -223,13 +211,6 @@ fun LyricsSettings(
                     }
                 }
                 "LrcLib" -> onEnableLrclibChange(value)
-                "Deezer" -> {
-                    if (value && deezerToken.isBlank()) {
-                        showLyricsSetupRequiredDialogFor = "Deezer"
-                    } else {
-                        onEnableDeezerChange(value)
-                    }
-                }
                 "KuGou" -> onEnableKugouChange(value)
                 else -> Unit
             }
@@ -240,7 +221,6 @@ fun LyricsSettings(
                 "Paxsenix" to stringResource(R.string.enable_paxsenix_desc),
                 "Musixmatch" to stringResource(R.string.enable_musixmatch_desc),
                 "LrcLib" to stringResource(R.string.enable_lrclib_desc),
-                "Deezer" to stringResource(R.string.enable_deezer_desc),
                 "KuGou" to stringResource(R.string.enable_kugou_desc),
             )
         val lyricsIcon = painterResource(R.drawable.lyrics)
@@ -252,8 +232,6 @@ fun LyricsSettings(
             enableMusixmatch,
             musixmatchToken,
             enableLrclib,
-            enableDeezer,
-            deezerToken,
             enableKugou,
         ) {
             val ordered = normalizedOrder.filter { it in toggleableProviders } +
@@ -688,30 +666,6 @@ fun LyricsSettings(
                                     )
                                 },
                                 onClick = { onLyricsScrollChange(!lyricsScroll) },
-                            ),
-                        )
-                        add(
-                            Material3SettingsItem(
-                                icon = painterResource(R.drawable.lyrics),
-                                title = { Text(stringResource(R.string.hide_status_bar_fullscreen)) },
-                                description = { Text(stringResource(R.string.hide_status_bar_fullscreen_desc)) },
-                                trailingContent = {
-                                    Switch(
-                                        checked = hideStatusBarOnFullscreen,
-                                        onCheckedChange = onHideStatusBarOnFullscreenChange,
-                                        thumbContent = {
-                                            Icon(
-                                                painter =
-                                                    painterResource(
-                                                        id = if (hideStatusBarOnFullscreen) R.drawable.check else R.drawable.close,
-                                                    ),
-                                                contentDescription = null,
-                                                modifier = Modifier.size(SwitchDefaults.IconSize),
-                                            )
-                                        },
-                                    )
-                                },
-                                onClick = { onHideStatusBarOnFullscreenChange(!hideStatusBarOnFullscreen) },
                             ),
                         )
                     },

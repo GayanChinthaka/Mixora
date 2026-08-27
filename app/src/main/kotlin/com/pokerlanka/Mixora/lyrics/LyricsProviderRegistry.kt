@@ -8,13 +8,12 @@ package com.pokerlanka.mixora.lyrics
 
 object LyricsProviderRegistry {
     private val providerMap = mapOf(
-        "Paxsenix" to PaxsenixLyricsProvider,
-        "Musixmatch" to MusixmatchLyricsProvider,
         "LrcLib" to LrcLibLyricsProvider,
-        "Deezer" to DeezerLyricsProvider,
+        "Musixmatch" to MusixmatchLyricsProvider,
+        "Paxsenix" to PaxsenixLyricsProvider,
         "KuGou" to KuGouLyricsProvider,
-        "YouTubeSubtitle" to YouTubeSubtitleLyricsProvider,
         "YouTube" to YouTubeLyricsProvider,
+        "YouTubeSubtitle" to YouTubeSubtitleLyricsProvider,
     )
 
     val providerNames = providerMap.keys.toList()
@@ -36,13 +35,12 @@ object LyricsProviderRegistry {
     }
 
     fun getDefaultProviderOrder(): List<String> = listOf(
-        "Paxsenix",
-        "Musixmatch",
         "LrcLib",
-        "Deezer",
+        "Musixmatch",
+        "Paxsenix",
         "KuGou",
-        "YouTubeSubtitle",
         "YouTube",
+        "YouTubeSubtitle",
     )
 
     fun getOrderedProviders(orderString: String): List<LyricsProvider> {

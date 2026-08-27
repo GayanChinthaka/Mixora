@@ -146,7 +146,6 @@ import com.pokerlanka.mixora.R
 import com.pokerlanka.mixora.constants.CropAlbumArtKey
 import com.pokerlanka.mixora.constants.DarkModeKey
 import com.pokerlanka.mixora.constants.DisableBlurKey
-import com.pokerlanka.mixora.constants.HideStatusBarOnFullscreenKey
 import com.pokerlanka.mixora.constants.KeepScreenOn
 import com.pokerlanka.mixora.constants.LyricsBackgroundStyle
 import com.pokerlanka.mixora.constants.LyricsBackgroundStyleKey
@@ -332,7 +331,6 @@ fun BottomSheetPlayer(
     val bottomSheetPageState = LocalBottomSheetPageState.current
     val playerConnection = LocalPlayerConnection.current ?: return
 
-    val (hideStatusBarOnFullscreen) = rememberPreference(HideStatusBarOnFullscreenKey, false)
     val playerBackground = PlayerBackgroundStyle.DEFAULT
     val playerButtonsStyle = PlayerButtonsStyle.DEFAULT
     val hidePlayerThumbnail = false
@@ -379,7 +377,6 @@ fun BottomSheetPlayer(
         useDarkTheme,
         keepScreenOn,
         isFullScreen,
-        hideStatusBarOnFullscreen,
         isLyricsThumbnailBg,
     ) {
         val window = (context as? android.app.Activity)?.window
@@ -400,7 +397,7 @@ fun BottomSheetPlayer(
                 }
             }
 
-            if (isFullScreen && hideStatusBarOnFullscreen) {
+            if (isFullScreen) {
                 insetsController.hide(WindowInsetsCompat.Type.statusBars())
                 insetsController.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
             } else {

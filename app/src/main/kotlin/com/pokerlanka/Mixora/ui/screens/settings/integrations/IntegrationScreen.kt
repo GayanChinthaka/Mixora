@@ -36,7 +36,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import com.pokerlanka.mixora.constants.DeezerUserTokenKey
 import com.pokerlanka.mixora.constants.MusixmatchUserTokenKey
 import com.pokerlanka.mixora.utils.rememberPreference
 
@@ -46,10 +45,8 @@ fun IntegrationScreen(
     navController: NavController
 ) {
     val (musixmatchToken, onMusixmatchTokenChange) = rememberPreference(MusixmatchUserTokenKey, defaultValue = "")
-    val (deezerToken, onDeezerTokenChange) = rememberPreference(DeezerUserTokenKey, defaultValue = "")
 
     var showMusixmatchDialog by remember { mutableStateOf(false) }
-    var showDeezerDialog by remember { mutableStateOf(false) }
 
     if (showMusixmatchDialog) {
         LyricsServiceConfigDialog(
@@ -58,16 +55,6 @@ fun IntegrationScreen(
             onSaveToken = onMusixmatchTokenChange,
             onDismiss = { showMusixmatchDialog = false },
             isMusixmatch = true
-        )
-    }
-
-    if (showDeezerDialog) {
-        LyricsServiceConfigDialog(
-            serviceName = "Deezer",
-            currentToken = deezerToken,
-            onSaveToken = onDeezerTokenChange,
-            onDismiss = { showDeezerDialog = false },
-            isMusixmatch = false
         )
     }
 
@@ -112,24 +99,6 @@ fun IntegrationScreen(
                         }
                     },
                     onClick = { showMusixmatchDialog = true }
-                ),
-                IntegrationCardItem(
-                    icon = painterResource(R.drawable.lyrics),
-                    title = { Text(stringResource(R.string.deezer_integration)) },
-                    description = { Text(stringResource(R.string.deezer_integration_desc)) },
-                    trailingContent = {
-                        val isConnected = deezerToken.isNotBlank()
-                        Badge(
-                            containerColor = if (isConnected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.5f),
-                            contentColor = if (isConnected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.error
-                        ) {
-                            Text(
-                                if (isConnected) stringResource(R.string.connected) + " ✓" else stringResource(R.string.not_configured) + " ⚠️",
-                                modifier = Modifier.padding(horizontal = 4.dp)
-                            )
-                        }
-                    },
-                    onClick = { showDeezerDialog = true }
                 )
             )
         )

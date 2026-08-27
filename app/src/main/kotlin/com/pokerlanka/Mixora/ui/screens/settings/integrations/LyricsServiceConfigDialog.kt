@@ -155,28 +155,18 @@ fun LyricsServiceConfigDialog(
                 onClick = {
                     isGenerating = true
                     scope.launch {
-                        if (isMusixmatch) {
-                            val result = withContext(Dispatchers.IO) {
-                                MusixmatchLyricsProvider.autoGenerateToken()
-                            }
-                            result.onSuccess { generatedToken ->
-                                tokenInput = generatedToken
-                                onSaveToken(generatedToken)
-                                Toast.makeText(context, "Connected successfully!", Toast.LENGTH_SHORT).show()
-                                isGenerating = false
-                                onDismiss()
-                            }.onFailure {
-                                isGenerating = false
-                                Toast.makeText(context, "Auto-connect failed. Please paste token below.", Toast.LENGTH_LONG).show()
-                            }
-                        } else {
-                            // Deezer auto connect simulation / fallback token
-                            val testToken = "active_deezer_session"
-                            tokenInput = testToken
-                            onSaveToken(testToken)
+                        val result = withContext(Dispatchers.IO) {
+                            MusixmatchLyricsProvider.autoGenerateToken()
+                        }
+                        result.onSuccess { generatedToken ->
+                            tokenInput = generatedToken
+                            onSaveToken(generatedToken)
+                            Toast.makeText(context, "Connected successfully!", Toast.LENGTH_SHORT).show()
                             isGenerating = false
-                            Toast.makeText(context, "Deezer connected!", Toast.LENGTH_SHORT).show()
                             onDismiss()
+                        }.onFailure {
+                            isGenerating = false
+                            Toast.makeText(context, "Auto-connect failed. Please paste token below.", Toast.LENGTH_LONG).show()
                         }
                     }
                 },

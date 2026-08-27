@@ -61,8 +61,6 @@ val EnableLrcLibKey = booleanPreferencesKey("enableLrclib")
 val EnablePaxsenixKey = booleanPreferencesKey("enablePaxsenix")
 val EnableMusixmatchKey = booleanPreferencesKey("enableMusixmatch")
 val MusixmatchUserTokenKey = stringPreferencesKey("musixmatchUserToken")
-val EnableDeezerKey = booleanPreferencesKey("enableDeezer")
-val DeezerUserTokenKey = stringPreferencesKey("deezerUserToken")
 val HideExplicitKey = booleanPreferencesKey("hideExplicit")
 val HideVideoSongsKey = booleanPreferencesKey("hideVideoSongs")
 val HideYoutubeShortsKey = booleanPreferencesKey("hideYoutubeShorts")
@@ -368,7 +366,6 @@ val PlayerBackgroundStyleKey = stringPreferencesKey("playerBackgroundStyle")
 val LyricsTextPositionKey = stringPreferencesKey("lyricsTextPosition")
 val LyricsClickKey = booleanPreferencesKey("lyricsClick")
 val LyricsScrollKey = booleanPreferencesKey("lyricsScrollKey")
-val HideStatusBarOnFullscreenKey = booleanPreferencesKey("hideStatusBarOnFullscreen")
 
 
 
