@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Mixora Project (C) 2026
  * Author : Gayan Chinthaka
  * Company: Pokerlanka
@@ -366,12 +366,20 @@ fun rememberBottomSheetState(
     var previousAnchor by rememberSaveable {
         mutableIntStateOf(initialAnchor)
     }
+    val initialValue = remember(previousAnchor) {
+        when (previousAnchor) {
+            expandedAnchor -> expandedBound
+            collapsedAnchor -> collapsedBound
+            dismissedAnchor -> dismissedBound
+            else -> dismissedBound
+        }
+    }
     val animatable = remember {
-        Animatable(0.dp, Dp.VectorConverter)
+        Animatable(initialValue, Dp.VectorConverter)
     }
 
     return remember(dismissedBound, expandedBound, collapsedBound, coroutineScope) {
-        val initialValue = when (previousAnchor) {
+        val targetValue = when (previousAnchor) {
             expandedAnchor -> expandedBound
             collapsedAnchor -> collapsedBound
             dismissedAnchor -> dismissedBound
@@ -380,7 +388,7 @@ fun rememberBottomSheetState(
 
         animatable.updateBounds(dismissedBound.coerceAtMost(expandedBound), expandedBound)
         coroutineScope.launch {
-            animatable.animateTo(initialValue, NavigationBarAnimationSpec)
+            animatable.animateTo(targetValue, NavigationBarAnimationSpec)
         }
 
         BottomSheetState(

@@ -337,7 +337,7 @@ fun BottomSheetPlayer(
     val cropAlbumArt = false
     val useNewPlayerDesign = true
 
-    var showInlineLyrics by remember {
+    var showInlineLyrics by rememberSaveable {
         mutableStateOf(false)
     }
 
@@ -483,9 +483,17 @@ fun BottomSheetPlayer(
         }
     }
 
+    var lastMediaId by rememberSaveable {
+        mutableStateOf(mediaMetadata?.id)
+    }
+
     LaunchedEffect(mediaMetadata?.id) {
-        showInlineLyrics = false
-        isFullScreen = false
+        val currentId = mediaMetadata?.id
+        if (currentId != null && lastMediaId != null && currentId != lastMediaId) {
+            showInlineLyrics = false
+            isFullScreen = false
+        }
+        lastMediaId = currentId
     }
 
     LaunchedEffect(state.isCollapsed, state.isDismissed) {
