@@ -1919,16 +1919,24 @@ fun InlineLyricsView(
     val lyricsHelper = remember(entryPoint) { entryPoint.lyricsHelper() }
     val currentSearchingProvider by lyricsHelper.currentSearchingProvider.collectAsStateWithLifecycle(initialValue = null)
 
+    var isFetching by remember(mediaMetadata?.id) { mutableStateOf(false) }
+
     LaunchedEffect(mediaMetadata?.id, currentLyrics) {
-        if (mediaMetadata != null && currentLyrics == null) {
+        val hasValidLyrics = currentLyrics != null && currentLyrics?.lyrics != LyricsEntity.LYRICS_NOT_FOUND
+        if (mediaMetadata != null && !hasValidLyrics) {
+            isFetching = true
             coroutineScope.launch(Dispatchers.IO) {
                 try {
                     val fetchedLyricsWithProvider = lyricsHelper.getLyrics(mediaMetadata)
-                    database.query {
-                        upsert(LyricsEntity(mediaMetadata.id, fetchedLyricsWithProvider.lyrics, fetchedLyricsWithProvider.provider))
+                    if (fetchedLyricsWithProvider.lyrics != LyricsEntity.LYRICS_NOT_FOUND && fetchedLyricsWithProvider.lyrics.isNotBlank()) {
+                        database.query {
+                            upsert(LyricsEntity(mediaMetadata.id, fetchedLyricsWithProvider.lyrics, fetchedLyricsWithProvider.provider))
+                        }
                     }
                 } catch (e: Exception) {
                     // Handle error
+                } finally {
+                    isFetching = false
                 }
             }
         }
@@ -1942,7 +1950,27 @@ fun InlineLyricsView(
         contentAlignment = Alignment.Center,
     ) {
         when {
-            lyrics == null -> {
+            lyrics != null && lyrics != LyricsEntity.LYRICS_NOT_FOUND -> {
+                val lyricsContent: @Composable () -> Unit = {
+                    Lyrics(
+                        sliderPositionProvider = positionProvider,
+                        modifier = Modifier.padding(horizontal = 24.dp),
+                        showLyrics = showLyrics,
+                        textColorOverride = lyricsTextColor,
+                    )
+                }
+                ProvideTextStyle(
+                    value =
+                        MaterialTheme.typography.bodyMedium.copy(
+                            fontSize = 14.sp,
+                            textAlign = TextAlign.Center,
+                        ),
+                ) {
+                    lyricsContent()
+                }
+            }
+
+            isFetching || lyrics == null -> {
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center,
@@ -1967,33 +1995,13 @@ fun InlineLyricsView(
                 }
             }
 
-            lyrics == LyricsEntity.LYRICS_NOT_FOUND -> {
+            else -> {
                 Text(
                     text = stringResource(R.string.lyrics_not_found),
                     style = MaterialTheme.typography.bodyMedium,
                     color = (lyricsTextColor ?: MaterialTheme.colorScheme.onSurface).copy(alpha = 0.7f),
                     textAlign = TextAlign.Center,
                 )
-            }
-
-            else -> {
-                val lyricsContent: @Composable () -> Unit = {
-                    Lyrics(
-                        sliderPositionProvider = positionProvider,
-                        modifier = Modifier.padding(horizontal = 24.dp),
-                        showLyrics = showLyrics,
-                        textColorOverride = lyricsTextColor,
-                    )
-                }
-                ProvideTextStyle(
-                    value =
-                        MaterialTheme.typography.bodyMedium.copy(
-                            fontSize = 14.sp,
-                            textAlign = TextAlign.Center,
-                        ),
-                ) {
-                    lyricsContent()
-                }
             }
         }
     }
