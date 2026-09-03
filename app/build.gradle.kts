@@ -41,7 +41,7 @@ android {
         minSdk = 26
         targetSdk = 36
         versionCode = 4
-        versionName = "1.4.0"
+        versionName = "1.4.1"
         resValue("string", "app_name", appNameOverride ?: "Mixora")
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
