@@ -51,8 +51,14 @@
             android:excludeFromRecents="true"
             android:process=":crash" />
 
+        <!-- Handle rotation / resize in-process instead of letting the activity be recreated.
+             A recreate tears down the service binding and rebuilds the whole composition, which
+             reset the player sheet back to the mini player and closed the lyrics pane on every
+             rotation. Compose re-measures and re-reads LocalConfiguration on its own, so the
+             layout still switches between the portrait and landscape player. -->
         <activity
             android:name=".MainActivity"
+            android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|keyboardHidden"
             android:exported="true"
             android:launchMode="singleTask"
             android:resizeableActivity="true"

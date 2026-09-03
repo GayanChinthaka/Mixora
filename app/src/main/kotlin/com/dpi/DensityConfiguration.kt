@@ -50,6 +50,20 @@ internal class DensityConfiguration(
     }
 
     /**
+     * Reapply the density override to [activity] outside the lifecycle callbacks.
+     *
+     * An activity that declares configChanges for orientation/resize is never recreated on
+     * rotation, so none of the callbacks below fire - but the framework still rebuilds its
+     * Configuration from the display and drops our densityDpi. Such an activity has to ask for
+     * the override back itself. The scale is always recomputed from [originalDensityDpi], which
+     * is captured once before any override, so repeated calls cannot compound.
+     */
+    fun reapplyTo(activity: Activity) {
+        if (densityScale == 1.0f) return
+        applyDensityToActivity(activity)
+    }
+
+    /**
      * Reapply density scaling when an activity is created.
      */
     override fun onActivityCreated(activity: Activity) {

@@ -14,6 +14,7 @@ import android.content.ComponentName
 import android.content.Intent
 import android.content.ServiceConnection
 import android.content.pm.PackageManager
+import android.content.res.Configuration
 import android.os.Build
 import android.os.Bundle
 import android.os.IBinder
@@ -131,6 +132,7 @@ import coil3.request.ImageRequest
 import coil3.request.allowHardware
 import coil3.request.crossfade
 import coil3.toBitmap
+import com.dpi.DensityScaler
 import com.pokerlanka.innertube.YouTube
 import com.pokerlanka.innertube.models.SongItem
 import com.pokerlanka.innertube.models.WatchEndpoint
@@ -158,7 +160,6 @@ import com.pokerlanka.mixora.db.MusicDatabase
 import com.pokerlanka.mixora.db.entities.SearchHistory
 import com.pokerlanka.mixora.extensions.toEnum
 import com.pokerlanka.mixora.lyrics.LyricsProviderRegistry
-import com.pokerlanka.mixora.models.MediaMetadata
 import com.pokerlanka.mixora.models.toMediaMetadata
 import com.pokerlanka.mixora.playback.DownloadUtil
 import com.pokerlanka.mixora.playback.MusicService
@@ -204,7 +205,6 @@ import com.valentinilk.shimmer.LocalShimmerTheme
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
@@ -348,6 +348,16 @@ class MainActivity : ComponentActivity() {
         if (stopServiceOnClear) {
             stopService(Intent(this, MusicService::class.java))
         }
+    }
+
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+        // This activity declares configChanges for orientation and resize, so it is not recreated
+        // on rotation and DensityScaler's activity-lifecycle hooks never run. The framework still
+        // rebuilds the activity's Configuration from the display, wiping the densityDpi override,
+        // so restore it here - otherwise a rotation would silently drop a user who picked a
+        // compact UI scale back to native density until the app is backgrounded and resumed.
+        DensityScaler.reapplyDensityScaling(this)
     }
 
     override fun onNewIntent(intent: Intent) {
@@ -743,25 +753,31 @@ class MainActivity : ComponentActivity() {
                 // asynchronously *after* the service reports the player ready, so a one-shot read here
                 // always saw a null item, dismissed the sheet, and then never ran again - leaving a full
                 // queue playing with no mini player and no way back to the player.
-                val noMediaMetadata = remember { MutableStateFlow<MediaMetadata?>(null) }
-                val activeMediaMetadata by (activePlayerConnection?.mediaMetadata ?: noMediaMetadata)
-                    .collectAsStateWithLifecycle()
+                //
+                // Collect straight from the connection instead of reading a collectAsStateWithLifecycle
+                // snapshot: that holder is remembered without being keyed on the flow, so swapping the
+                // flow (null connection -> real connection) leaves the State reporting the previous
+                // flow's value for a frame. On an activity restart the stale value is a null metadata
+                // even though the service already has an item loaded, so the restored sheet was
+                // dismissed and then collapsed - dropping the user from the expanded player, lyrics
+                // and all, onto the mini player.
+                LaunchedEffect(activePlayerConnection) {
+                    val connection = activePlayerConnection ?: return@LaunchedEffect
 
-                LaunchedEffect(activePlayerConnection, activeMediaMetadata) {
-                    if (activePlayerConnection == null) return@LaunchedEffect
-
-                    if (activeMediaMetadata == null) {
-                        if (!playerBottomSheetState.isDismissed) {
-                            playerBottomSheetState.dismiss()
+                    connection.mediaMetadata.collect { metadata ->
+                        if (metadata == null) {
+                            if (!playerBottomSheetState.isDismissed) {
+                                playerBottomSheetState.dismiss()
+                            }
+                        } else if (playerBottomSheetState.targetAnchor == dismissedAnchor) {
+                            // Restores reveal the mini player only; openPlayerEvent still handles the
+                            // expand-to-full-screen for playback the user actually started. Checking the
+                            // target anchor rather than isDismissed matters: when the user taps a song both
+                            // fire, and isDismissed is still true for the frames before the expand
+                            // animation moves, so collapsing here would cancel it and strand the user on
+                            // the mini player.
+                            playerBottomSheetState.collapseSoft()
                         }
-                    } else if (playerBottomSheetState.targetAnchor == dismissedAnchor) {
-                        // Restores reveal the mini player only; openPlayerEvent still handles the
-                        // expand-to-full-screen for playback the user actually started. Checking the
-                        // target anchor rather than isDismissed matters: when the user taps a song both
-                        // fire, and isDismissed is still true for the frames before the expand
-                        // animation moves, so collapsing here would cancel it and strand the user on
-                        // the mini player.
-                        playerBottomSheetState.collapseSoft()
                     }
                 }
 

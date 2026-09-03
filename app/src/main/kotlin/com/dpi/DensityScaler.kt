@@ -1,5 +1,6 @@
 ﻿package com.dpi
 
+import android.app.Activity
 import android.content.Context
 import timber.log.Timber
 
@@ -19,7 +20,9 @@ class DensityScaler : BaseLifecycleContentProvider() {
     override fun onCreate(): Boolean {
         val context = context ?: return false
         val scaleFactor = getScaleFactorFromPreferences(context)
-        DensityConfiguration(scaleFactor).applyDensityScaling(context)
+        val configuration = DensityConfiguration(scaleFactor)
+        configuration.applyDensityScaling(context)
+        activeConfiguration = configuration
         return true
     }
 
@@ -27,6 +30,20 @@ class DensityScaler : BaseLifecycleContentProvider() {
         private const val PREFS_NAME = "Mixora_settings"
         private const val KEY_DENSITY_SCALE = "density_scale_factor"
         private const val DEFAULT_SCALE_FACTOR = 1.0f
+
+        private var activeConfiguration: DensityConfiguration? = null
+
+        /**
+         * Restores the density override on an activity that handles its own configuration changes.
+         *
+         * Activities that are recreated get this for free from the lifecycle callbacks; one that
+         * declares configChanges must call this from onConfigurationChanged instead, or the
+         * framework's fresh Configuration leaves the UI at native density until the app is
+         * backgrounded and resumed. No-op when the user is on the default 100% scale.
+         */
+        fun reapplyDensityScaling(activity: Activity) {
+            activeConfiguration?.reapplyTo(activity)
+        }
 
         /**
          * Reads the density scale factor from SharedPreferences.
