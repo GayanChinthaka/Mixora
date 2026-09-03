@@ -971,7 +971,6 @@ class MainActivity : ComponentActivity() {
                             // Pre-calculate values for graphicsLayer to avoid reading state during composition
                             val navBarTotalHeight = bottomInset + NavigationBarHeight
 
-                            if (!showRail) {
                                 Box {
                                     if (activePlayerConnection != null) {
                                         BottomSheetPlayer(
@@ -981,35 +980,37 @@ class MainActivity : ComponentActivity() {
                                         )
                                     }
 
-                                    AppNavigationBar(
-                                        navigationItems = navigationItems,
-                                        currentRoute = currentRoute,
-                                        onItemClick = onNavItemClick,
-                                        pureBlack = pureBlack,
-                                        onSearchLongClick = onSearchLongClick,
-                                        modifier =
-                                            Modifier
-                                                .align(Alignment.BottomCenter)
-                                                .height(bottomInset + navPadding)
-                                                // Use graphicsLayer instead of offset to avoid recomposition
-                                                // graphicsLayer runs during draw phase, not composition phase
-                                                .graphicsLayer {
-                                                    val navBarHeightPx = navigationBarHeight.toPx()
-                                                    val totalHeightPx = navBarTotalHeight.toPx()
+                                    if (!showRail) {
+                                        AppNavigationBar(
+                                            navigationItems = navigationItems,
+                                            currentRoute = currentRoute,
+                                            onItemClick = onNavItemClick,
+                                            pureBlack = pureBlack,
+                                            onSearchLongClick = onSearchLongClick,
+                                            modifier =
+                                                Modifier
+                                                    .align(Alignment.BottomCenter)
+                                                    .height(bottomInset + navPadding)
+                                                    // Use graphicsLayer instead of offset to avoid recomposition
+                                                    // graphicsLayer runs during draw phase, not composition phase
+                                                    .graphicsLayer {
+                                                        val navBarHeightPx = navigationBarHeight.toPx()
+                                                        val totalHeightPx = navBarTotalHeight.toPx()
 
-                                                    translationY =
-                                                        if (navBarHeightPx == 0f) {
-                                                            totalHeightPx
-                                                        } else {
-                                                            // Read progress only during draw phase
-                                                            val progress = playerBottomSheetState.progress.coerceIn(0f, 1f)
-                                                            val slideOffset = totalHeightPx * progress
-                                                            val hideOffset =
-                                                                totalHeightPx * (1 - navBarHeightPx / NavigationBarHeight.toPx())
-                                                            slideOffset + hideOffset
-                                                        }
-                                                },
-                                    )
+                                                        translationY =
+                                                            if (navBarHeightPx == 0f) {
+                                                                totalHeightPx
+                                                            } else {
+                                                                // Read progress only during draw phase
+                                                                val progress = playerBottomSheetState.progress.coerceIn(0f, 1f)
+                                                                val slideOffset = totalHeightPx * progress
+                                                                val hideOffset =
+                                                                    totalHeightPx * (1 - navBarHeightPx / NavigationBarHeight.toPx())
+                                                                slideOffset + hideOffset
+                                                            }
+                                                    },
+                                        )
+                                    }
 
                                     Box(
                                         modifier =
@@ -1021,7 +1022,7 @@ class MainActivity : ComponentActivity() {
                                                 .graphicsLayer {
                                                     val progress = playerBottomSheetState.progress
                                                     alpha =
-                                                        if (progress > 0f || !shouldShowNavigationBar) {
+                                                        if (progress > 0f || !shouldShowNavigationBar || showRail) {
                                                             0f
                                                         } else {
                                                             1f
@@ -1029,29 +1030,6 @@ class MainActivity : ComponentActivity() {
                                                 }.background(baseBg),
                                     )
                                 }
-                            } else {
-                                if (activePlayerConnection != null) {
-                                    BottomSheetPlayer(
-                                        state = playerBottomSheetState,
-                                        navController = navController,
-                                        pureBlack = pureBlack,
-                                    )
-                                }
-
-                                Box(
-                                    modifier =
-                                        Modifier
-                                            .fillMaxWidth()
-                                            .align(Alignment.BottomCenter)
-                                            .height(bottomInsetDp)
-                                            // Use graphicsLayer for background color changes
-                                            .graphicsLayer {
-                                                val progress = playerBottomSheetState.progress
-                                                alpha =
-                                                    if (progress > 0f || !shouldShowNavigationBar) 0f else 1f
-                                            }.background(baseBg),
-                                )
-                            }
                         },
                         modifier =
                             Modifier

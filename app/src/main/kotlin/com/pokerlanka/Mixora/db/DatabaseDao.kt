@@ -1990,6 +1990,9 @@ interface DatabaseDao {
     @Delete
     fun delete(lyrics: LyricsEntity)
 
+    @Query("DELETE FROM lyrics WHERE id = :id")
+    fun deleteLyricsById(id: String)
+
     @Delete
     fun delete(searchHistory: SearchHistory)
 

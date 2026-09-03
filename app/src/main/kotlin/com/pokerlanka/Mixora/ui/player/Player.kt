@@ -1918,27 +1918,36 @@ fun InlineLyricsView(
     }
     val lyricsHelper = remember(entryPoint) { entryPoint.lyricsHelper() }
     val currentSearchingProvider by lyricsHelper.currentSearchingProvider.collectAsStateWithLifecycle(initialValue = null)
+    val isHelperFetching by lyricsHelper.isFetchingLyrics.collectAsStateWithLifecycle()
+    var initialFetchDone by remember(mediaMetadata?.id) { mutableStateOf(false) }
 
-    var isFetching by remember(mediaMetadata?.id) { mutableStateOf(false) }
+    LaunchedEffect(mediaMetadata?.id) {
+        val metadata = mediaMetadata ?: return@LaunchedEffect
+        val existing = withContext(Dispatchers.IO) {
+            database.lyrics(metadata.id).first()
+        }
+        if (existing != null && existing.lyrics.isNotBlank() && existing.lyrics != LyricsEntity.LYRICS_NOT_FOUND) {
+            initialFetchDone = true
+            return@LaunchedEffect
+        }
 
-    LaunchedEffect(mediaMetadata?.id, currentLyrics) {
-        val hasValidLyrics = currentLyrics != null && currentLyrics?.lyrics != LyricsEntity.LYRICS_NOT_FOUND
-        if (mediaMetadata != null && !hasValidLyrics) {
-            isFetching = true
-            coroutineScope.launch(Dispatchers.IO) {
-                try {
-                    val fetchedLyricsWithProvider = lyricsHelper.getLyrics(mediaMetadata)
-                    if (fetchedLyricsWithProvider.lyrics != LyricsEntity.LYRICS_NOT_FOUND && fetchedLyricsWithProvider.lyrics.isNotBlank()) {
-                        database.query {
-                            upsert(LyricsEntity(mediaMetadata.id, fetchedLyricsWithProvider.lyrics, fetchedLyricsWithProvider.provider))
-                        }
-                    }
-                } catch (e: Exception) {
-                    // Handle error
-                } finally {
-                    isFetching = false
+        try {
+            val fetchedLyricsWithProvider = lyricsHelper.getLyrics(metadata)
+            if (fetchedLyricsWithProvider.lyrics != LyricsEntity.LYRICS_NOT_FOUND && fetchedLyricsWithProvider.lyrics.isNotBlank()) {
+                withContext(Dispatchers.IO) {
+                    database.upsert(
+                        LyricsEntity(
+                            id = metadata.id,
+                            lyrics = fetchedLyricsWithProvider.lyrics,
+                            provider = fetchedLyricsWithProvider.provider,
+                        )
+                    )
                 }
             }
+        } catch (e: Exception) {
+            // Handle error
+        } finally {
+            initialFetchDone = true
         }
     }
 
@@ -1970,7 +1979,7 @@ fun InlineLyricsView(
                 }
             }
 
-            isFetching || lyrics == null -> {
+            isHelperFetching || !initialFetchDone -> {
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center,

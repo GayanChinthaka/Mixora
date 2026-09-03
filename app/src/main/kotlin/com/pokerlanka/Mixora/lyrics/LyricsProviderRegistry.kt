@@ -18,7 +18,21 @@ object LyricsProviderRegistry {
 
     val providerNames = providerMap.keys.toList()
 
-    fun getProviderByName(name: String): LyricsProvider? = providerMap[name]
+    fun getProviderByName(name: String): LyricsProvider? {
+        providerMap[name]?.let { return it }
+        // Case-insensitive lookup
+        providerMap.entries.firstOrNull { it.key.equals(name, ignoreCase = true) }?.value?.let { return it }
+        // Alternate name matching
+        return when (name.lowercase().replace(" ", "")) {
+            "kugou" -> KuGouLyricsProvider
+            "youtube", "youtubemusic" -> YouTubeLyricsProvider
+            "youtubesubtitle", "youtubesubtitles" -> YouTubeSubtitleLyricsProvider
+            "lrclib" -> LrcLibLyricsProvider
+            "musixmatch" -> MusixmatchLyricsProvider
+            "paxsenix" -> PaxsenixLyricsProvider
+            else -> null
+        }
+    }
 
     fun getProviderName(provider: LyricsProvider): String? =
         providerMap.entries.find { it.value == provider }?.key

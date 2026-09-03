@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Mixora Project (C) 2026
  * Author : Gayan Chinthaka
  * Company: Pokerlanka
@@ -8,8 +8,9 @@ package com.pokerlanka.mixora.ui.component
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.basicMarquee
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -38,11 +39,13 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 
 // Enhanced Action Button - Material 3 Expressive Design
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun NewActionButton(
     icon: @Composable () -> Unit,
     text: String,
     onClick: @Composable () -> Unit,
+    onLongClick: (@Composable () -> Unit)? = null,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
     backgroundColor: Color = MaterialTheme.colorScheme.surfaceVariant,
@@ -61,6 +64,7 @@ fun NewActionButton(
     )
 
     var performAction by remember { mutableStateOf(false) }
+    var performLongAction by remember { mutableStateOf(false) }
 
     if (performAction) {
         onClick()
@@ -69,10 +73,21 @@ fun NewActionButton(
         }
     }
 
+    if (performLongAction) {
+        onLongClick?.invoke()
+        LaunchedEffect(Unit) {
+            performLongAction = false
+        }
+    }
+
     Card(
         modifier =
             modifier
-                .clickable(enabled = enabled) { performAction = true },
+                .combinedClickable(
+                    enabled = enabled,
+                    onClick = { performAction = true },
+                    onLongClick = if (onLongClick != null) { { performLongAction = true } } else null,
+                ),
         colors =
             CardDefaults.cardColors(
                 containerColor = animatedBackground,
@@ -133,6 +148,7 @@ fun NewActionGrid(
                         icon = action.icon,
                         text = action.text,
                         onClick = action.onClick,
+                        onLongClick = action.onLongClick,
                         modifier = Modifier.weight(1f),
                         enabled = action.enabled,
                         backgroundColor =
@@ -168,6 +184,7 @@ data class NewAction(
     val icon: @Composable () -> Unit,
     val text: String,
     val onClick: @Composable () -> Unit,
+    val onLongClick: (@Composable () -> Unit)? = null,
     val enabled: Boolean = true,
     val backgroundColor: Color = Color.Unspecified,
     val contentColor: Color = Color.Unspecified,

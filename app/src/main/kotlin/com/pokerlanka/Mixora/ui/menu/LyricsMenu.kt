@@ -11,8 +11,12 @@ import android.content.ClipboardManager
 import android.content.Context
 import android.content.res.Configuration
 import android.widget.Toast
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -20,7 +24,10 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -28,6 +35,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -38,6 +46,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
@@ -64,6 +73,8 @@ import com.pokerlanka.mixora.ui.component.RomanizationSetupDialog
 import com.pokerlanka.mixora.viewmodels.LyricsMenuViewModel
 import com.pokerlanka.mixora.constants.LyricsBackgroundStyle
 import com.pokerlanka.mixora.constants.LyricsBackgroundStyleKey
+import com.pokerlanka.mixora.constants.LyricsProviderOrderKey
+import com.pokerlanka.mixora.lyrics.LyricsProviderRegistry
 import com.pokerlanka.mixora.constants.AiApiKeyKey
 import com.pokerlanka.mixora.constants.AiCustomEndpointKey
 import com.pokerlanka.mixora.constants.AiCustomModelKey
@@ -148,6 +159,92 @@ fun LyricsMenu(
         )
     }
 
+    val providerOrderPreference by rememberPreference(
+        key = LyricsProviderOrderKey,
+        defaultValue = "",
+    )
+    val providers = remember(providerOrderPreference) {
+        LyricsProviderRegistry.deserializeProviderOrder(providerOrderPreference)
+    }
+
+    var showProviderSelectDialog by rememberSaveable { mutableStateOf(false) }
+
+    if (showProviderSelectDialog) {
+        val providerDisplayNames = mapOf(
+            "LrcLib" to "LrcLib",
+            "Musixmatch" to "Musixmatch",
+            "Paxsenix" to "Paxsenix",
+            "KuGou" to "KuGou",
+            "YouTube" to "YouTube",
+            "YouTubeSubtitle" to "YouTube Subtitles",
+        )
+
+        AlertDialog(
+            modifier = Modifier.padding(horizontal = 24.dp),
+            onDismissRequest = { showProviderSelectDialog = false },
+            icon = {
+                Icon(
+                    painter = painterResource(R.drawable.lyrics),
+                    contentDescription = null,
+                    modifier = Modifier.size(28.dp),
+                    tint = MaterialTheme.colorScheme.primary,
+                )
+            },
+            title = {
+                Text(
+                    text = stringResource(R.string.lyrics_provider_selection),
+                    style = MaterialTheme.typography.headlineSmall,
+                )
+            },
+            text = {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                ) {
+                    providers.forEach { providerName ->
+                        val displayName = providerDisplayNames[providerName] ?: providerName
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(12.dp))
+                                .clickable {
+                                    showProviderSelectDialog = false
+                                    val metadata = mediaMetadataProvider()
+                                    Toast.makeText(
+                                        context,
+                                        "Searching lyrics on $displayName...",
+                                        Toast.LENGTH_SHORT,
+                                    ).show()
+                                    viewModel.refetchLyrics(metadata, selectedProvider = providerName)
+                                    onDismiss()
+                                }
+                                .padding(horizontal = 14.dp, vertical = 12.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Icon(
+                                painter = painterResource(R.drawable.lyrics),
+                                contentDescription = null,
+                                modifier = Modifier.size(22.dp),
+                                tint = MaterialTheme.colorScheme.primary,
+                            )
+                            Spacer(modifier = Modifier.width(14.dp))
+                            Text(
+                                text = displayName,
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = MaterialTheme.colorScheme.onSurface,
+                            )
+                        }
+                    }
+                }
+            },
+            confirmButton = {},
+            dismissButton = {
+                TextButton(onClick = { showProviderSelectDialog = false }) {
+                    Text(stringResource(android.R.string.cancel))
+                }
+            },
+        )
+    }
 
     var lyricsOffset by rememberSaveable { mutableIntStateOf(songProvider()?.lyricsOffset ?: 0) }
 
@@ -237,8 +334,12 @@ fun LyricsMenu(
                             },
                             text = stringResource(R.string.refetch),
                             onClick = {
+                                val metadata = mediaMetadataProvider()
+                                viewModel.refetchLyrics(metadata)
                                 onDismiss()
-                                viewModel.refetchLyrics(mediaMetadataProvider(), lyricsProvider())
+                            },
+                            onLongClick = {
+                                showProviderSelectDialog = true
                             },
                         ),
                         NewAction(
