@@ -1050,6 +1050,7 @@ class MusicService :
         mediaSession =
             MediaLibrarySession
                 .Builder(this, player, mediaLibrarySessionCallback)
+                .setPeriodicPositionUpdateEnabled(false)
                 .setSessionActivity(
                     PendingIntent.getActivity(
                         this,
