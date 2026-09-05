@@ -1993,6 +1993,14 @@ interface DatabaseDao {
     @Query("DELETE FROM lyrics WHERE id = :id")
     fun deleteLyricsById(id: String)
 
+    /**
+     * Older builds persisted the LYRICS_NOT_FOUND sentinel, including when the fetch only failed
+     * because the device was offline. Those rows made the player report "no lyrics" for songs that
+     * do have them, so they are cleared once on upgrade. Nothing writes the sentinel any more.
+     */
+    @Query("DELETE FROM lyrics WHERE lyrics = :sentinel")
+    fun deleteNotFoundLyrics(sentinel: String)
+
     @Delete
     fun delete(searchHistory: SearchHistory)
 

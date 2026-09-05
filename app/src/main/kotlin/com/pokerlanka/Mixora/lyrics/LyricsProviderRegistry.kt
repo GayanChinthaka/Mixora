@@ -41,7 +41,15 @@ object LyricsProviderRegistry {
         if (orderString.isBlank()) {
             return getDefaultProviderOrder()
         }
-        return orderString.split(",").map { it.trim() }.filter { it in providerNames }
+        // Names left over from providers that have since been removed are dropped. If that leaves
+        // nothing - a saved order made up entirely of removed providers - fall back to the defaults
+        // rather than handing the caller an empty provider list, which would silently stop lyrics
+        // from ever being fetched.
+        return orderString
+            .split(",")
+            .map { it.trim() }
+            .filter { it in providerNames }
+            .ifEmpty { getDefaultProviderOrder() }
     }
 
     fun serializeProviderOrder(providers: List<String>): String {

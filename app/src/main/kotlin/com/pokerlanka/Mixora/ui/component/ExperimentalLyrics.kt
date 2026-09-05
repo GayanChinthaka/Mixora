@@ -160,14 +160,7 @@ fun ExperimentalLyrics(
 
     val mediaMetadata by playerConnection.mediaMetadata.collectAsStateWithLifecycle()
     val currentLyricsEntity by playerConnection.currentLyrics.collectAsStateWithLifecycle(initialValue = null)
-    var lastValidLyricsEntity by remember { mutableStateOf<com.pokerlanka.mixora.db.entities.LyricsEntity?>(null) }
-    
-    LaunchedEffect(currentLyricsEntity) {
-        if (currentLyricsEntity != null) {
-            lastValidLyricsEntity = currentLyricsEntity
-        }
-    }
-    
+
     val entryPoint = remember(context) {
         EntryPointAccessors.fromApplication(
             context.applicationContext,
@@ -175,7 +168,9 @@ fun ExperimentalLyrics(
         )
     }
     val lyricsHelper = remember(entryPoint) { entryPoint.lyricsHelper() }
-    val currentSearchingProvider by lyricsHelper.currentSearchingProvider.collectAsStateWithLifecycle(initialValue = null)
+    // Per track id, so a fetch left over from the previous song cannot label this one.
+    val activeFetches by lyricsHelper.activeFetches.collectAsStateWithLifecycle()
+    val currentSearchingProvider = mediaMetadata?.id?.let { activeFetches[it] }
 
     val lyricsEntity = currentLyricsEntity
     val currentSong by playerConnection.currentSong.collectAsStateWithLifecycle(initialValue = null)

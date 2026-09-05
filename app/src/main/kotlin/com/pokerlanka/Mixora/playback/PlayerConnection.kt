@@ -34,6 +34,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import timber.log.Timber
@@ -159,9 +160,12 @@ class PlayerConnection(
         mediaMetadata.flatMapLatest {
             database.song(it?.id)
         }.stateIn(scope, SharingStarted.Lazily, null)
+    // onStart(null) clears the previous song's lyrics the moment the track changes. stateIn keeps
+    // replaying the last value until Room answers for the new id, which showed the outgoing song's
+    // lyrics on the incoming one for a frame.
     val currentLyrics =
         mediaMetadata.flatMapLatest { mediaMetadata ->
-            database.lyrics(mediaMetadata?.id)
+            database.lyrics(mediaMetadata?.id).onStart { emit(null) }
         }.stateIn(scope, SharingStarted.Lazily, null)
     val currentFormat =
         mediaMetadata.flatMapLatest { mediaMetadata ->

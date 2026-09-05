@@ -1,7 +1,6 @@
 package com.pokerlanka.paxsenix
 
 import android.content.Context
-import com.pokerlanka.mixora.betterlyrics.TTMLParser
 import com.pokerlanka.paxsenix.models.AppleMusicSearchResponse
 import com.pokerlanka.paxsenix.models.LyricsResponse
 
@@ -438,57 +437,6 @@ object Paxsenix {
         return@runCatching lrc
     }
 
-    suspend fun getAllLyrics(
-        title: String,
-        artist: String,
-        duration: Int,
-        album: String? = null,
-        callback: (String) -> Unit,
-    ) {
-        val cleanedTitle = cleanTitle(title)
-        val cleanedArtist = cleanArtist(artist)
-
-        val searchQueries = listOf(
-            "$cleanedTitle $cleanedArtist",
-            cleanedTitle
-        )
-
-        var plainFallback: String? = null
-
-        var scoredResults: List<Pair<SearchResult, Double>> = emptyList()
-        searchLoop@ for (query in searchQueries) {
-            val results = search(query)
-            if (results.isEmpty()) continue
-
-            val filtered = scoreAndFilterResults(results, title, artist, duration)
-            if (filtered.isNotEmpty()) {
-                scoredResults = filtered
-                break@searchLoop
-            }
-        }
-
-        val collectedLyrics = mutableListOf<Pair<String, Int>>()
-
-        for ((result, _) in scoredResults.take(5)) {
-            Timber.d("Trying lyrics for: ${result.displayName}")
-            val lrc = fetchLyricsForTrack(result.id).getOrNull() ?: continue
-            if (lrc.isNotEmpty()) {
-                val quality = getQuality(lrc)
-                collectedLyrics.add(lrc to quality)
-                if (quality == 3) break // Found best quality, stop searching
-            }
-        }
-
-        // Sort by quality descending and callback
-        collectedLyrics.sortedByDescending { it.second }.forEach { (lrc, _) ->
-            callback(lrc)
-        }
-    }
-    
-    /**
-     * Convert TTML format to app format with v1/v2/bg support
-     * TTML has native agent info via ttm:agent="v1" or ttm:agent="v2"
-     */
     private fun convertTTMLToAppFormat(ttml: String): String {
         return try {
             val parsedLines = TTMLParser.parseTTML(ttml)

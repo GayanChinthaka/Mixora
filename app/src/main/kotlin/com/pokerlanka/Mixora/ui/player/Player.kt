@@ -187,12 +187,14 @@ import com.pokerlanka.mixora.utils.rememberEnumPreference
 import com.pokerlanka.mixora.utils.rememberPreference
 import com.pokerlanka.mixora.utils.safeDataStoreEdit
 import dagger.hilt.android.EntryPointAccessors
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import timber.log.Timber
 import kotlin.math.max
 import kotlin.math.roundToInt
 import com.pokerlanka.mixora.ui.component.Icon as MIcon
@@ -1917,8 +1919,11 @@ fun InlineLyricsView(
         )
     }
     val lyricsHelper = remember(entryPoint) { entryPoint.lyricsHelper() }
-    val currentSearchingProvider by lyricsHelper.currentSearchingProvider.collectAsStateWithLifecycle(initialValue = null)
-    val isHelperFetching by lyricsHelper.isFetchingLyrics.collectAsStateWithLifecycle()
+    // Fetch state is tracked per track id: a fetch still running for the previous song must not
+    // drive this song's spinner or provider label.
+    val activeFetches by lyricsHelper.activeFetches.collectAsStateWithLifecycle()
+    val currentSearchingProvider = mediaMetadata?.id?.let { activeFetches[it] }
+    val isHelperFetching = mediaMetadata?.id?.let { activeFetches.containsKey(it) } == true
     var initialFetchDone by remember(mediaMetadata?.id) { mutableStateOf(false) }
 
     LaunchedEffect(mediaMetadata?.id) {
@@ -1944,8 +1949,10 @@ fun InlineLyricsView(
                     )
                 }
             }
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
-            // Handle error
+            Timber.tag("InlineLyricsView").w(e, "Lyrics fetch failed for ${metadata.id}")
         } finally {
             initialFetchDone = true
         }

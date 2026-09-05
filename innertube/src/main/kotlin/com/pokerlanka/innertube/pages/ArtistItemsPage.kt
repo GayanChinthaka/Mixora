@@ -36,7 +36,8 @@ data class ArtistItemsPage(
                     )
                 }
 
-            // Extract album from last flexColumn (like SimpMusic does)
+            // The album lives in the last flexColumn; only treat it as one when the run
+            // carries a browse endpoint, otherwise it is plain text such as the play count.
             val album = renderer.flexColumns.lastOrNull()
                 ?.musicResponsiveListItemFlexColumnRenderer?.text?.runs
                 ?.firstOrNull()?.let {

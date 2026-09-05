@@ -172,7 +172,6 @@ import com.pokerlanka.mixora.extensions.toEnum
 import com.pokerlanka.mixora.extensions.toMediaItem
 import com.pokerlanka.mixora.extensions.toPersistQueue
 import com.pokerlanka.mixora.extensions.toQueue
-import com.pokerlanka.mixora.lyrics.LyricsHelper
 import com.pokerlanka.mixora.models.PersistPlayerState
 import com.pokerlanka.mixora.models.PersistQueue
 import com.pokerlanka.mixora.models.toMediaMetadata
@@ -254,9 +253,6 @@ class MusicService :
     PlaybackStatsListener.Callback {
     @Inject
     lateinit var database: MusicDatabase
-
-    @Inject
-    lateinit var lyricsHelper: LyricsHelper
 
     @Inject
     lateinit var syncUtils: SyncUtils
@@ -1091,9 +1087,6 @@ class MusicService :
         playerVolume = MutableStateFlow((startupPrefs!![PlayerVolumeKey] ?: 1f).coerceIn(0f, 1f))
 
         initializeCast()
-
-        // Collecting this flow activates the internal map that updates lyricsProviders in LyricsHelper
-        lyricsHelper.preferred.collectLatest(scope) {}
 
         // 4. Watch for EQ profile changes
         scope.launch {

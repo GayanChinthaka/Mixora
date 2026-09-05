@@ -194,11 +194,9 @@ val PlaylistViewTypeKey = stringPreferencesKey("playlistViewType")
 
 val PlaylistEditLockKey = booleanPreferencesKey("playlistEditLock")
 val QuickPicksKey = stringPreferencesKey("discover")
-val PreferredLyricsProviderKey = stringPreferencesKey("lyricsProvider")
 val LyricsProviderOrderKey = stringPreferencesKey("lyricsProviderOrder")
-val SimpMusicMigrationDoneKey = booleanPreferencesKey("simpMusicMigrationDone")
+val NotFoundLyricsCleanupDoneKey = booleanPreferencesKey("notFoundLyricsCleanupDone")
 val QueueEditLockKey = booleanPreferencesKey("queueEditLock")
-val LastSeenVersionKey = stringPreferencesKey("lastSeenVersion")
 val RandomizeHomeOrderKey = booleanPreferencesKey("randomizeHomeOrder")
 
 val ShowLikedPlaylistKey = booleanPreferencesKey("show_liked_playlist")
@@ -337,14 +335,6 @@ enum class MyTopFilter {
 enum class QuickPicks {
     QUICK_PICKS,
     LAST_LISTEN,
-}
-
-enum class PreferredLyricsProvider {
-    LRCLIB,
-    KUGOU,
-    BETTER_LYRICS,
-    PAXSENIX,
-    LYRICSPLUS
 }
 
 enum class PlayerButtonsStyle {

@@ -47,22 +47,4 @@ object PaxsenixLyricsProvider : LyricsProvider {
         }
     }
 
-    override suspend fun getAllLyrics(
-        context: Context,
-        id: String,
-        title: String,
-        artist: String,
-        duration: Int,
-        album: String?,
-        callback: (String) -> Unit,
-    ) {
-        Timber.tag(TAG).d("getAllLyrics called")
-        try {
-            Paxsenix.init(context)
-            Paxsenix.getAllLyrics(title, artist, duration, album, callback)
-        } catch (e: Exception) {
-            Timber.tag(TAG).e(e, "Error fetching lyrics from Paxsenix")
-            callback("")
-        }
-    }
 }

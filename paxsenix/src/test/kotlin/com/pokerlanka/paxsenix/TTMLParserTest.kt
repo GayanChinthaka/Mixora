@@ -1,5 +1,5 @@
 ﻿
-package com.pokerlanka.mixora.betterlyrics
+package com.pokerlanka.paxsenix
 
 import org.junit.Test
 import org.junit.Assert.*

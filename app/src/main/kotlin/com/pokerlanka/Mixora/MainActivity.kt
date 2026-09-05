@@ -141,22 +141,19 @@ import com.pokerlanka.mixora.constants.CustomThemeColorKey
 import com.pokerlanka.mixora.constants.DarkModeKey
 import com.pokerlanka.mixora.constants.DisableAnimationsKey
 import com.pokerlanka.mixora.constants.DynamicThemeKey
-import com.pokerlanka.mixora.constants.LastSeenVersionKey
-import com.pokerlanka.mixora.constants.LyricsProviderOrderKey
 import com.pokerlanka.mixora.constants.MiniPlayerBottomSpacing
 import com.pokerlanka.mixora.constants.MiniPlayerHeight
 import com.pokerlanka.mixora.constants.NavigationBarAnimationSpec
 import com.pokerlanka.mixora.constants.NavigationBarHeight
 import com.pokerlanka.mixora.constants.PauseListenHistoryKey
 import com.pokerlanka.mixora.constants.PauseSearchHistoryKey
-import com.pokerlanka.mixora.constants.PreferredLyricsProvider
-import com.pokerlanka.mixora.constants.PreferredLyricsProviderKey
 import com.pokerlanka.mixora.constants.PureBlackKey
 import com.pokerlanka.mixora.constants.SYSTEM_DEFAULT
 import com.pokerlanka.mixora.constants.SelectedThemeColorKey
-import com.pokerlanka.mixora.constants.SimpMusicMigrationDoneKey
+import com.pokerlanka.mixora.constants.NotFoundLyricsCleanupDoneKey
 import com.pokerlanka.mixora.constants.StopMusicOnTaskClearKey
 import com.pokerlanka.mixora.db.MusicDatabase
+import com.pokerlanka.mixora.db.entities.LyricsEntity
 import com.pokerlanka.mixora.db.entities.SearchHistory
 import com.pokerlanka.mixora.extensions.toEnum
 import com.pokerlanka.mixora.lyrics.LyricsProviderRegistry
@@ -378,33 +375,19 @@ class MainActivity : ComponentActivity() {
         window.decorView.layoutDirection = View.LAYOUT_DIRECTION_LTR
         WindowCompat.setDecorFitsSystemWindows(window, false)
 
-        // Defer migration and version tracking to avoid blocking first frame
+        // Defer migration work to avoid blocking first frame
         lifecycleScope.launch(Dispatchers.IO) {
             val preferences = dataStore.data.first()
-            val currentVersion = BuildConfig.VERSION_NAME
 
-            // SimpMusic Removal Migration
-            if (preferences[SimpMusicMigrationDoneKey] != true) {
+            // Older builds wrote the LYRICS_NOT_FOUND sentinel into the lyrics table, including
+            // when the fetch had only failed because the device was offline. Those rows make the
+            // player claim a song has no lyrics forever, so clear them once. Nothing writes the
+            // sentinel any more.
+            if (preferences[NotFoundLyricsCleanupDoneKey] != true) {
+                runCatching { database.deleteNotFoundLyrics(LyricsEntity.LYRICS_NOT_FOUND) }
+                    .onFailure { Timber.w(it, "Failed to clear stale LYRICS_NOT_FOUND rows") }
                 safeDataStoreEdit { settings ->
-                    val currentOrder = settings[LyricsProviderOrderKey] ?: ""
-                    if (currentOrder.contains("SimpMusic")) {
-                        val orderList =
-                            currentOrder
-                                .split(",")
-                                .map { it.trim() }
-                                .filter { it.isNotBlank() && it != "SimpMusic" }
-                                .toMutableList()
-                        if (orderList.isEmpty()) {
-                            settings[LyricsProviderOrderKey] = ""
-                        } else {
-                            settings[LyricsProviderOrderKey] = orderList.joinToString(",")
-                        }
-                    }
-                    if (settings[PreferredLyricsProviderKey] == "SIMPMUSIC") {
-                        settings[PreferredLyricsProviderKey] = PreferredLyricsProvider.LRCLIB.name
-                    }
-                    settings[SimpMusicMigrationDoneKey] = true
-                    settings[LastSeenVersionKey] = currentVersion
+                    settings[NotFoundLyricsCleanupDoneKey] = true
                 }
             }
 
