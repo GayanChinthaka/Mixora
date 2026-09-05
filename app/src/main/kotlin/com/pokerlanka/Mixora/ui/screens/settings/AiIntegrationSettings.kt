@@ -8,20 +8,10 @@
 
 package com.pokerlanka.mixora.ui.screens.settings
 
+import android.content.ClipboardManager
+import android.content.Context
 import android.widget.Toast
-import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.spring
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.scaleIn
-import androidx.compose.animation.scaleOut
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
-import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -73,7 +63,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -106,6 +95,7 @@ import com.pokerlanka.mixora.ui.component.IconButton
 import com.pokerlanka.mixora.ui.component.Material3SettingsGroup
 import com.pokerlanka.mixora.ui.component.Material3SettingsItem
 import com.pokerlanka.mixora.ui.utils.backToMain
+import com.pokerlanka.mixora.utils.readPlainText
 import com.pokerlanka.mixora.utils.rememberEnumPreference
 import com.pokerlanka.mixora.utils.rememberPreference
 import com.pokerlanka.mixora.viewmodels.AiIntegrationSettingsViewModel
@@ -501,11 +491,13 @@ private fun ApiKeyDialog(
     onSave: (String) -> Unit,
 ) {
     var field by remember { mutableStateOf(TextFieldValue(value)) }
-    val clipboardManager = LocalClipboardManager.current
-    val hasClipboardText = remember {
+    val context = LocalContext.current
+    val clipboardManager = remember(context) {
+        context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+    }
+    val hasClipboardText = remember(clipboardManager) {
         try {
-            val text = clipboardManager.getText()?.text
-            !text.isNullOrBlank()
+            !clipboardManager.readPlainText(context).isNullOrBlank()
         } catch (e: Exception) {
             false
         }
@@ -538,7 +530,7 @@ private fun ApiKeyDialog(
                     androidx.compose.material3.IconButton(
                         onClick = {
                             try {
-                                val text = clipboardManager.getText()?.text
+                                val text = clipboardManager.readPlainText(context)
                                 if (!text.isNullOrBlank()) {
                                     field = TextFieldValue(text)
                                 }

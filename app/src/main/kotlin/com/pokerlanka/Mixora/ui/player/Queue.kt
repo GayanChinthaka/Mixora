@@ -8,7 +8,6 @@ package com.pokerlanka.mixora.ui.player
 
 import android.annotation.SuppressLint
 import androidx.activity.compose.BackHandler
-import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.expandVertically
@@ -19,7 +18,6 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
@@ -46,7 +44,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
@@ -65,7 +62,6 @@ import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.SwipeToDismissBox
 import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -86,23 +82,18 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.scale
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.datastore.preferences.core.edit
 import androidx.media3.common.Player
 import androidx.media3.common.Timeline
 import androidx.media3.exoplayer.source.ShuffleOrder.DefaultShuffleOrder
@@ -113,7 +104,6 @@ import com.pokerlanka.mixora.constants.ListItemHeight
 import com.pokerlanka.mixora.constants.PlayerBackgroundStyle
 import com.pokerlanka.mixora.constants.PlayerHorizontalPadding
 import com.pokerlanka.mixora.constants.SwipeToRemoveSongKey
-import com.pokerlanka.mixora.constants.ThumbnailCornerRadius
 import com.pokerlanka.mixora.constants.QueueEditLockKey
 import com.pokerlanka.mixora.extensions.metadata
 import com.pokerlanka.mixora.extensions.move
@@ -125,11 +115,9 @@ import com.pokerlanka.mixora.ui.component.BottomSheetState
 import com.pokerlanka.mixora.ui.component.LocalBottomSheetPageState
 import com.pokerlanka.mixora.ui.component.LocalMenuState
 import com.pokerlanka.mixora.ui.component.MediaMetadataListItem
-import com.pokerlanka.mixora.ui.menu.PlayerMenu
 import com.pokerlanka.mixora.ui.menu.QueueMenu
 import com.pokerlanka.mixora.ui.menu.SelectionMediaMetadataMenu
 import com.pokerlanka.mixora.ui.utils.ShowMediaInfo
-import com.pokerlanka.mixora.utils.dataStore
 import com.pokerlanka.mixora.utils.makeTimeString
 import com.pokerlanka.mixora.utils.rememberPreference
 import com.pokerlanka.mixora.utils.safeDataStoreEdit
@@ -169,7 +157,6 @@ fun Queue(
     val navController = LocalNavController.current
     val context = LocalContext.current
     val haptic = LocalHapticFeedback.current
-    val clipboardManager = LocalClipboard.current
     val menuState = LocalMenuState.current
     val sleepTimerDefaultSetTemplate = stringResource(R.string.sleep_timer_default_set)
     val bottomSheetPageState = LocalBottomSheetPageState.current

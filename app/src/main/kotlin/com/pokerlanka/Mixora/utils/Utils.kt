@@ -6,6 +6,7 @@
 
 package com.pokerlanka.mixora.utils
 
+import android.content.ClipboardManager
 import android.content.Context
 import com.pokerlanka.mixora.R
 
@@ -24,3 +25,17 @@ fun <T> List<T>.joinToArtistString(
 fun reportException(throwable: Throwable) {
     throwable.printStackTrace()
 }
+
+/**
+ * Current clipboard contents as plain text, or null when the clipboard is empty.
+ *
+ * Replaces Compose's deprecated `LocalClipboardManager.getText()` and matches how the rest of the
+ * app already talks to the clipboard. [android.content.ClipData.Item.coerceToText] is used so a
+ * copied URI or styled text still pastes as something sensible.
+ */
+fun ClipboardManager.readPlainText(context: Context): String? =
+    primaryClip
+        ?.takeIf { it.itemCount > 0 }
+        ?.getItemAt(0)
+        ?.coerceToText(context)
+        ?.toString()
