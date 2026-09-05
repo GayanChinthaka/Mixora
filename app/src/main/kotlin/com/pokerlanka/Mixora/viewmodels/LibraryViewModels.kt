@@ -9,8 +9,6 @@
 package com.pokerlanka.mixora.viewmodels
 
 import android.content.Context
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -33,7 +31,6 @@ import com.pokerlanka.mixora.constants.ArtistSortTypeKey
 import com.pokerlanka.mixora.constants.HideExplicitKey
 import com.pokerlanka.mixora.constants.HideVideoSongsKey
 import com.pokerlanka.mixora.constants.HideYoutubeShortsKey
-import com.pokerlanka.mixora.constants.LibraryFilter
 import com.pokerlanka.mixora.constants.PlaylistSortDescendingKey
 import com.pokerlanka.mixora.constants.PlaylistSortType
 import com.pokerlanka.mixora.constants.PlaylistSortTypeKey
@@ -62,7 +59,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
@@ -603,10 +599,3 @@ constructor(
     }
 }
 
-@HiltViewModel
-class LibraryViewModel
-@Inject
-constructor() : ViewModel() {
-    private val curScreen = mutableStateOf(LibraryFilter.LIBRARY)
-    val filter: MutableState<LibraryFilter> = curScreen
-}

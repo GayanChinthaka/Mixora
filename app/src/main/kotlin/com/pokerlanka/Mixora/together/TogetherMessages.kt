@@ -83,14 +83,6 @@ data class JoinDecision(
 ) : TogetherMessage
 
 @Serializable
-@SerialName("join_request")
-@Immutable
-data class JoinRequest(
-    val sessionId: String,
-    val participant: TogetherParticipant,
-) : TogetherMessage
-
-@Serializable
 @SerialName("participant_joined")
 @Immutable
 data class ParticipantJoined(

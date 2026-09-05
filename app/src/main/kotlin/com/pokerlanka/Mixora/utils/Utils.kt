@@ -7,9 +7,7 @@
 package com.pokerlanka.mixora.utils
 
 import android.content.Context
-import android.content.res.Configuration
 import com.pokerlanka.mixora.R
-import java.util.Locale
 
 fun getArtistSeparator(context: Context): String = " ${context.getString(R.string.and)} "
 
@@ -25,11 +23,4 @@ fun <T> List<T>.joinToArtistString(
 
 fun reportException(throwable: Throwable) {
     throwable.printStackTrace()
-}
-
-@Suppress("DEPRECATION")
-fun setAppLocale(context: Context, locale: Locale) {
-    val config = Configuration(context.resources.configuration)
-    config.setLocale(locale)
-    context.resources.updateConfiguration(config, context.resources.displayMetrics)
 }
