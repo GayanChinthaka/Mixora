@@ -147,7 +147,6 @@ import com.pokerlanka.mixora.constants.ShufflePlaylistFirstKey
 import com.pokerlanka.mixora.constants.SimilarContent
 import com.pokerlanka.mixora.constants.SkipSilenceInstantKey
 import com.pokerlanka.mixora.constants.SkipSilenceKey
-import com.pokerlanka.mixora.constants.StopMusicOnTaskClearKey
 import com.pokerlanka.mixora.db.MusicDatabase
 import com.pokerlanka.mixora.db.entities.Event
 import com.pokerlanka.mixora.db.entities.FormatEntity
@@ -4164,12 +4163,20 @@ class MusicService :
     override fun onDestroy() {
         isRunning = false
 
+        runCatching {
+            ServiceCompat.stopForeground(this, ServiceCompat.STOP_FOREGROUND_REMOVE)
+            getSystemService(NotificationManager::class.java)?.cancel(NOTIFICATION_ID)
+        }
+
         if (!::player.isInitialized) {
             try {
                 scope.cancel()
             } catch (_: Exception) {
             }
             super.onDestroy()
+            runCatching {
+                getSystemService(NotificationManager::class.java)?.cancel(NOTIFICATION_ID)
+            }
             shutdownDeferred.complete(Unit)
             return
         }
@@ -4211,39 +4218,45 @@ class MusicService :
         player.release()
         scope.cancel()
         super.onDestroy()
+        runCatching {
+            getSystemService(NotificationManager::class.java)?.cancel(NOTIFICATION_ID)
+        }
         shutdownDeferred.complete(Unit)
     }
 
     override fun onBind(intent: Intent?) = super.onBind(intent) ?: binder
 
     override fun onTaskRemoved(rootIntent: Intent?) {
-        if (dataStore.get(StopMusicOnTaskClearKey, false)) {
-            if (!::player.isInitialized) {
-                stopSelf()
-                return
-            }
-            // Remote playback (Cast) is independent of the local ExoPlayer; ending the session
-            // is required or audio keeps playing on the Cast device.
+        if (!::player.isInitialized) {
             runCatching {
-                if (castConnectionHandler?.isCasting?.value == true) {
-                    castConnectionHandler?.disconnect()
-                }
-                player.stop()
                 ServiceCompat.stopForeground(this, ServiceCompat.STOP_FOREGROUND_REMOVE)
-                controllerFuture?.let { MediaController.releaseFuture(it) }
-                controllerFuture = null
-                // Media3: coordinates notification/foreground teardown and stopSelf; required when
-                // playback was ongoing (default super.onTaskRemoved keeps the service alive).
-                pauseAllPlayersAndStopSelf()
-            }.onFailure { e ->
-                Timber.tag(TAG).e(e, "Failed to stop playback on task clear")
-                controllerFuture?.let { MediaController.releaseFuture(it) }
-                controllerFuture = null
-                runCatching { pauseAllPlayersAndStopSelf() }.onFailure { stopSelf() }
+                getSystemService(NotificationManager::class.java)?.cancel(NOTIFICATION_ID)
             }
+            stopSelf()
             return
         }
-        super.onTaskRemoved(rootIntent)
+        // Always stop playback, dismiss notification, and stop service when task is cleared
+        runCatching {
+            if (castConnectionHandler?.isCasting?.value == true) {
+                castConnectionHandler?.disconnect()
+            }
+            player.stop()
+            player.clearMediaItems()
+            ServiceCompat.stopForeground(this, ServiceCompat.STOP_FOREGROUND_REMOVE)
+            getSystemService(NotificationManager::class.java)?.cancel(NOTIFICATION_ID)
+            controllerFuture?.let { MediaController.releaseFuture(it) }
+            controllerFuture = null
+            stopSelf()
+        }.onFailure { e ->
+            Timber.tag(TAG).e(e, "Failed to stop playback on task clear")
+            controllerFuture?.let { MediaController.releaseFuture(it) }
+            controllerFuture = null
+            runCatching {
+                ServiceCompat.stopForeground(this, ServiceCompat.STOP_FOREGROUND_REMOVE)
+                getSystemService(NotificationManager::class.java)?.cancel(NOTIFICATION_ID)
+            }
+            stopSelf()
+        }
     }
 
     override fun onGetSession(controllerInfo: MediaSession.ControllerInfo) = mediaSession

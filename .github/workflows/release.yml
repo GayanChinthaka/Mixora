@@ -1,6 +1,9 @@
 name: Build & Publish Release
 
 on:
+  push:
+    tags:
+      - 'v*'
   workflow_dispatch:
     inputs:
       prerelease:
@@ -25,18 +28,25 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Determine Release Version from Gradle
+      - name: Determine Release Version
         id: version_step
         run: |
-          VERSION=$(grep -oP 'versionName\s*=\s*"\K[^"]+' app/build.gradle.kts || echo "")
-          
-          if [ -z "$VERSION" ]; then
-            echo "Error: Could not extract versionName from app/build.gradle.kts!"
-            exit 1
+          if [ "${{ github.ref_type }}" = "tag" ]; then
+            TAG="${{ github.ref_name }}"
+            STRIPPED_TAG="${TAG#v}"
+            GRADLE_VERSION=$(grep -oP 'versionName\s*=\s*"\K[^"]+' app/build.gradle.kts || echo "")
+            VERSION="${GRADLE_VERSION:-$STRIPPED_TAG}"
+          else
+            VERSION=$(grep -oP 'versionName\s*=\s*"\K[^"]+' app/build.gradle.kts || echo "")
+            if [ -z "$VERSION" ]; then
+              echo "Error: Could not extract versionName from app/build.gradle.kts!"
+              exit 1
+            fi
+            TAG="v$VERSION"
           fi
 
-          echo "Extracted version from app/build.gradle.kts: $VERSION"
-          TAG="v$VERSION"
+          echo "Release version: $VERSION"
+          echo "Release tag: $TAG"
           echo "version_name=$VERSION" >> "$GITHUB_OUTPUT"
           echo "tag_name=$TAG" >> "$GITHUB_OUTPUT"
           echo "should_release=true" >> "$GITHUB_OUTPUT"

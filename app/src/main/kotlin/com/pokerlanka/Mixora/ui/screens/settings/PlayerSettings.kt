@@ -71,7 +71,6 @@ import com.pokerlanka.mixora.constants.ShufflePlaylistFirstKey
 import com.pokerlanka.mixora.constants.SimilarContent
 import com.pokerlanka.mixora.constants.SkipSilenceInstantKey
 import com.pokerlanka.mixora.constants.SkipSilenceKey
-import com.pokerlanka.mixora.constants.StopMusicOnTaskClearKey
 import com.pokerlanka.mixora.constants.VarispeedKey
 import com.pokerlanka.mixora.ui.component.DefaultDialog
 import com.pokerlanka.mixora.ui.component.EnumDialog
@@ -189,10 +188,6 @@ fun PlayerSettings(
     )
     val (preventDuplicateTracksInQueue, onPreventDuplicateTracksInQueueChange) = rememberPreference(
         PreventDuplicateTracksInQueueKey,
-        defaultValue = false
-    )
-    val (stopMusicOnTaskClear, onStopMusicOnTaskClearChange) = rememberPreference(
-        StopMusicOnTaskClearKey,
         defaultValue = false
     )
     val (pauseOnMute, onPauseOnMuteChange) = rememberPreference(
@@ -840,26 +835,6 @@ fun PlayerSettings(
         Material3SettingsGroup(
             title = stringResource(R.string.misc),
             items = listOf(
-                Material3SettingsItem(
-                    icon = painterResource(R.drawable.clear_all),
-                    title = { Text(stringResource(R.string.stop_music_on_task_clear)) },
-                    trailingContent = {
-                        Switch(
-                            checked = stopMusicOnTaskClear,
-                            onCheckedChange = onStopMusicOnTaskClearChange,
-                            thumbContent = {
-                                Icon(
-                                    painter = painterResource(
-                                        id = if (stopMusicOnTaskClear) R.drawable.check else R.drawable.close
-                                    ),
-                                    contentDescription = null,
-                                    modifier = Modifier.size(SwitchDefaults.IconSize)
-                                )
-                            }
-                        )
-                    },
-                    onClick = { onStopMusicOnTaskClearChange(!stopMusicOnTaskClear) }
-                ),
                 Material3SettingsItem(
                     icon = painterResource(R.drawable.volume_off_pause),
                     title = { Text(stringResource(R.string.pause_music_when_media_is_muted)) },

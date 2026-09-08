@@ -151,7 +151,6 @@ import com.pokerlanka.mixora.constants.PureBlackKey
 import com.pokerlanka.mixora.constants.SYSTEM_DEFAULT
 import com.pokerlanka.mixora.constants.SelectedThemeColorKey
 import com.pokerlanka.mixora.constants.NotFoundLyricsCleanupDoneKey
-import com.pokerlanka.mixora.constants.StopMusicOnTaskClearKey
 import com.pokerlanka.mixora.db.MusicDatabase
 import com.pokerlanka.mixora.db.entities.LyricsEntity
 import com.pokerlanka.mixora.db.entities.SearchHistory
@@ -328,11 +327,6 @@ class MainActivity : ComponentActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
-        // Use effective playing state so Cast (local player paused, remote playing) is included.
-        val stopServiceOnClear =
-            dataStore.get(StopMusicOnTaskClearKey, false) &&
-                playerConnection?.isEffectivelyPlaying?.value == true &&
-                isFinishing
 
         // Full cleanup - only on actual destroy
         playerConnection?.dispose()
@@ -342,7 +336,7 @@ class MainActivity : ComponentActivity() {
         // Unbind before stopService: a started+bound service does not stop until all clients unbind.
         safeUnbindService("onDestroy()")
 
-        if (stopServiceOnClear) {
+        if (isFinishing) {
             stopService(Intent(this, MusicService::class.java))
         }
     }
