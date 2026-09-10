@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Mixora Project (C) 2026
  * Author : Gayan Chinthaka
  * Company: Pokerlanka
@@ -28,8 +28,81 @@ private val BACKGROUND_REGEX = "^\\{bg\\}".toRegex()
 
 @Suppress("RegExpRedundantEscape")
 object LyricsUtils {
-    fun cleanTitleForSearch(title: String): String {
-        return title.replace(Regex("\\s*[(\\[].*?[)\\]]"), "").trim()
+    private val TITLE_CLEANUP_REGEXES = listOf(
+        Regex("""\s*\((?:official|video|audio|lyrics?|lyric\s+video|visualizer|hd|hq|4k|remaster(?:ed)?|remix|live|acoustic|version|edit|extended|radio|clean|explicit|clip).*?\)""", RegexOption.IGNORE_CASE),
+        Regex("""\s*\[(?:official|video|audio|lyrics?|lyric\s+video|visualizer|hd|hq|4k|remaster(?:ed)?|remix|live|acoustic|version|edit|extended|radio|clean|explicit|clip).*?\]""", RegexOption.IGNORE_CASE),
+        Regex("""\s*【.*?】"""),
+        Regex("""\s*\|.*$"""),
+        Regex("""\s*-\s*(?:official|video|audio|lyrics?|visualizer).*$""", RegexOption.IGNORE_CASE),
+        Regex("""\s*\((?:feat\.|ft\.|featuring).*?\)""", RegexOption.IGNORE_CASE),
+        Regex("""\s*\[(?:feat\.|ft\.|featuring).*?\]""", RegexOption.IGNORE_CASE),
+        Regex("""\s*(?:feat\.|ft\.|featuring)\s+.*$""", RegexOption.IGNORE_CASE),
+    )
+
+    private val ARTIST_NOISE_REGEX = Regex("""(?i)\s*-\s*Topic|\s*VEVO|\s*Official""")
+
+    fun cleanArtist(artist: String?): String {
+        if (artist.isNullOrBlank()) return ""
+        return artist.replace(ARTIST_NOISE_REGEX, "").trim()
+    }
+
+    /**
+     * Cleans up song title and artist. If title contains "Artist - Title",
+     * it separates them cleanly and resolves the actual song title and primary artist.
+     */
+    fun cleanTitleAndArtist(rawTitle: String, rawArtist: String? = null): Pair<String, String> {
+        var title = rawTitle.trim()
+        var artist = cleanArtist(rawArtist)
+
+        // 1. Remove bracketed junk from title
+        for (pattern in TITLE_CLEANUP_REGEXES) {
+            title = title.replace(pattern, "")
+        }
+        title = title.trim()
+
+        // 2. Detect "Artist - Title" or "Artist: Title"
+        val separators = listOf(" - ", " – ", " — ", ": ")
+        for (sep in separators) {
+            if (title.contains(sep)) {
+                val parts = title.split(sep, limit = 2)
+                val part1 = parts[0].trim()
+                val part2 = parts[1].trim()
+
+                if (part1.isNotBlank() && part2.isNotBlank()) {
+                    val part1Lower = part1.lowercase(Locale.ROOT)
+                    val artistLower = artist.lowercase(Locale.ROOT)
+
+                    if (artist.isNotBlank() && (part1Lower == artistLower || artistLower.contains(part1Lower) || part1Lower.contains(artistLower))) {
+                        // "Akon - Freedom" where artist is "Akon" -> title is "Freedom"
+                        title = part2
+                        break
+                    } else if (artist.isNotBlank() && (part2.lowercase(Locale.ROOT) == artistLower)) {
+                        // "Freedom - Akon" where artist is "Akon" -> title is "Freedom"
+                        title = part1
+                        break
+                    } else if (artist.isBlank()) {
+                        // If no artist was given, split into artist and title
+                        artist = cleanArtist(part1)
+                        title = part2
+                        break
+                    }
+                }
+            }
+        }
+
+        // 3. Fallback: if title still has leftover brackets e.g. "(...)"
+        if (title.contains("(") || title.contains("[")) {
+            val stripped = title.replace(Regex("""\s*[(\[].*?[)\]]"""), "").trim()
+            if (stripped.isNotBlank()) {
+                title = stripped
+            }
+        }
+
+        return Pair(title.trim(), artist.trim())
+    }
+
+    fun cleanTitleForSearch(title: String, artist: String? = null): String {
+        return cleanTitleAndArtist(title, artist).first
     }
 
     fun filterLyricsCreditLines(lyrics: String): String {

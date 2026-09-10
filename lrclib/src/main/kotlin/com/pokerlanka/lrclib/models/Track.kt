@@ -16,11 +16,16 @@ data class Track(
 /** Duration window a candidate must fall inside before its name is even considered. */
 private const val DURATION_TOLERANCE_SECONDS = 5
 
+/** Extended duration window allowed only when both title and artist are strong matches (e.g. video intros/outros). */
+private const val DURATION_EXTENDED_TOLERANCE_SECONDS = 18
+
 /** Below this window the duration alone is strong enough evidence to forgive a differing artist. */
 private const val DURATION_STRONG_MATCH_SECONDS = 2
 
 private const val MIN_TITLE_SIMILARITY = 0.6
 private const val MIN_ARTIST_SIMILARITY = 0.5
+private const val STRONG_TITLE_SIMILARITY = 0.8
+private const val STRONG_ARTIST_SIMILARITY = 0.7
 
 // Relaxed matching with ±5 seconds tolerance. Duration only - callers that know the track name
 // should prefer the [bestMatchingFor] overload below, which also checks the name.
@@ -46,11 +51,9 @@ internal fun List<Track>.bestMatchingForRelaxed(duration: Int): Track? {
 /**
  * Picks the candidate that matches the playing track on **both** duration and name.
  *
- * Duration alone is not enough: `LrcLib.queryLyrics` deliberately widens its search by dropping the
- * artist (and eventually the artist *and* the exact title) when the strict query returns nothing, so
- * the candidate list regularly contains covers, remixes and entirely unrelated songs that happen to
- * share a title and run for about as long. Matching on duration only made those win, which is how
- * the wrong lyrics ended up attached to a song.
+ * Checks standard duration tolerance (±5s) first. If no candidate matches, checks extended
+ * duration tolerance (up to ±18s to accommodate music video intro/outro differences)
+ * ONLY when both title and artist strongly match.
  */
 internal fun List<Track>.bestMatchingFor(
     duration: Int,
@@ -67,16 +70,20 @@ internal fun List<Track>.bestMatchingFor(
         return findBestMatch(trackName, artistName, duration = -1)
     }
 
-    val withinTolerance = filter { abs(it.duration.toInt() - duration) <= DURATION_TOLERANCE_SECONDS }
-    if (withinTolerance.isEmpty()) return null
+    val standardTolerance = filter { abs(it.duration.toInt() - duration) <= DURATION_TOLERANCE_SECONDS }
+    val standardMatch = standardTolerance.findBestMatch(trackName, artistName, duration)
+    if (standardMatch != null) return standardMatch
 
-    return withinTolerance.findBestMatch(trackName, artistName, duration)
+    // Fall back to extended tolerance (video intros/outros) only for strong title & artist matches
+    val extendedTolerance = filter { abs(it.duration.toInt() - duration) <= DURATION_EXTENDED_TOLERANCE_SECONDS }
+    return extendedTolerance.findBestMatch(trackName, artistName, duration, requireStrongMatch = true)
 }
 
 private fun List<Track>.findBestMatch(
     trackName: String,
     artistName: String,
     duration: Int,
+    requireStrongMatch: Boolean = false,
 ): Track? {
     val normalizedTrackName = trackName.trim().lowercase()
     val normalizedArtistName = artistName.trim().lowercase()
@@ -84,15 +91,16 @@ private fun List<Track>.findBestMatch(
     fun titleScore(track: Track) = calculateSimilarity(normalizedTrackName, track.trackName.trim().lowercase())
     fun artistScore(track: Track) = calculateSimilarity(normalizedArtistName, track.artistName.trim().lowercase())
 
+    val maxTol = if (requireStrongMatch) DURATION_EXTENDED_TOLERANCE_SECONDS else DURATION_TOLERANCE_SECONDS
+
     val best = maxByOrNull { track ->
         var score = (titleScore(track) + artistScore(track)) / 2.0
 
         if (track.syncedLyrics != null) score += 0.1
 
-        // Break ties towards the closest duration so two equally named candidates cannot be picked
-        // by list order alone.
+        // Break ties towards the closest duration
         if (duration != -1) {
-            score += (1.0 - abs(track.duration.toInt() - duration) / (DURATION_TOLERANCE_SECONDS + 1.0)) * 0.05
+            score += (1.0 - abs(track.duration.toInt() - duration) / (maxTol + 1.0)) * 0.05
         }
 
         score
@@ -101,9 +109,11 @@ private fun List<Track>.findBestMatch(
     val titleSimilarity = titleScore(best)
     val artistSimilarity = artistScore(best)
 
-    // The title has to line up. A weak artist match is tolerated only when the runtime is a near
-    // exact match, which covers "Artist" vs "Artist feat. Someone" style metadata differences
-    // without letting a same-titled different song through.
+    if (requireStrongMatch) {
+        val accepted = titleSimilarity >= STRONG_TITLE_SIMILARITY && artistSimilarity >= STRONG_ARTIST_SIMILARITY
+        return best.takeIf { accepted }
+    }
+
     val durationIsStrongEvidence =
         duration != -1 && abs(best.duration.toInt() - duration) <= DURATION_STRONG_MATCH_SECONDS
 

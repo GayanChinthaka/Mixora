@@ -100,12 +100,26 @@ object Paxsenix {
 
     private val artistSeparators = listOf(" & ", " and ", ", ", " x ", " X ", " feat. ", " feat ", " ft. ", " ft ", " featuring ", " with ")
 
-    private fun cleanTitle(title: String): String {
+    private fun cleanTitle(title: String, artist: String? = null): String {
         var cleaned = title.trim()
         for (pattern in titleCleanupPatterns) {
             cleaned = cleaned.replace(pattern, "")
         }
-        return cleaned.trim()
+        cleaned = cleaned.trim()
+
+        if (!artist.isNullOrBlank()) {
+            val primaryArtist = cleanArtist(artist)
+            val prefix = "$primaryArtist - "
+            if (cleaned.startsWith(prefix, ignoreCase = true)) {
+                cleaned = cleaned.substring(prefix.length).trim()
+            }
+        } else if (cleaned.contains(" - ")) {
+            val parts = cleaned.split(" - ", limit = 2)
+            if (parts.size == 2 && parts[1].trim().isNotBlank()) {
+                cleaned = parts[1].trim()
+            }
+        }
+        return cleaned
     }
 
     private fun cleanArtist(artist: String): String {
@@ -186,8 +200,8 @@ object Paxsenix {
         duration: Int,
         album: String? = null,
     ): Result<String> = runCatching {
-        val cleanedTitle = cleanTitle(title)
         val cleanedArtist = cleanArtist(artist)
+        val cleanedTitle = cleanTitle(title, artist)
         
         Timber.d("getLyrics called: title='$title', artist='$artist', duration=$duration, album=$album")
         Timber.d("Cleaned: title='$cleanedTitle', artist='$cleanedArtist'")
@@ -196,9 +210,6 @@ object Paxsenix {
         val searchQueries = buildList {
             add("$cleanedTitle $cleanedArtist")
             add(cleanedTitle) // Just title as fallback
-            if (!album.isNullOrBlank()) {
-                add("$cleanedTitle $cleanedArtist $album")
-            }
         }
         
         var allResults: List<Pair<SearchResult, Double>> = emptyList()

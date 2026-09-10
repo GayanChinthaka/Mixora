@@ -49,12 +49,26 @@ object LrcLib {
     // Patterns to extract primary artist
     private val artistSeparators = listOf(" & ", " and ", ", ", " x ", " X ", " feat. ", " feat ", " ft. ", " ft ", " featuring ", " with ")
 
-    private fun cleanTitle(title: String): String {
+    private fun cleanTitle(title: String, artist: String? = null): String {
         var cleaned = title.trim()
         for (pattern in titleCleanupPatterns) {
             cleaned = cleaned.replace(pattern, "")
         }
-        return cleaned.trim()
+        cleaned = cleaned.trim()
+
+        if (!artist.isNullOrBlank()) {
+            val primaryArtist = cleanArtist(artist)
+            val prefix = "$primaryArtist - "
+            if (cleaned.startsWith(prefix, ignoreCase = true)) {
+                cleaned = cleaned.substring(prefix.length).trim()
+            }
+        } else if (cleaned.contains(" - ")) {
+            val parts = cleaned.split(" - ", limit = 2)
+            if (parts.size == 2 && parts[1].trim().isNotBlank()) {
+                cleaned = parts[1].trim()
+            }
+        }
+        return cleaned
     }
 
     private fun cleanArtist(artist: String): String {
@@ -86,49 +100,42 @@ object LrcLib {
     private suspend fun queryLyrics(
         artist: String,
         title: String,
-        album: String? = null,
     ): List<Track> {
-        val cleanedTitle = cleanTitle(title)
         val cleanedArtist = cleanArtist(artist)
+        val cleanedTitle = cleanTitle(title, artist)
         
-        // Strategy 1: Search with cleaned title and artist
+        // Strategy 1: Search with cleaned track_name and artist_name directly
         var results = queryLyricsWithParams(
             trackName = cleanedTitle,
-            artistName = cleanedArtist,
-            albumName = album
+            artistName = cleanedArtist
         ).filter { it.syncedLyrics != null || it.plainLyrics != null }
-        
         if (results.isNotEmpty()) return results
-        
-        // Strategy 2: Search with cleaned title only (artist might be different)
-        results = queryLyricsWithParams(
-            trackName = cleanedTitle
-        ).filter { it.syncedLyrics != null || it.plainLyrics != null }
-        
-        if (results.isNotEmpty()) return results
-        
-        // Strategy 3: Use q parameter with combined search
+
+        // Strategy 2: Use q parameter with combined artist + title
         results = queryLyricsWithParams(
             query = "$cleanedArtist $cleanedTitle"
         ).filter { it.syncedLyrics != null || it.plainLyrics != null }
-        
         if (results.isNotEmpty()) return results
-        
+
+        // Strategy 3: Try original title with artist if different from cleaned title
+        if (cleanedTitle != title.trim()) {
+            results = queryLyricsWithParams(
+                trackName = title.trim(),
+                artistName = cleanedArtist
+            ).filter { it.syncedLyrics != null || it.plainLyrics != null }
+            if (results.isNotEmpty()) return results
+        }
+
         // Strategy 4: Use q parameter with just title
         results = queryLyricsWithParams(
             query = cleanedTitle
         ).filter { it.syncedLyrics != null || it.plainLyrics != null }
-        
         if (results.isNotEmpty()) return results
-        
-        // Strategy 5: Try original title if different from cleaned
-        if (cleanedTitle != title.trim()) {
-            results = queryLyricsWithParams(
-                trackName = title.trim(),
-                artistName = artist.trim()
-            ).filter { it.syncedLyrics != null || it.plainLyrics != null }
-        }
-        
+
+        // Strategy 5: Fallback to searching trackName only (last resort when artist is unknown)
+        results = queryLyricsWithParams(
+            trackName = cleanedTitle
+        ).filter { it.syncedLyrics != null || it.plainLyrics != null }
         return results
     }
 
@@ -138,9 +145,9 @@ object LrcLib {
         duration: Int,
         album: String? = null,
     ) = runCatching {
-        val tracks = queryLyrics(artist, title, album)
-        val cleanedTitle = cleanTitle(title)
         val cleanedArtist = cleanArtist(artist)
+        val cleanedTitle = cleanTitle(title, artist)
+        val tracks = queryLyrics(artist, title)
 
         // Match on duration *and* name. queryLyrics widens the search by dropping the artist when
         // the strict query comes back empty, so a duration-only pick regularly landed on a cover or

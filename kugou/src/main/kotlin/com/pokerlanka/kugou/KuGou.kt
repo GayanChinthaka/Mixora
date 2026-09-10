@@ -51,25 +51,82 @@ private const val HEAD_CUT_LIMIT = 30
 object KuGou {
     var useTraditionalChinese: Boolean = false
 
+    private fun isTitleMatch(candidateTitle: String, targetTitle: String): Boolean {
+        if (candidateTitle.isEmpty() || targetTitle.isEmpty()) return false
+        if (candidateTitle.equals(targetTitle, ignoreCase = true)) return true
+        if (candidateTitle.contains(targetTitle, ignoreCase = true) || targetTitle.contains(candidateTitle, ignoreCase = true)) return true
+        val cleanCand = candidateTitle.replace(Regex("""[^a-zA-Z0-9\u4e00-\u9fa5]"""), "").lowercase()
+        val cleanTarget = targetTitle.replace(Regex("""[^a-zA-Z0-9\u4e00-\u9fa5]"""), "").lowercase()
+        if (cleanCand.isNotEmpty() && cleanCand == cleanTarget) return true
+        if (cleanCand.isNotEmpty() && (cleanCand.contains(cleanTarget) || cleanTarget.contains(cleanCand))) return true
+        return false
+    }
+
+    private suspend fun tryDownloadCandidate(candidate: SearchLyricsResponse.Candidate): String? {
+        val resp = runCatching { downloadLyrics(candidate.id, candidate.accesskey) }.getOrNull()
+        if (resp != null && resp.status == 200 && resp.content.isNotBlank()) {
+            val decoded = runCatching {
+                Base64.Default.decode(resp.content).decodeToString().normalize()
+            }.getOrNull()
+            if (!decoded.isNullOrBlank()) {
+                return decoded
+            }
+        }
+        return null
+    }
+
     suspend fun getLyrics(title: String, artist: String, duration: Int, album: String? = null): Result<String> =
         runCatching {
             val keyword = generateKeyword(title, artist, album)
-            getLyricsCandidate(keyword, duration)?.let { candidate ->
-                Base64.Default.decode(downloadLyrics(candidate.id, candidate.accesskey).content).decodeToString()
-                    .normalize()
-            } ?: throw IllegalStateException("No lyrics candidate")
+            val normalizedTargetTitle = normalizeTitle(keyword.title).trim()
+
+            // Strategy 1: Search songs by title + artist and check candidate matches
+            val searchSongResp = runCatching { searchSongs(keyword) }.getOrNull()
+            if (searchSongResp != null) {
+                for (song in searchSongResp.data.info) {
+                    val songTitle = normalizeTitle(song.songname).trim()
+                    if (!isTitleMatch(songTitle, normalizedTargetTitle)) continue
+
+                    if (duration == -1 || abs(song.duration - duration) <= DURATION_TOLERANCE) {
+                        val hashCandidates = runCatching { searchLyricsByHash(song.hash).candidates }.getOrDefault(emptyList())
+                        for (candidate in hashCandidates) {
+                            val lyrics = tryDownloadCandidate(candidate)
+                            if (lyrics != null) return@runCatching lyrics
+                        }
+                    }
+                }
+            }
+
+            // Strategy 2: Search lyrics directly by keyword and match candidate song name
+            val keywordCandidates = runCatching { searchLyricsByKeyword(keyword, duration).candidates }.getOrDefault(emptyList())
+            for (candidate in keywordCandidates) {
+                val candidateTitle = normalizeTitle(candidate.song).trim()
+                if (isTitleMatch(candidateTitle, normalizedTargetTitle)) {
+                    val lyrics = tryDownloadCandidate(candidate)
+                    if (lyrics != null) return@runCatching lyrics
+                }
+            }
+
+            throw IllegalStateException("No lyrics candidate")
         }
 
     suspend fun getLyricsCandidate(
         keyword: Keyword, duration: Int
     ): SearchLyricsResponse.Candidate? {
-        searchSongs(keyword).data.info.forEach { song ->
-            if (duration == -1 || abs(song.duration - duration) <= DURATION_TOLERANCE) { // if duration == -1, we don't care duration
-                val candidate = searchLyricsByHash(song.hash).candidates.firstOrNull()
-                if (candidate != null) return candidate
+        val normalizedTargetTitle = normalizeTitle(keyword.title).trim()
+        val searchSongResp = runCatching { searchSongs(keyword) }.getOrNull()
+        if (searchSongResp != null) {
+            for (song in searchSongResp.data.info) {
+                val songTitle = normalizeTitle(song.songname).trim()
+                if (!isTitleMatch(songTitle, normalizedTargetTitle)) continue
+                if (duration == -1 || abs(song.duration - duration) <= DURATION_TOLERANCE) {
+                    val candidate = searchLyricsByHash(song.hash).candidates.firstOrNull()
+                    if (candidate != null) return candidate
+                }
             }
         }
-        return searchLyricsByKeyword(keyword, duration).candidates.firstOrNull()
+        val keywordCandidates = runCatching { searchLyricsByKeyword(keyword, duration).candidates }.getOrDefault(emptyList())
+        return keywordCandidates.firstOrNull { isTitleMatch(normalizeTitle(it.song).trim(), normalizedTargetTitle) }
     }
 
     suspend fun searchSongs(keyword: Keyword) =
@@ -78,15 +135,7 @@ object KuGou {
             parameter("plat", 0)
             parameter("pagesize", PAGE_SIZE)
             parameter("showtype", 0)
-            val searchQuery = buildString {
-                append(keyword.title)
-                append(" - ")
-                append(keyword.artist)
-                if (!keyword.album.isNullOrBlank()) {
-                    append(" ")
-                    append(keyword.album)
-                }
-            }
+            val searchQuery = "${keyword.title} - ${keyword.artist}"
             url.encodedParameters.append(
                 "keyword",
                 searchQuery.encodeURLParameter(spaceToPlus = false)
@@ -100,16 +149,8 @@ object KuGou {
             parameter("client", "pc")
             parameter(
                 "duration", duration.takeIf { it != -1 }?.times(1000)
-            ) // if duration == -1, we don't care duration
-            val searchQuery = buildString {
-                append(keyword.title)
-                append(" - ")
-                append(keyword.artist)
-                if (!keyword.album.isNullOrBlank()) {
-                    append(" ")
-                    append(keyword.album)
-                }
-            }
+            )
+            val searchQuery = "${keyword.title} - ${keyword.artist}"
             url.encodedParameters.append(
                 "keyword",
                 searchQuery.encodeURLParameter(spaceToPlus = false)

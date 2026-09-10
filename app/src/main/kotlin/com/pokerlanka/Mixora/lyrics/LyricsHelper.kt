@@ -15,6 +15,7 @@ import com.pokerlanka.mixora.utils.NetworkConnectivityObserver
 import com.pokerlanka.mixora.utils.dataStore
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.SupervisorJob
@@ -42,16 +43,9 @@ import kotlin.coroutines.coroutineContext
  * inside this budget. Previously the per-provider timeouts could add up to roughly twice this value,
  * and the providers at the bottom of the user's order were never reached at all.
  */
-private const val MAX_LYRICS_FETCH_MS = 25000L
-private const val PER_PROVIDER_TIMEOUT_MS = 8000L
-
-/**
- * How long a provider is given to answer before the next one down the order is also started. Short
- * enough that a dead provider does not stall the queue, long enough that the common case (the top
- * provider answers) still costs a single request.
- */
-private const val PROVIDER_STAGGER_MS = 1500L
-private const val SINGLE_PROVIDER_TIMEOUT_MS = 15000L
+private const val PER_PROVIDER_TIMEOUT_MS = 12000L
+private const val PROVIDER_STAGGER_MS = 5000L
+private const val SINGLE_PROVIDER_TIMEOUT_MS = 20000L
 private const val PROVIDER_NONE = ""
 
 @Singleton
@@ -188,73 +182,79 @@ constructor(
                 return LyricsWithProvider(LYRICS_NOT_FOUND, PROVIDER_NONE)
             }
 
-            val result = withTimeoutOrNull(MAX_LYRICS_FETCH_MS) {
-                val cleanedTitle = LyricsUtils.cleanTitleForSearch(mediaMetadata.title)
-                val artists = mediaMetadata.artists.joinToString { it.name }
-                val enabledProviders = orderedProviders.filter { it.isEnabled(context) }
+            val rawArtists = mediaMetadata.artists.joinToString { it.name }
+            val (cleanedTitle, artists) = LyricsUtils.cleanTitleAndArtist(mediaMetadata.title, rawArtists)
+            val enabledProviders = orderedProviders.filter { it.isEnabled(context) }
 
-                Timber.tag(TAG).d("Starting fetch for: $cleanedTitle by $artists")
-                Timber.tag(TAG).d("Enabled providers in order: ${enabledProviders.joinToString { it.name }}")
+            Timber.tag(TAG).d("Starting fetch for: $cleanedTitle by $artists")
+            Timber.tag(TAG).d("Enabled providers in order: ${enabledProviders.joinToString { it.name }}")
 
-                if (enabledProviders.isEmpty()) {
-                    return@withTimeoutOrNull LyricsWithProvider(LYRICS_NOT_FOUND, PROVIDER_NONE)
-                }
+            if (enabledProviders.isEmpty()) {
+                return LyricsWithProvider(LYRICS_NOT_FOUND, PROVIDER_NONE)
+            }
 
-                coroutineScope {
-                    val attempts = enabledProviders.mapIndexed { index, provider ->
-                        provider to async {
-                            // Staggered start: the provider at position N only reaches the network
-                            // once everything above it has had a fair chance to answer.
-                            if (index > 0) delay(index * PROVIDER_STAGGER_MS)
-                            Timber.tag(TAG).d("Trying provider: ${provider.name}")
-                            try {
-                                withTimeoutOrNull(PER_PROVIDER_TIMEOUT_MS) {
-                                    provider.getLyrics(
-                                        context,
-                                        mediaMetadata.id,
-                                        cleanedTitle,
-                                        artists,
-                                        mediaMetadata.duration,
-                                        mediaMetadata.album?.title,
-                                    )
-                                }
-                            } catch (e: CancellationException) {
-                                throw e
-                            } catch (e: Exception) {
-                                Timber.tag(TAG).w("${provider.name} threw: ${e.message}")
-                                null
+            val result = coroutineScope {
+                val completionSignals = List(enabledProviders.size) { CompletableDeferred<Unit>() }
+
+                val attempts = enabledProviders.mapIndexed { index, provider ->
+                    provider to async {
+                        // Staggered start: wait until the preceding provider finishes (error/not found)
+                        // OR until PROVIDER_STAGGER_MS elapses, whichever comes first.
+                        if (index > 0) {
+                            withTimeoutOrNull(PROVIDER_STAGGER_MS) {
+                                completionSignals[index - 1].await()
                             }
                         }
-                    }
-
-                    try {
-                        // Results are consumed in the user's priority order even though the
-                        // requests overlap, so a faster low-priority provider can never outrank the
-                        // preferred one.
-                        for ((provider, attempt) in attempts) {
-                            setSearchingProvider(mediaMetadata.id, provider.name)
-                            val providerResult = attempt.await()
-                            val lyrics = providerResult?.getOrNull()
-                            if (providerResult != null && providerResult.isSuccess && !lyrics.isNullOrBlank()) {
-                                Timber.tag(TAG).i("Got lyrics from ${provider.name}")
-                                return@coroutineScope LyricsWithProvider(
-                                    LyricsUtils.filterLyricsCreditLines(lyrics),
-                                    provider.name,
+                        Timber.tag(TAG).d("Trying provider: ${provider.name}")
+                        try {
+                            withTimeoutOrNull(PER_PROVIDER_TIMEOUT_MS) {
+                                provider.getLyrics(
+                                    context,
+                                    mediaMetadata.id,
+                                    cleanedTitle,
+                                    artists,
+                                    mediaMetadata.duration,
+                                    null,
                                 )
                             }
-                            val errorMsg = providerResult?.exceptionOrNull()?.message ?: "timeout or not found"
-                            Timber.tag(TAG).w("${provider.name} failed: $errorMsg")
+                        } catch (e: CancellationException) {
+                            throw e
+                        } catch (e: Exception) {
+                            Timber.tag(TAG).w("${provider.name} threw: ${e.message}")
+                            null
+                        } finally {
+                            completionSignals[index].complete(Unit)
                         }
-
-                        Timber.tag(TAG).w("No lyrics found after checking all providers")
-                        LyricsWithProvider(LYRICS_NOT_FOUND, PROVIDER_NONE)
-                    } finally {
-                        // Stop whatever is still in flight before coroutineScope waits on it.
-                        attempts.forEach { (_, attempt) -> attempt.cancel() }
-                        setSearchingProvider(mediaMetadata.id, null)
                     }
                 }
-            } ?: LyricsWithProvider(LYRICS_NOT_FOUND, PROVIDER_NONE)
+
+                try {
+                    // Results are consumed in the user's priority order. The search provider UI
+                    // indicator only moves to the next provider once the current one gives an
+                    // error, not found, or times out.
+                    for ((provider, attempt) in attempts) {
+                        setSearchingProvider(mediaMetadata.id, provider.name)
+                        val providerResult = attempt.await()
+                        val lyrics = providerResult?.getOrNull()
+                        if (providerResult != null && providerResult.isSuccess && !lyrics.isNullOrBlank()) {
+                            Timber.tag(TAG).i("Got lyrics from ${provider.name}")
+                            return@coroutineScope LyricsWithProvider(
+                                LyricsUtils.filterLyricsCreditLines(lyrics),
+                                provider.name,
+                            )
+                        }
+                        val errorMsg = providerResult?.exceptionOrNull()?.message ?: "timeout or not found"
+                        Timber.tag(TAG).w("${provider.name} failed: $errorMsg")
+                    }
+
+                    Timber.tag(TAG).w("No lyrics found after checking all providers")
+                    LyricsWithProvider(LYRICS_NOT_FOUND, PROVIDER_NONE)
+                } finally {
+                    // Stop whatever is still in flight before coroutineScope exits.
+                    attempts.forEach { (_, attempt) -> attempt.cancel() }
+                    setSearchingProvider(mediaMetadata.id, null)
+                }
+            }
 
             if (result.lyrics != LYRICS_NOT_FOUND) {
                 cache.put(mediaMetadata.id, listOf(LyricsResult(result.provider, result.lyrics)))
@@ -288,8 +288,8 @@ constructor(
 
             startFetching(mediaMetadata.id, provider.name)
 
-            val cleanedTitle = LyricsUtils.cleanTitleForSearch(mediaMetadata.title)
-            val artists = mediaMetadata.artists.joinToString { it.name }
+            val rawArtists = mediaMetadata.artists.joinToString { it.name }
+            val (cleanedTitle, artists) = LyricsUtils.cleanTitleAndArtist(mediaMetadata.title, rawArtists)
             Timber.tag(TAG).d("Fetching from specific provider: ${provider.name} for $cleanedTitle by $artists")
 
             val providerResult = try {
@@ -300,7 +300,7 @@ constructor(
                         cleanedTitle,
                         artists,
                         mediaMetadata.duration,
-                        mediaMetadata.album?.title,
+                        null,
                     )
                 }
             } catch (e: CancellationException) {
