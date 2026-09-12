@@ -60,7 +60,7 @@ class MusicTogetherRepository
                                 ?: Build.MODEL?.takeIf { it.isNotBlank() }
                                 ?: context.getString(R.string.app_name),
                         allowGuestsToAddTracks = preferences[TogetherAllowGuestsToAddTracksKey] ?: true,
-                        allowGuestsToControlPlayback = preferences[TogetherAllowGuestsToControlPlaybackKey] ?: false,
+                        allowGuestsToControlPlayback = preferences[TogetherAllowGuestsToControlPlaybackKey] ?: true,
                         requireHostApprovalToJoin = preferences[TogetherRequireHostApprovalToJoinKey] ?: false,
                         lastJoinCode = preferences[TogetherLastJoinCodeKey] ?: "",
                         welcomeShown = preferences[TogetherWelcomeShownKey] ?: false,
@@ -169,5 +169,33 @@ class MusicTogetherRepository
 
         fun transferHostOwnership(participantId: String) {
             serviceFlow.value?.transferTogetherHostOwnership(participantId)
+        }
+
+        fun requestControl(action: ControlAction) {
+            val service = serviceFlow.value ?: return
+            if (service.isJoinedTogetherGuest()) {
+                service.requestTogetherControl(action)
+            } else {
+                when (action) {
+                    ControlAction.Play -> {
+                        if (service.player.playbackState == androidx.media3.common.Player.STATE_IDLE ||
+                            service.player.playbackState == androidx.media3.common.Player.STATE_ENDED
+                        ) {
+                            service.player.prepare()
+                        }
+                        service.player.play()
+                    }
+                    ControlAction.Pause -> service.player.pause()
+                    ControlAction.SkipNext -> {
+                        service.player.seekToNextMediaItem()
+                        service.player.play()
+                    }
+                    ControlAction.SkipPrevious -> {
+                        service.player.seekToPreviousMediaItem()
+                        service.player.play()
+                    }
+                    else -> Unit
+                }
+            }
         }
     }

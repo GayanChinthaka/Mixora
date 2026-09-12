@@ -39,6 +39,7 @@ import com.pokerlanka.mixora.together.TogetherRole
 import com.pokerlanka.mixora.together.TogetherRoomSettings
 import com.pokerlanka.mixora.together.TogetherRoomState
 import com.pokerlanka.mixora.together.TogetherSessionState
+import com.pokerlanka.mixora.together.ControlAction
 import com.pokerlanka.mixora.together.UpdateMusicTogetherPreferencesUseCase
 import com.pokerlanka.mixora.together.isConnectedToSession
 import java.text.DateFormat
@@ -126,6 +127,8 @@ data class MusicTogetherPlaybackUiModel(
     val title: String?,
     val artists: String?,
     @StringRes val playbackStateResId: Int,
+    val isPlaying: Boolean = false,
+    val canControl: Boolean = false,
     val queueSize: Int,
     val currentIndexLabel: String?,
     val shuffleEnabled: Boolean,
@@ -412,6 +415,20 @@ class MusicTogetherViewModel
             sessionActions.leaveSession()
         }
 
+        fun togglePlayPause() {
+            val model = successModel() ?: return
+            val isPlaying = model.playback.isPlaying
+            sessionActions.requestControl(if (isPlaying) ControlAction.Pause else ControlAction.Play)
+        }
+
+        fun skipNext() {
+            sessionActions.requestControl(ControlAction.SkipNext)
+        }
+
+        fun skipPrevious() {
+            sessionActions.requestControl(ControlAction.SkipPrevious)
+        }
+
         fun copySessionValue(
             @StringRes labelResId: Int,
             value: String,
@@ -542,6 +559,12 @@ class MusicTogetherViewModel
                     else -> null
                 }
 
+            val canControl =
+                when {
+                    isHostRole -> true
+                    isJoinedAsAcceptedGuest -> roomState?.settings?.allowGuestsToControlPlayback == true
+                    else -> false
+                }
             val currentTrack = roomState?.queue?.getOrNull(roomState.currentIndex)
             val playback =
                 MusicTogetherPlaybackUiModel(
@@ -553,6 +576,8 @@ class MusicTogetherViewModel
                         } else {
                             R.string.together_playback_paused
                         },
+                    isPlaying = roomState?.isPlaying == true,
+                    canControl = canControl,
                     queueSize = roomState?.queue?.size ?: 0,
                     currentIndexLabel =
                         roomState?.let {

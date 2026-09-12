@@ -22,13 +22,22 @@ import com.pokerlanka.mixora.extensions.currentMetadata
 import com.pokerlanka.mixora.extensions.getCurrentQueueIndex
 import com.pokerlanka.mixora.extensions.getQueueWindows
 import com.pokerlanka.mixora.extensions.metadata
+import com.pokerlanka.mixora.extensions.toMediaItem
+import com.pokerlanka.mixora.extensions.toMediaMetadata
+import com.pokerlanka.mixora.extensions.toTogetherTrack
 import com.pokerlanka.mixora.extensions.togglePlayPause
+import com.pokerlanka.mixora.extensions.toggleRepeatMode
 import com.pokerlanka.mixora.playback.MusicService.MusicBinder
 import com.pokerlanka.mixora.playback.queues.Queue
+import com.pokerlanka.mixora.together.AddTrackMode
+import com.pokerlanka.mixora.together.ControlAction
+import com.pokerlanka.mixora.together.TogetherRole
+import com.pokerlanka.mixora.together.TogetherSessionState
 import com.pokerlanka.mixora.utils.dataStore
 import com.pokerlanka.mixora.utils.get
 import com.pokerlanka.mixora.utils.reportException
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -48,7 +57,7 @@ class PlayerConnection(
     context: Context,
     binder: MusicBinder,
     val database: MusicDatabase,
-    scope: CoroutineScope,
+    val scope: CoroutineScope,
 ) : Player.Listener {
     private companion object {
         private const val TAG = "PlayerConnection"
@@ -56,6 +65,9 @@ class PlayerConnection(
 
     val service = binder.service
     private val playerReadinessFlow = service.isPlayerReady
+
+    val isTogetherGuest: Boolean
+        get() = service.isJoinedTogetherGuest()
 
     private fun getPlayerSafe(): ExoPlayer {
         check(playerReadinessFlow.value) {
@@ -143,8 +155,15 @@ class PlayerConnection(
             isPlaying,
             service.castConnectionHandler?.isCasting ?: MutableStateFlow(false),
             service.castConnectionHandler?.castIsPlaying ?: MutableStateFlow(false),
-        ) { localPlaying, isCasting, castPlaying ->
-            if (isCasting) castPlaying else localPlaying
+            service.togetherSessionState,
+        ) { localPlaying, isCasting, castPlaying, togetherState ->
+            if (togetherState is TogetherSessionState.Joined && togetherState.role is TogetherRole.Guest) {
+                togetherState.roomState.isPlaying
+            } else if (isCasting) {
+                castPlaying
+            } else {
+                localPlaying
+            }
         }.stateIn(
             scope,
             SharingStarted.Lazily,
@@ -207,6 +226,36 @@ class PlayerConnection(
             updateAttachedPlayer(readyPlayer)
         }
 
+        scope.launch {
+            service.togetherSessionState.collect { togetherState ->
+                if (togetherState is TogetherSessionState.Joined && togetherState.role is TogetherRole.Guest) {
+                    val roomState = togetherState.roomState
+                    val track = roomState.queue.getOrNull(roomState.currentIndex)
+                    if (track != null) {
+                        mediaMetadata.value = track.toMediaMetadata()
+                    }
+                    playbackState.value = if (roomState.isPlaying || roomState.queue.isNotEmpty()) Player.STATE_READY else Player.STATE_IDLE
+                    playWhenReady.value = roomState.isPlaying
+                    currentMediaItemIndex.value = roomState.currentIndex
+                    currentWindowIndex.value = roomState.currentIndex
+                    shuffleModeEnabled.value = roomState.shuffleEnabled
+                    repeatMode.value = roomState.repeatMode
+                    canSkipPrevious.value = roomState.currentIndex > 0
+                    canSkipNext.value = roomState.currentIndex < roomState.queue.size - 1
+                } else if (togetherState is TogetherSessionState.Idle) {
+                    attachedPlayer?.let { player ->
+                        playbackState.value = player.playbackState
+                        playWhenReady.value = player.playWhenReady
+                        mediaMetadata.value = player.currentMetadata
+                        currentMediaItemIndex.value = player.currentMediaItemIndex
+                        currentWindowIndex.value = player.getCurrentQueueIndex()
+                        shuffleModeEnabled.value = player.shuffleModeEnabled
+                        repeatMode.value = player.repeatMode
+                    }
+                }
+            }
+        }
+
         Timber.tag(TAG).d("PlayerConnection flow observer registered; playerReady=${playerReadinessFlow.value}")
     }
 
@@ -227,6 +276,26 @@ class PlayerConnection(
     }
 
     fun playQueue(queue: Queue) {
+        if (isTogetherGuest) {
+            scope.launch(Dispatchers.IO) {
+                try {
+                    val initialStatus = queue.getInitialStatus()
+                    val items = initialStatus.items
+                    val selectedIndex = initialStatus.mediaItemIndex.coerceIn(0, (items.size - 1).coerceAtLeast(0))
+                    val currentItem = items.getOrNull(selectedIndex) ?: queue.preloadItem?.toMediaItem()
+                    if (currentItem != null) {
+                        service.requestTogetherAddTrack(currentItem.toTogetherTrack(), AddTrackMode.PLAY_NOW)
+                        val subsequent = items.drop(selectedIndex + 1).take(25)
+                        for (item in subsequent) {
+                            service.requestTogetherAddTrack(item.toTogetherTrack(), AddTrackMode.ADD_TO_QUEUE)
+                        }
+                    }
+                } catch (e: Exception) {
+                    Timber.tag(TAG).e(e, "Error forwarding playQueue to Together host")
+                }
+            }
+            return
+        }
         if (!playerReadinessFlow.value) {
             Timber.tag(TAG).w("playQueue called before player ready; delegating to service")
         }
@@ -253,6 +322,12 @@ class PlayerConnection(
     fun playNext(item: MediaItem) = playNext(listOf(item))
 
     fun playNext(items: List<MediaItem>) {
+        if (isTogetherGuest) {
+            for (item in items) {
+                service.requestTogetherAddTrack(item.toTogetherTrack(), AddTrackMode.PLAY_NEXT)
+            }
+            return
+        }
         try {
             service.playNext(items)
         } catch (e: Exception) {
@@ -264,6 +339,12 @@ class PlayerConnection(
     fun addToQueue(item: MediaItem) = addToQueue(listOf(item))
 
     fun addToQueue(items: List<MediaItem>) {
+        if (isTogetherGuest) {
+            for (item in items) {
+                service.requestTogetherAddTrack(item.toTogetherTrack(), AddTrackMode.ADD_TO_QUEUE)
+            }
+            return
+        }
         try {
             service.addToQueue(items)
         } catch (e: Exception) {
@@ -297,10 +378,15 @@ class PlayerConnection(
     }
 
     /**
-     * Toggle play/pause - handles Cast when active
+     * Toggle play/pause - handles Cast and Together when active
      */
     fun togglePlayPause() {
         try {
+            if (isTogetherGuest) {
+                val isPlaying = (service.togetherSessionState.value as? TogetherSessionState.Joined)?.roomState?.isPlaying == true
+                service.requestTogetherControl(if (isPlaying) ControlAction.Pause else ControlAction.Play)
+                return
+            }
             val castHandler = service.castConnectionHandler
             if (castHandler?.isCasting?.value == true) {
                 if (castHandler.castIsPlaying.value) {
@@ -317,10 +403,14 @@ class PlayerConnection(
     }
 
     /**
-     * Start playback - handles Cast when active
+     * Start playback - handles Cast and Together when active
      */
     fun play() {
         try {
+            if (isTogetherGuest) {
+                service.requestTogetherControl(ControlAction.Play)
+                return
+            }
             val castHandler = service.castConnectionHandler
             if (castHandler?.isCasting?.value == true) {
                 castHandler.play()
@@ -336,10 +426,14 @@ class PlayerConnection(
     }
 
     /**
-     * Pause playback - handles Cast when active
+     * Pause playback - handles Cast and Together when active
      */
     fun pause() {
         try {
+            if (isTogetherGuest) {
+                service.requestTogetherControl(ControlAction.Pause)
+                return
+            }
             val castHandler = service.castConnectionHandler
             if (castHandler?.isCasting?.value == true) {
                 castHandler.pause()
@@ -352,10 +446,14 @@ class PlayerConnection(
     }
 
     /**
-     * Seek to position - handles Cast when active
+     * Seek to position - handles Cast and Together when active
      */
     fun seekTo(position: Long) {
         try {
+            if (isTogetherGuest) {
+                service.requestTogetherControl(ControlAction.SeekTo(position))
+                return
+            }
             val castHandler = service.castConnectionHandler
             if (castHandler?.isCasting?.value == true) {
                 castHandler.seekTo(position)
@@ -369,6 +467,11 @@ class PlayerConnection(
 
     fun seekToNext() {
         try {
+            if (isTogetherGuest) {
+                service.requestTogetherControl(ControlAction.SkipNext)
+                onSkipNext?.invoke()
+                return
+            }
             // When casting, use Cast skip instead of local player
             val castHandler = service.castConnectionHandler
             if (castHandler?.isCasting?.value == true) {
@@ -396,6 +499,11 @@ class PlayerConnection(
 
     fun seekToPrevious() {
         try {
+            if (isTogetherGuest) {
+                service.requestTogetherControl(ControlAction.SkipPrevious)
+                onSkipPrevious?.invoke()
+                return
+            }
             // When casting, use Cast skip instead of local player
             val castHandler = service.castConnectionHandler
             if (castHandler?.isCasting?.value == true) {
@@ -424,6 +532,28 @@ class PlayerConnection(
         } catch (e: Exception) {
             Timber.tag(TAG).e(e, "Error in seekToPrevious")
         }
+    }
+
+    fun toggleShuffleMode() {
+        if (isTogetherGuest) {
+            val current = shuffleModeEnabled.value
+            service.requestTogetherControl(ControlAction.SetShuffleEnabled(!current))
+            return
+        }
+        player.shuffleModeEnabled = !player.shuffleModeEnabled
+    }
+
+    fun toggleRepeatMode() {
+        if (isTogetherGuest) {
+            val next = when (repeatMode.value) {
+                Player.REPEAT_MODE_OFF -> Player.REPEAT_MODE_ALL
+                Player.REPEAT_MODE_ALL -> Player.REPEAT_MODE_ONE
+                else -> Player.REPEAT_MODE_OFF
+            }
+            service.requestTogetherControl(ControlAction.SetRepeatMode(next))
+            return
+        }
+        player.toggleRepeatMode()
     }
 
     override fun onPlaybackStateChanged(state: Int) {

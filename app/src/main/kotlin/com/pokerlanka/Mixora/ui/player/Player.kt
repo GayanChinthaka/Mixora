@@ -1569,7 +1569,7 @@ fun BottomSheetPlayer(
                         // 1. Shuffle Button
                         FilledIconButton(
                             onClick = {
-                                playerConnection.player.shuffleModeEnabled = !shuffleModeEnabled
+                                playerConnection.toggleShuffleMode()
                             },
                             shape = CircleShape,
                             colors =
@@ -1673,7 +1673,7 @@ fun BottomSheetPlayer(
                         // 5. Repeat Button
                         FilledIconButton(
                             onClick = {
-                                playerConnection.player.toggleRepeatMode()
+                                playerConnection.toggleRepeatMode()
                             },
                             shape = CircleShape,
                             colors =

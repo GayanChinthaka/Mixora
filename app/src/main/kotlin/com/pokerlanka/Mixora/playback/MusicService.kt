@@ -405,11 +405,40 @@ class MusicService :
                             duration = track.durationSec,
                             thumbnailUrl = track.thumbnailUrl,
                         ).toMediaItem()
-                    if (event.request.mode == com.pokerlanka.mixora.together.AddTrackMode.PLAY_NEXT) {
-                        val nextIndex = (player.currentMediaItemIndex + 1).coerceAtMost(player.mediaItemCount)
-                        player.addMediaItem(nextIndex, mediaItem)
-                    } else {
-                        player.addMediaItem(mediaItem)
+                    when (event.request.mode) {
+                        com.pokerlanka.mixora.together.AddTrackMode.PLAY_NOW -> {
+                            if (player.mediaItemCount == 0) {
+                                player.setMediaItem(mediaItem)
+                                player.prepare()
+                                player.play()
+                            } else {
+                                val nextIndex = (player.currentMediaItemIndex + 1).coerceAtMost(player.mediaItemCount)
+                                player.addMediaItem(nextIndex, mediaItem)
+                                player.seekToDefaultPosition(nextIndex)
+                                player.play()
+                            }
+                        }
+
+                        com.pokerlanka.mixora.together.AddTrackMode.PLAY_NEXT -> {
+                            if (player.mediaItemCount == 0) {
+                                player.setMediaItem(mediaItem)
+                                player.prepare()
+                                player.play()
+                            } else {
+                                val nextIndex = (player.currentMediaItemIndex + 1).coerceAtMost(player.mediaItemCount)
+                                player.addMediaItem(nextIndex, mediaItem)
+                            }
+                        }
+
+                        com.pokerlanka.mixora.together.AddTrackMode.ADD_TO_QUEUE -> {
+                            if (player.mediaItemCount == 0) {
+                                player.setMediaItem(mediaItem)
+                                player.prepare()
+                                player.play()
+                            } else {
+                                player.addMediaItem(mediaItem)
+                            }
+                        }
                     }
                     updateAndBroadcastTogetherRoomState()
                 }
@@ -418,16 +447,31 @@ class MusicService :
             is com.pokerlanka.mixora.together.TogetherServerEvent.ControlRequested -> {
                 if (togetherHostingSettings.allowGuestsToControlPlayback && ::player.isInitialized) {
                     when (val action = event.request.action) {
-                        is com.pokerlanka.mixora.together.ControlAction.Play -> player.play()
+                        is com.pokerlanka.mixora.together.ControlAction.Play -> {
+                            if (player.playbackState == Player.STATE_IDLE || player.playbackState == Player.STATE_ENDED) {
+                                player.prepare()
+                            }
+                            player.play()
+                        }
                         is com.pokerlanka.mixora.together.ControlAction.Pause -> player.pause()
-                        is com.pokerlanka.mixora.together.ControlAction.SkipNext -> player.seekToNextMediaItem()
-                        is com.pokerlanka.mixora.together.ControlAction.SkipPrevious -> player.seekToPreviousMediaItem()
+                        is com.pokerlanka.mixora.together.ControlAction.SkipNext -> {
+                            player.seekToNextMediaItem()
+                            player.play()
+                        }
+                        is com.pokerlanka.mixora.together.ControlAction.SkipPrevious -> {
+                            player.seekToPreviousMediaItem()
+                            player.play()
+                        }
                         is com.pokerlanka.mixora.together.ControlAction.SeekTo -> player.seekTo(action.positionMs)
-                        is com.pokerlanka.mixora.together.ControlAction.SeekToIndex -> player.seekTo(action.index, action.positionMs)
+                        is com.pokerlanka.mixora.together.ControlAction.SeekToIndex -> {
+                            player.seekTo(action.index, action.positionMs)
+                            player.play()
+                        }
                         is com.pokerlanka.mixora.together.ControlAction.SeekToTrack -> {
                             val index = (0 until player.mediaItemCount).indexOfFirst { player.getMediaItemAt(it).mediaId == action.trackId }
                             if (index != -1) {
                                 player.seekTo(index, action.positionMs)
+                                player.play()
                             }
                         }
                         is com.pokerlanka.mixora.together.ControlAction.SetRepeatMode -> player.repeatMode = action.repeatMode
@@ -717,6 +761,11 @@ class MusicService :
     ) {
         val state = togetherSessionState.value as? com.pokerlanka.mixora.together.TogetherSessionState.Joined ?: return
         togetherClient?.requestAddTrack(state.sessionId, track, mode)
+    }
+
+    fun isJoinedTogetherGuest(): Boolean {
+        val state = togetherSessionState.value as? com.pokerlanka.mixora.together.TogetherSessionState.Joined ?: return false
+        return state.role is com.pokerlanka.mixora.together.TogetherRole.Guest
     }
 
     private lateinit var connectivityManager: ConnectivityManager

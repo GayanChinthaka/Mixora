@@ -116,4 +116,8 @@ class MusicTogetherSessionActionsUseCase
         fun transferHostOwnership(participantId: String) {
             repository.transferHostOwnership(participantId)
         }
+
+        fun requestControl(action: ControlAction) {
+            repository.requestControl(action)
+        }
     }

@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Mixora Project (C) 2026
  * Author : Gayan Chinthaka
  * Company: Pokerlanka
@@ -91,3 +91,34 @@ fun MediaMetadata.toMediaItem() = MediaItem.Builder()
             .build()
     )
     .build()
+
+fun MediaItem.toTogetherTrack(): com.pokerlanka.mixora.together.TogetherTrack {
+    val meta = metadata
+    return com.pokerlanka.mixora.together.TogetherTrack(
+        id = mediaId,
+        title = mediaMetadata.title?.toString() ?: meta?.title ?: "Track",
+        artists = listOfNotNull(mediaMetadata.artist?.toString() ?: meta?.artists?.firstOrNull()?.name),
+        durationSec = (mediaMetadata.extras?.getInt("duration") ?: meta?.duration ?: -1),
+        thumbnailUrl = mediaMetadata.artworkUri?.toString() ?: meta?.thumbnailUrl,
+    )
+}
+
+fun MediaMetadata.toTogetherTrack(): com.pokerlanka.mixora.together.TogetherTrack {
+    return com.pokerlanka.mixora.together.TogetherTrack(
+        id = id,
+        title = title,
+        artists = artists.map { it.name },
+        durationSec = duration,
+        thumbnailUrl = thumbnailUrl,
+    )
+}
+
+fun com.pokerlanka.mixora.together.TogetherTrack.toMediaMetadata(): MediaMetadata {
+    return MediaMetadata(
+        id = id,
+        title = title,
+        artists = artists.map { MediaMetadata.Artist(id = null, name = it) },
+        duration = durationSec,
+        thumbnailUrl = thumbnailUrl,
+    )
+}

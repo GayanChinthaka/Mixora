@@ -33,7 +33,7 @@ data class TogetherParticipant(
 @Immutable
 data class TogetherRoomSettings(
     val allowGuestsToAddTracks: Boolean = true,
-    val allowGuestsToControlPlayback: Boolean = false,
+    val allowGuestsToControlPlayback: Boolean = true,
     val requireHostApprovalToJoin: Boolean = false,
 )
 

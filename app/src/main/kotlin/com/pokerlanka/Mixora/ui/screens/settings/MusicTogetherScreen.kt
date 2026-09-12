@@ -55,6 +55,7 @@ import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -278,7 +279,12 @@ private fun MusicTogetherContent(
                 }
                 if (model.isInSession) {
                     item(contentType = "playback") {
-                        PlaybackCard(playback = model.playback)
+                        PlaybackCard(
+                            playback = model.playback,
+                            onPlayPause = viewModel::togglePlayPause,
+                            onSkipNext = viewModel::skipNext,
+                            onSkipPrevious = viewModel::skipPrevious,
+                        )
                     }
                     if (model.isHostRole) {
                         item(contentType = "room_settings") {
@@ -358,7 +364,12 @@ private fun MusicTogetherContent(
             }
             if (model.isInSession) {
                 item(contentType = "playback") {
-                    PlaybackCard(playback = model.playback)
+                    PlaybackCard(
+                        playback = model.playback,
+                        onPlayPause = viewModel::togglePlayPause,
+                        onSkipNext = viewModel::skipNext,
+                        onSkipPrevious = viewModel::skipPrevious,
+                    )
                 }
                 if (model.isHostRole) {
                     item(contentType = "room_settings") {
@@ -561,48 +572,93 @@ private fun SessionShareCard(
 }
 
 @Composable
-private fun PlaybackCard(playback: MusicTogetherPlaybackUiModel) {
+private fun PlaybackCard(
+    playback: MusicTogetherPlaybackUiModel,
+    onPlayPause: () -> Unit = {},
+    onSkipNext: () -> Unit = {},
+    onSkipPrevious: () -> Unit = {},
+) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = MaterialTheme.shapes.extraLarge,
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
     ) {
-        Row(
+        Column(
             modifier = Modifier.padding(Spacing.sm),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
+            verticalArrangement = Arrangement.spacedBy(Spacing.xs),
         ) {
-            AccentIcon(
-                iconResId = R.drawable.music_note,
-                accent = MaterialTheme.colorScheme.secondary,
-            )
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = playback.title ?: stringResource(R.string.together_playback_empty),
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
+            ) {
+                AccentIcon(
+                    iconResId = R.drawable.music_note,
+                    accent = MaterialTheme.colorScheme.secondary,
                 )
-                if (!playback.artists.isNullOrBlank()) {
+                Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = playback.artists,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        text = playback.title ?: stringResource(R.string.together_playback_empty),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                     )
+                    if (!playback.artists.isNullOrBlank()) {
+                        Text(
+                            text = playback.artists,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                    }
+                }
+                Surface(
+                    shape = RoundedCornerShape(12.dp),
+                    color = MaterialTheme.colorScheme.surfaceContainerHigh,
+                ) {
+                    Text(
+                        text = stringResource(playback.playbackStateResId),
+                        style = MaterialTheme.typography.labelSmall,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                    )
                 }
             }
-            Surface(
-                shape = RoundedCornerShape(12.dp),
-                color = MaterialTheme.colorScheme.surfaceContainerHigh,
-            ) {
-                Text(
-                    text = stringResource(playback.playbackStateResId),
-                    style = MaterialTheme.typography.labelSmall,
-                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                )
+
+            if (playback.canControl && playback.title != null) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    IconButton(onClick = onSkipPrevious) {
+                        Icon(
+                            painter = painterResource(R.drawable.skip_previous),
+                            contentDescription = null,
+                            modifier = Modifier.size(24.dp),
+                        )
+                    }
+                    Spacer(Modifier.width(Spacing.sm))
+                    FilledIconButton(
+                        onClick = onPlayPause,
+                        modifier = Modifier.size(42.dp),
+                    ) {
+                        Icon(
+                            painter = painterResource(if (playback.isPlaying) R.drawable.pause else R.drawable.play),
+                            contentDescription = null,
+                            modifier = Modifier.size(22.dp),
+                        )
+                    }
+                    Spacer(Modifier.width(Spacing.sm))
+                    IconButton(onClick = onSkipNext) {
+                        Icon(
+                            painter = painterResource(R.drawable.skip_next),
+                            contentDescription = null,
+                            modifier = Modifier.size(24.dp),
+                        )
+                    }
+                }
             }
         }
     }

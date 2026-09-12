@@ -168,6 +168,7 @@ enum class ServerRole {
 
 @Serializable
 enum class AddTrackMode {
+    PLAY_NOW,
     PLAY_NEXT,
     ADD_TO_QUEUE,
 }
