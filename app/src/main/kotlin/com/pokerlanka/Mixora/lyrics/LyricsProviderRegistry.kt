@@ -9,11 +9,11 @@ package com.pokerlanka.mixora.lyrics
 object LyricsProviderRegistry {
     private val providerMap = mapOf(
         "LrcLib" to LrcLibLyricsProvider,
-        "Musixmatch" to MusixmatchLyricsProvider,
         "Paxsenix" to PaxsenixLyricsProvider,
-        "KuGou" to KuGouLyricsProvider,
-        "YouTube" to YouTubeLyricsProvider,
         "YouTubeSubtitle" to YouTubeSubtitleLyricsProvider,
+        "YouTube" to YouTubeLyricsProvider,
+        "SinhalaLyrics" to SinhalaLyricsProvider,
+        "AiLyrics" to AiLyricsProvider,
     )
 
     val providerNames = providerMap.keys.toList()
@@ -24,11 +24,11 @@ object LyricsProviderRegistry {
         providerMap.entries.firstOrNull { it.key.equals(name, ignoreCase = true) }?.value?.let { return it }
         // Alternate name matching
         return when (name.lowercase().replace(" ", "")) {
-            "kugou" -> KuGouLyricsProvider
+            "sinhalalyrics", "sinhala" -> SinhalaLyricsProvider
+            "ailyrics", "ai", "aifallback" -> AiLyricsProvider
             "youtube", "youtubemusic" -> YouTubeLyricsProvider
             "youtubesubtitle", "youtubesubtitles" -> YouTubeSubtitleLyricsProvider
             "lrclib" -> LrcLibLyricsProvider
-            "musixmatch" -> MusixmatchLyricsProvider
             "paxsenix" -> PaxsenixLyricsProvider
             else -> null
         }
@@ -38,18 +38,16 @@ object LyricsProviderRegistry {
         providerMap.entries.find { it.value == provider }?.key
 
     fun deserializeProviderOrder(orderString: String): List<String> {
+        val defaults = getDefaultProviderOrder()
         if (orderString.isBlank()) {
-            return getDefaultProviderOrder()
+            return defaults
         }
-        // Names left over from providers that have since been removed are dropped. If that leaves
-        // nothing - a saved order made up entirely of removed providers - fall back to the defaults
-        // rather than handing the caller an empty provider list, which would silently stop lyrics
-        // from ever being fetched.
-        return orderString
+        val saved = orderString
             .split(",")
             .map { it.trim() }
             .filter { it in providerNames }
-            .ifEmpty { getDefaultProviderOrder() }
+        val missing = defaults.filter { it !in saved }
+        return (saved + missing).ifEmpty { defaults }
     }
 
     fun serializeProviderOrder(providers: List<String>): String {
@@ -58,11 +56,11 @@ object LyricsProviderRegistry {
 
     fun getDefaultProviderOrder(): List<String> = listOf(
         "LrcLib",
-        "Musixmatch",
         "Paxsenix",
-        "KuGou",
-        "YouTube",
         "YouTubeSubtitle",
+        "YouTube",
+        "SinhalaLyrics",
+        "AiLyrics",
     )
 
     fun getOrderedProviders(orderString: String): List<LyricsProvider> {

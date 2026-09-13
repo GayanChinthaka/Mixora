@@ -54,11 +54,10 @@ import com.pokerlanka.mixora.constants.AiProvider
 import com.pokerlanka.mixora.constants.AiProviderKey
 import com.pokerlanka.mixora.constants.AiRomanizationEnabledKey
 import com.pokerlanka.mixora.constants.AiSelectedModelKey
-import com.pokerlanka.mixora.constants.EnableKugouKey
 import com.pokerlanka.mixora.constants.EnableLrcLibKey
 import com.pokerlanka.mixora.constants.EnablePaxsenixKey
-import com.pokerlanka.mixora.constants.EnableMusixmatchKey
-import com.pokerlanka.mixora.constants.MusixmatchUserTokenKey
+import com.pokerlanka.mixora.constants.EnableSinhalaLyricsKey
+import com.pokerlanka.mixora.constants.EnableAiLyricsKey
 import com.pokerlanka.mixora.constants.LyricsBackgroundStyle
 import com.pokerlanka.mixora.constants.LyricsBackgroundStyleKey
 import com.pokerlanka.mixora.constants.LyricsClickKey
@@ -94,11 +93,10 @@ enum class LyricsPosition {
 fun LyricsSettings(
     navController: NavController,
 ) {
-    val (enableKugou, onEnableKugouChange) = rememberPreference(key = EnableKugouKey, defaultValue = true)
     val (enableLrclib, onEnableLrclibChange) = rememberPreference(key = EnableLrcLibKey, defaultValue = true)
     val (enablePaxsenix, onEnablePaxsenixChange) = rememberPreference(key = EnablePaxsenixKey, defaultValue = true)
-    val (enableMusixmatch, onEnableMusixmatchChange) = rememberPreference(key = EnableMusixmatchKey, defaultValue = false)
-    val (musixmatchToken, _) = rememberPreference(key = MusixmatchUserTokenKey, defaultValue = "")
+    val (enableSinhalaLyrics, onEnableSinhalaLyricsChange) = rememberPreference(key = EnableSinhalaLyricsKey, defaultValue = true)
+    val (enableAiLyrics, onEnableAiLyricsChange) = rememberPreference(key = EnableAiLyricsKey, defaultValue = true)
     val (lyricsProviderOrder, onLyricsProviderOrderChange) = rememberPreference(
         key = LyricsProviderOrderKey,
         defaultValue = LyricsProviderRegistry.serializeProviderOrder(LyricsProviderRegistry.getDefaultProviderOrder())
@@ -154,11 +152,11 @@ fun LyricsSettings(
     val providerDisplayNames =
         mapOf(
             "Paxsenix" to "Paxsenix",
-            "Musixmatch" to "Musixmatch",
             "LrcLib" to "LrcLib",
-            "KuGou" to "KuGou",
             "YouTubeSubtitle" to "YouTube Subtitles",
             "YouTube" to "YouTube",
+            "SinhalaLyrics" to "Sinhala Lyrics",
+            "AiLyrics" to "AI Lyrics",
         )
 
     if (showRomanizationSetupDialog) {
@@ -189,29 +187,29 @@ fun LyricsSettings(
         val normalizedOrder = currentOrder.filter { it in defaultOrder } +
             defaultOrder.filter { it !in currentOrder }
 
-        val toggleableProviders = listOf("LrcLib", "Musixmatch", "Paxsenix", "KuGou")
+        val toggleableProviders = listOf("LrcLib", "Paxsenix", "SinhalaLyrics", "AiLyrics")
 
         val isProviderEnabled: (String) -> Boolean = { id ->
             when (id) {
                 "Paxsenix" -> enablePaxsenix
-                "Musixmatch" -> enableMusixmatch && musixmatchToken.isNotBlank()
                 "LrcLib" -> enableLrclib
-                "KuGou" -> enableKugou
+                "SinhalaLyrics" -> enableSinhalaLyrics
+                "AiLyrics" -> enableAiLyrics && aiConfigured
                 else -> true
             }
         }
         val setProviderEnabled: (String, Boolean) -> Unit = { id, value ->
             when (id) {
                 "Paxsenix" -> onEnablePaxsenixChange(value)
-                "Musixmatch" -> {
-                    if (value && musixmatchToken.isBlank()) {
-                        showLyricsSetupRequiredDialogFor = "Musixmatch"
+                "LrcLib" -> onEnableLrclibChange(value)
+                "SinhalaLyrics" -> onEnableSinhalaLyricsChange(value)
+                "AiLyrics" -> {
+                    if (value && !aiConfigured) {
+                        showRomanizationSetupDialog = true
                     } else {
-                        onEnableMusixmatchChange(value)
+                        onEnableAiLyricsChange(value)
                     }
                 }
-                "LrcLib" -> onEnableLrclibChange(value)
-                "KuGou" -> onEnableKugouChange(value)
                 else -> Unit
             }
         }
@@ -219,9 +217,9 @@ fun LyricsSettings(
         val providerDescriptions =
             mapOf(
                 "Paxsenix" to stringResource(R.string.enable_paxsenix_desc),
-                "Musixmatch" to stringResource(R.string.enable_musixmatch_desc),
                 "LrcLib" to stringResource(R.string.enable_lrclib_desc),
-                "KuGou" to stringResource(R.string.enable_kugou_desc),
+                "SinhalaLyrics" to stringResource(R.string.enable_sinhala_lyrics_desc),
+                "AiLyrics" to stringResource(R.string.enable_ai_lyrics_desc),
             )
         val lyricsIcon = painterResource(R.drawable.lyrics)
         val draggableItems = remember { mutableStateListOf<DraggableLyricsProviderItem>() }
@@ -229,10 +227,10 @@ fun LyricsSettings(
         LaunchedEffect(
             normalizedOrder,
             enablePaxsenix,
-            enableMusixmatch,
-            musixmatchToken,
             enableLrclib,
-            enableKugou,
+            enableSinhalaLyrics,
+            enableAiLyrics,
+            aiConfigured,
         ) {
             val ordered = normalizedOrder.filter { it in toggleableProviders } +
                 toggleableProviders.filter { it !in normalizedOrder }

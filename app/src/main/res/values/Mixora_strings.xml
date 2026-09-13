@@ -97,7 +97,8 @@
     <string name="enable_kugou_desc">Pulls lyrics from KuGou, a popular Chinese music platform</string>
     <string name="youtube_music_lyrics_note">NOTE: YouTube Music lyrics will be shown automatically when no other source is available. They are usually not synchronized</string>
     <string name="enable_paxsenix_desc">High-quality synchronized lyrics from Paxsenix API</string>
-    <string name="enable_musixmatch_desc">Largest global database with synchronized lyrics</string>
+    <string name="enable_sinhala_lyrics_desc">Dedicated provider for Sinhala songs and lyrics databases</string>
+    <string name="enable_ai_lyrics_desc">Fetches lyrics using configured AI (Gemini/ChatGPT) as fallback</string>
     <string name="lyrics_provider_selection">Provider selection</string>
     <string name="auto_scroll">Re-sync</string>
     <string name="slim">Slim</string>

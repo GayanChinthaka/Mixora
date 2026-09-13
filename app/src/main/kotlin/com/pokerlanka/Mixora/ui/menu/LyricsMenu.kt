@@ -172,11 +172,11 @@ fun LyricsMenu(
     if (showProviderSelectDialog) {
         val providerDisplayNames = mapOf(
             "LrcLib" to "LrcLib",
-            "Musixmatch" to "Musixmatch",
             "Paxsenix" to "Paxsenix",
-            "KuGou" to "KuGou",
             "YouTube" to "YouTube",
             "YouTubeSubtitle" to "YouTube Subtitles",
+            "SinhalaLyrics" to "Sinhala Lyrics",
+            "AiLyrics" to "AI Lyrics",
         )
 
         AlertDialog(

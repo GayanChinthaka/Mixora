@@ -101,6 +101,36 @@ object LyricsUtils {
         return Pair(title.trim(), artist.trim())
     }
 
+    fun hasSinhalaScript(text: String): Boolean =
+        text.any { it.code in 0x0D80..0x0DFF }
+
+    /**
+     * Extracts candidate search titles from a potentially bilingual or bracketed title.
+     * E.g. "සරාගයේ (Saragaye)" -> ["සරාගයේ", "Saragaye"]
+     */
+    fun extractSearchCandidateTitles(rawTitle: String, rawArtist: String? = null): List<String> {
+        val candidates = mutableListOf<String>()
+        val (cleanedTitle, _) = cleanTitleAndArtist(rawTitle, rawArtist)
+        if (cleanedTitle.isNotBlank()) {
+            candidates.add(cleanedTitle)
+        }
+
+        val bracketMatch = Regex("""\(([^)]+)\)""").find(rawTitle)
+        if (bracketMatch != null) {
+            val inside = bracketMatch.groupValues[1].trim()
+            val outside = rawTitle.replace(bracketMatch.value, "").trim()
+            val (cleanedInside, _) = cleanTitleAndArtist(inside, rawArtist)
+            val (cleanedOutside, _) = cleanTitleAndArtist(outside, rawArtist)
+            if (cleanedInside.isNotBlank() && cleanedInside.length > 2 && !candidates.contains(cleanedInside)) {
+                candidates.add(cleanedInside)
+            }
+            if (cleanedOutside.isNotBlank() && cleanedOutside.length > 2 && !candidates.contains(cleanedOutside)) {
+                candidates.add(cleanedOutside)
+            }
+        }
+        return candidates.distinct()
+    }
+
     fun cleanTitleForSearch(title: String, artist: String? = null): String {
         return cleanTitleAndArtist(title, artist).first
     }

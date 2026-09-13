@@ -36,7 +36,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import com.pokerlanka.mixora.constants.MusixmatchUserTokenKey
+import com.pokerlanka.mixora.constants.AiApiKeyKey
+import com.pokerlanka.mixora.constants.AiProvider
+import com.pokerlanka.mixora.constants.AiProviderKey
+import com.pokerlanka.mixora.utils.rememberEnumPreference
 import com.pokerlanka.mixora.utils.rememberPreference
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -44,19 +47,9 @@ import com.pokerlanka.mixora.utils.rememberPreference
 fun IntegrationScreen(
     navController: NavController
 ) {
-    val (musixmatchToken, onMusixmatchTokenChange) = rememberPreference(MusixmatchUserTokenKey, defaultValue = "")
-
-    var showMusixmatchDialog by remember { mutableStateOf(false) }
-
-    if (showMusixmatchDialog) {
-        LyricsServiceConfigDialog(
-            serviceName = "Musixmatch",
-            currentToken = musixmatchToken,
-            onSaveToken = onMusixmatchTokenChange,
-            onDismiss = { showMusixmatchDialog = false },
-            isMusixmatch = true
-        )
-    }
+    val aiProvider by rememberEnumPreference(AiProviderKey, AiProvider.NONE)
+    val (aiApiKey, _) = rememberPreference(AiApiKeyKey, defaultValue = "")
+    val isAiConnected = aiProvider != AiProvider.NONE && aiApiKey.isNotBlank()
 
     Column(
         Modifier
@@ -84,21 +77,20 @@ fun IntegrationScreen(
             items = listOf(
                 IntegrationCardItem(
                     icon = painterResource(R.drawable.lyrics),
-                    title = { Text(stringResource(R.string.musixmatch_integration)) },
-                    description = { Text(stringResource(R.string.musixmatch_integration_desc)) },
+                    title = { Text("AI Lyrics & Romanization") },
+                    description = { Text("Gemini, ChatGPT, or OpenRouter fallback for missing lyrics") },
                     trailingContent = {
-                        val isConnected = musixmatchToken.isNotBlank()
                         Badge(
-                            containerColor = if (isConnected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.5f),
-                            contentColor = if (isConnected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.error
+                            containerColor = if (isAiConnected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.5f),
+                            contentColor = if (isAiConnected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.error
                         ) {
                             Text(
-                                if (isConnected) stringResource(R.string.connected) + " ✓" else stringResource(R.string.not_configured) + " ⚠️",
+                                if (isAiConnected) stringResource(R.string.connected) + " ✓" else stringResource(R.string.not_configured) + " ⚠️",
                                 modifier = Modifier.padding(horizontal = 4.dp)
                             )
                         }
                     },
-                    onClick = { showMusixmatchDialog = true }
+                    onClick = { navController.navigate("settings/ai_integration") }
                 )
             )
         )
