@@ -74,7 +74,6 @@ import com.pokerlanka.mixora.ui.component.EnumDialog
 import com.pokerlanka.mixora.ui.component.IconButton
 import com.pokerlanka.mixora.ui.component.Material3SettingsGroup
 import com.pokerlanka.mixora.ui.component.RomanizationSetupDialog
-import com.pokerlanka.mixora.ui.component.LyricsSetupRequiredDialog
 import com.pokerlanka.mixora.ui.component.Material3SettingsItem
 import com.pokerlanka.mixora.ui.utils.backToMain
 import com.pokerlanka.mixora.utils.rememberEnumPreference
@@ -139,7 +138,6 @@ fun LyricsSettings(
             aiModel.isNotBlank() &&
             (aiProvider != AiProvider.CUSTOM || aiCustomEndpoint.isNotBlank())
     var showRomanizationSetupDialog by rememberSaveable { mutableStateOf(false) }
-    var showLyricsSetupRequiredDialogFor by rememberSaveable { mutableStateOf<String?>(null) }
     val (lyricsTextSize, onLyricsTextSizeChange) = rememberPreference(LyricsTextSizeKey, defaultValue = 36f)
     val (lyricsLineSpacing, onLyricsLineSpacingChange) = rememberPreference(LyricsLineSpacingKey, defaultValue = 1.3f)
 
@@ -165,18 +163,6 @@ fun LyricsSettings(
             onSetUp = {
                 showRomanizationSetupDialog = false
                 navController.navigate("settings/ai_integration")
-            },
-        )
-    }
-
-    showLyricsSetupRequiredDialogFor?.let { providerName ->
-        LyricsSetupRequiredDialog(
-            providerName = providerName,
-            onDismiss = { showLyricsSetupRequiredDialogFor = null },
-            onSetUp = {
-                showLyricsSetupRequiredDialogFor = null
-                showProviderDialog = false
-                navController.navigate("settings/integrations")
             },
         )
     }

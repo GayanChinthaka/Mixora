@@ -94,7 +94,6 @@
     <string name="lyrics_text_size">Lyrics text size</string>
     <string name="lyrics_line_spacing">Lyrics line spacing</string>
     <string name="enable_lrclib_desc">Community-driven synchronized lyrics database</string>
-    <string name="enable_kugou_desc">Pulls lyrics from KuGou, a popular Chinese music platform</string>
     <string name="youtube_music_lyrics_note">NOTE: YouTube Music lyrics will be shown automatically when no other source is available. They are usually not synchronized</string>
     <string name="enable_paxsenix_desc">High-quality synchronized lyrics from Paxsenix API</string>
     <string name="enable_sinhala_lyrics_desc">Dedicated provider for Sinhala songs and lyrics databases</string>
@@ -666,8 +665,6 @@
     <string name="cache_songs">Cache Songs</string>
     <string name="selection">Selection</string>
     <string name="lyrics_services">Lyrics Services</string>
-    <string name="musixmatch_integration">Musixmatch</string>
-    <string name="musixmatch_integration_desc">Largest synchronized lyrics database</string>
     <string name="auto_connect">Auto Connect</string>
     <string name="connecting">Connecting...</string>
     <string name="connected">Connected</string>

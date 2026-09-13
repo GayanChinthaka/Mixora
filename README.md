@@ -7,7 +7,7 @@ Mixora is a modern, feature-packed music streaming and playback application for 
 ## ✨ Features
 
 - **Online Streaming**: Stream millions of tracks via YouTube Music (InnerTube integration).
-- **Synchronized Lyrics**: Real-time synced and plain lyrics support powered by LRCLIB, Kugou, and more.
+- **Synchronized Lyrics**: Real-time synced and plain lyrics support powered by LRCLIB, Paxsenix, Sinhala Lyrics, and AI Fallback.
 - **Modern Material 3 UI**: Dynamic color theming, sleek animations, and responsive player sheets.
 - **Audio Effects & Processing**: Audio normalization, gapless playback, silence skipping, and custom equalizer support.
 - **Offline & Cache Support**: Cache your favorite songs and download tracks for offline listening.

@@ -1,4 +1,4 @@
-﻿@file:Suppress("UnstableApiUsage")
+@file:Suppress("UnstableApiUsage")
 
 pluginManagement {
     repositories {
@@ -27,7 +27,6 @@ dependencyResolutionManagement {
 rootProject.name = "Mixora"
 include(":app")
 include(":innertube")
-include(":kugou")
 include(":lrclib")
 include(":lastfm")
 include(":shazamkit")

@@ -278,7 +278,6 @@ dependencies {
     ksp(libs.hilt.compiler)
 
     implementation(project(":innertube"))
-    implementation(project(":kugou"))
     implementation(project(":lrclib"))
     implementation(project(":lastfm"))
     implementation(project(":shazamkit"))

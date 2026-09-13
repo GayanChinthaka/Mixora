@@ -14,7 +14,6 @@ local.properties
 /app/release
 /app/keystore/release.keystore
 /innertube/build
-/kugou/build
 /lastfm/build
 /lrclib/build
 /shazamkit/build

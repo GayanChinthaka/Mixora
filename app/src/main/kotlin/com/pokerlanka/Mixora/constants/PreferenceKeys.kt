@@ -56,13 +56,10 @@ enum class SliderStyle {
 
 const val SYSTEM_DEFAULT = "SYSTEM_DEFAULT"
 val ContentCountryKey = stringPreferencesKey("contentCountry")
-val EnableKugouKey = booleanPreferencesKey("enableKugou")
 val EnableLrcLibKey = booleanPreferencesKey("enableLrclib")
 val EnablePaxsenixKey = booleanPreferencesKey("enablePaxsenix")
 val EnableSinhalaLyricsKey = booleanPreferencesKey("enableSinhalaLyrics")
 val EnableAiLyricsKey = booleanPreferencesKey("enableAiLyrics")
-val EnableMusixmatchKey = booleanPreferencesKey("enableMusixmatch")
-val MusixmatchUserTokenKey = stringPreferencesKey("musixmatchUserToken")
 val HideExplicitKey = booleanPreferencesKey("hideExplicit")
 val HideVideoSongsKey = booleanPreferencesKey("hideVideoSongs")
 val HideYoutubeShortsKey = booleanPreferencesKey("hideYoutubeShorts")
