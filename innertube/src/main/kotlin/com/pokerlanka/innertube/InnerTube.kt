@@ -817,7 +817,10 @@ class InnerTube {
                     }?.videoPrimaryInfoRenderer
 
             val returnYouTubeDislikeResponse =
-                returnYouTubeDislike(videoId).body<ReturnYouTubeDislikeResponse>()
+                runCatching { returnYouTubeDislike(videoId).body<ReturnYouTubeDislikeResponse>() }.getOrNull()
+
+            val rawViewCount = baseForTitle?.viewCount?.videoViewCountRenderer?.viewCount?.simpleText
+                ?.filter { it.isDigit() }?.toIntOrNull()
 
             return@runCatching MediaInfo(
                 videoId = videoId,
@@ -857,10 +860,11 @@ class InnerTube {
                         ?.videoOwnerRenderer
                         ?.subscriberCountText
                         ?.simpleText?.split(" ")?.firstOrNull(),
-                uploadDate = baseForTitle?.dateText?.simpleText,
-                viewCount = returnYouTubeDislikeResponse.viewCount,
-                like = returnYouTubeDislikeResponse.likes,
-                dislike = returnYouTubeDislikeResponse.dislikes,
+                uploadDate = baseForTitle?.dateText?.text,
+                relativeDate = baseForTitle?.relativeDateText?.text,
+                viewCount = returnYouTubeDislikeResponse?.viewCount ?: rawViewCount,
+                like = returnYouTubeDislikeResponse?.likes,
+                dislike = returnYouTubeDislikeResponse?.dislikes,
             )
 
         }

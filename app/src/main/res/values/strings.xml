@@ -117,6 +117,9 @@
 
     <!-- Dialog -->
     <string name="media_id">Media id</string>
+    <string name="upload_date">Upload date</string>
+    <string name="streamed_date">Streamed date</string>
+    <string name="premiere_date">Premiere date</string>
     <string name="mime_type">MIME type</string>
     <string name="codecs">Codecs</string>
     <string name="bitrate">Bitrate</string>

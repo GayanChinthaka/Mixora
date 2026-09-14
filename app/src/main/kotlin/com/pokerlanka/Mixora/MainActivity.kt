@@ -289,21 +289,14 @@ class MainActivity : ComponentActivity() {
         }
 
         // Start the playback service explicitly once so it can outlive binding.
-        // Re-issuing startForegroundService() while an existing service instance is already
-        // running can trigger "did not then call startForeground" on some Android 9 devices
-        // when the framework expects a fresh foreground promotion for that start request.
+        // We start it as a normal background service since MainActivity is in the foreground.
+        // Media3 automatically promotes it to foreground with startForeground() when playback starts.
         if (!MusicService.isRunning) {
             val serviceIntent = Intent(this, MusicService::class.java)
             try {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                    ContextCompat.startForegroundService(this, serviceIntent)
-                } else {
-                    startService(serviceIntent)
-                }
-            } catch (e: ForegroundServiceStartNotAllowedException) {
-                Timber.w(e, "Cannot start foreground service from background")
-            } catch (e: IllegalStateException) {
-                Timber.w(e, "Failed to start foreground service")
+                startService(serviceIntent)
+            } catch (e: Exception) {
+                Timber.w(e, "Failed to start playback service")
             }
         }
 

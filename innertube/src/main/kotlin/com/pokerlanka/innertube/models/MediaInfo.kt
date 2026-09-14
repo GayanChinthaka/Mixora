@@ -8,6 +8,7 @@ data class MediaInfo(
     val authorThumbnail: String? = null,
     val description: String? = null,
     val uploadDate: String? = null,
+    val relativeDate: String? = null,
     val subscribers: String? = null,
     val viewCount: Int? = null,
     val like: Int? = null,

@@ -998,14 +998,8 @@ class MusicService :
 
         playerInitialized.value = false
 
-        // Call startForeground() as early as possible to satisfy the
-        // 5-second timeout imposed by Context.startForegroundService().
-        // On some OEMs (e.g. MIUI), even a DataStore read can be slow
-        // enough to miss the window, so we promote before any I/O.
         ensureForegroundChannelExists()
-        if (!ensureStartedAsForegroundOrStop()) {
-            return
-        }
+        setShowNotificationForIdlePlayer(SHOW_NOTIFICATION_FOR_IDLE_PLAYER_NEVER)
 
         // Read ALL startup preferences in one shot so that subsequent code
         // never calls dataStore.get() (which does runBlocking internally).
@@ -2891,6 +2885,14 @@ class MusicService :
         if (playbackState == Player.STATE_IDLE || playbackState == Player.STATE_ENDED) {
             scrobbleManager?.onSongStop()
         }
+
+        if (playbackState == Player.STATE_IDLE) {
+            ServiceCompat.stopForeground(this, ServiceCompat.STOP_FOREGROUND_REMOVE)
+            runCatching {
+                getSystemService(NotificationManager::class.java)?.cancel(NOTIFICATION_ID)
+            }
+            latestMediaNotification = null
+        }
     }
 
     override fun onPlayWhenReadyChanged(
@@ -2919,6 +2921,7 @@ class MusicService :
                 saveEpisodePosition(currentMetadata.id, player.currentPosition)
                 previousEpisodePosition = player.currentPosition
             }
+            ServiceCompat.stopForeground(this, ServiceCompat.STOP_FOREGROUND_DETACH)
         }
 
         if (playWhenReady) {
@@ -4147,6 +4150,9 @@ class MusicService :
             stopOnFailure = false,
         )
 
+    private fun isPlaybackActive(): Boolean =
+        ::player.isInitialized && (player.playWhenReady || player.isPlaying) && player.playbackState != Player.STATE_IDLE
+
     private fun ensureForegroundChannelExists() {
         val nm = getSystemService(NotificationManager::class.java)
         nm?.createNotificationChannel(
@@ -4173,7 +4179,7 @@ class MusicService :
             .setContentText("")
             .setSmallIcon(R.drawable.small_icon)
             .setContentIntent(pending)
-            .setOngoing(true)
+            .setOngoing(false)
             .build()
     }
 
@@ -4332,14 +4338,24 @@ class MusicService :
         flags: Int,
         startId: Int,
     ): Int {
-        // On Android O+, every startForegroundService() call requires
-        // Service.startForeground() to be called within a short timeout.
-        // Some OEMs (e.g. MIUI) strictly enforce this even when the
-        // service is already in the foreground, so always promote here.
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            if (!ensureForegroundWithLatestNotificationOrStop()) {
-                return START_NOT_STICKY
+        val isNotificationDismissed =
+            intent?.extras?.getBoolean(MediaNotification.NOTIFICATION_DISMISSED_EVENT_KEY) == true
+        if (isNotificationDismissed) {
+            latestMediaNotification = null
+            ServiceCompat.stopForeground(this, ServiceCompat.STOP_FOREGROUND_REMOVE)
+            runCatching {
+                getSystemService(NotificationManager::class.java)?.cancel(NOTIFICATION_ID)
             }
+            if (::player.isInitialized && player.playWhenReady) {
+                player.pause()
+            }
+            return super.onStartCommand(intent, flags, startId)
+        }
+
+        // Only ensure foreground if playback is active; never force a foreground notification
+        // when no music is playing.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && isPlaybackActive()) {
+            tryEnsureForegroundWithLatestNotification()
         }
 
         when (intent?.action) {

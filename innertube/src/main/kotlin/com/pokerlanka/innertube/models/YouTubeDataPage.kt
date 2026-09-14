@@ -82,6 +82,8 @@ data class YouTubeDataPage(
                             val viewCount: ViewCount? = null,
                             @SerialName("dateText")
                             val dateText: DateText? = null,
+                            @SerialName("relativeDateText")
+                            val relativeDateText: RelativeDateText? = null,
                         ) {
                             @Serializable
                             data class Title(
@@ -117,7 +119,23 @@ data class YouTubeDataPage(
                             data class DateText(
                                 @SerialName("simpleText")
                                 val simpleText: String? = null,
-                            )
+                                @SerialName("runs")
+                                val runs: List<Title.Run>? = null,
+                            ) {
+                                val text: String?
+                                    get() = simpleText ?: runs?.joinToString("") { it.text.orEmpty() }?.takeIf { it.isNotBlank() }
+                            }
+
+                            @Serializable
+                            data class RelativeDateText(
+                                @SerialName("simpleText")
+                                val simpleText: String? = null,
+                                @SerialName("runs")
+                                val runs: List<Title.Run>? = null,
+                            ) {
+                                val text: String?
+                                    get() = simpleText ?: runs?.joinToString("") { it.text.orEmpty() }?.takeIf { it.isNotBlank() }
+                            }
                         }
 
                         @Serializable

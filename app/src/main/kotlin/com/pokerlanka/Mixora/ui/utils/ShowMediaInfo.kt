@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Mixora Project (C) 2026
  * Author : Gayan Chinthaka
  * Company: Pokerlanka
@@ -123,35 +123,43 @@ fun ShowMediaInfo(videoId: String) {
         if (info != null) {
             item(contentType = "MediaDetails") {
                 Column {
-                    val baseList = listOf(
-                        stringResource(R.string.song_title) to (info?.title ?: song?.title),
-                        stringResource(R.string.song_artists) to (info?.author ?: song?.artists?.joinToString { it.name }),
-                        stringResource(R.string.media_id) to (song?.id ?: info?.videoId)
-                    )
+                    val uploadDate = info?.uploadDate
+                    val relativeDate = info?.relativeDate
+                    val isStreamed = (uploadDate?.contains("stream", ignoreCase = true) == true) ||
+                            (relativeDate?.contains("stream", ignoreCase = true) == true)
+                    val isPremiered = (uploadDate?.contains("premier", ignoreCase = true) == true) ||
+                            (relativeDate?.contains("premier", ignoreCase = true) == true)
 
-                    val baseIconsList = listOf(
-                        R.drawable.music_note,
-                        R.drawable.person,
-                        R.drawable.media3_icon_bookmark_filled,
-                    )
+                    val dateLabel = when {
+                        isStreamed -> stringResource(R.string.streamed_date)
+                        isPremiered -> stringResource(R.string.premiere_date)
+                        else -> stringResource(R.string.upload_date)
+                    }
 
-                    val iconsList = listOf(
-                        R.drawable.media3_icon_feed,
-                        R.drawable.media3_icon_thumb_up_unfilled,
-                        R.drawable.media3_icon_thumb_down_unfilled,
-                        R.drawable.key,
-                        R.drawable.play,
-                        R.drawable.lock,
-                        R.drawable.key_vertical,
-                        R.drawable.info,
-                        R.drawable.radio,
-                        R.drawable.gradient,
-                        R.drawable.contrast,
-                        R.drawable.volume_up,
-                        R.drawable.volume_up,
-                        R.drawable.volume_mute,
-                        R.drawable.content_copy
-                    )
+                    val formattedDate = remember(uploadDate, relativeDate, song?.song?.year) {
+                        when {
+                            !uploadDate.isNullOrBlank() && !relativeDate.isNullOrBlank() -> {
+                                if (uploadDate.contains(relativeDate, ignoreCase = true) || relativeDate.contains(uploadDate, ignoreCase = true)) {
+                                    uploadDate
+                                } else {
+                                    "$uploadDate ($relativeDate)"
+                                }
+                            }
+                            !uploadDate.isNullOrBlank() -> uploadDate
+                            !relativeDate.isNullOrBlank() -> relativeDate
+                            song?.song?.year != null -> song?.song?.year.toString()
+                            else -> null
+                        }
+                    }
+
+                    val baseList = buildList {
+                        add(Triple(stringResource(R.string.song_title), info?.title ?: song?.title, R.drawable.music_note))
+                        add(Triple(stringResource(R.string.song_artists), info?.author ?: song?.artists?.joinToString { it.name }, R.drawable.person))
+                        if (!formattedDate.isNullOrBlank()) {
+                            add(Triple(dateLabel, formattedDate, R.drawable.calendar))
+                        }
+                        add(Triple(stringResource(R.string.media_id), song?.id ?: info?.videoId, R.drawable.media3_icon_bookmark_filled))
+                    }
 
                     val notApplicable = stringResource(R.string.not_applicable)
                     // Player hash + cipher support date apply only to deciphered web clients;
@@ -162,48 +170,42 @@ fun ShowMediaInfo(videoId: String) {
 
                     val measuredLufs: Double? = currentFormat?.perceptualLoudnessDb ?: currentFormat?.loudnessDb?.let { it + LoudnessLevel.AGGRESSIVE.targetLufs }
 
-                    val extendedList = if (currentFormat != null) {
-                        listOf(
-                            stringResource(R.string.views) to info?.viewCount?.let(::numberFormatter).orEmpty(),
-                            stringResource(R.string.likes) to info?.like?.let(::numberFormatter).orEmpty(),
-                            stringResource(R.string.dislikes) to info?.dislike?.let(::numberFormatter).orEmpty(),
-                            "Itag" to currentFormat?.itag?.toString(),
-                            stringResource(R.string.stream_client) to currentStreamClient,
-                            stringResource(R.string.format_player_hash) to
-                                    (if (isWebStream) playerHash else notApplicable),
-                            stringResource(R.string.format_cipher_support_added) to
-                                    (if (isWebStream) PlayerDatesStore.get(playerHash) else notApplicable),
-                            stringResource(R.string.mime_type) to currentFormat?.mimeType,
-                            stringResource(R.string.codecs) to currentFormat?.codecs,
-                            stringResource(R.string.bitrate) to currentFormat?.bitrate?.let { "${it / 1000} Kbps" },
-                            stringResource(R.string.sample_rate) to currentFormat?.sampleRate?.let { "$it Hz" },
-                            stringResource(R.string.loudness) to measuredLufs?.let {
-                                String.format(LocalLocale.current.platformLocale, "%.2f dB", it - targetLufs)
-                            },
-                            stringResource(R.string.loudness_level) to getLoudnessLevelLabel(loudnessLevel),
-                            stringResource(R.string.volume) to if (playerConnection != null) "${(playerConnection.player.volume * 100).toInt()}%" else null,
-                            stringResource(R.string.file_size) to
-                                    currentFormat?.contentLength?.let {
-                                        Formatter.formatShortFileSize(
-                                            context,
-                                            it
-                                        )
-                                    },
-                        )
-                    } else {
-                        emptyList()
+                    val extendedList = buildList {
+                        info?.viewCount?.let {
+                            add(Triple(stringResource(R.string.views), numberFormatter(it), R.drawable.media3_icon_feed))
+                        }
+                        info?.like?.let {
+                            add(Triple(stringResource(R.string.likes), numberFormatter(it), R.drawable.media3_icon_thumb_up_unfilled))
+                        }
+                        info?.dislike?.let {
+                            add(Triple(stringResource(R.string.dislikes), numberFormatter(it), R.drawable.media3_icon_thumb_down_unfilled))
+                        }
+                        if (currentFormat != null) {
+                            add(Triple("Itag", currentFormat?.itag?.toString(), R.drawable.key))
+                            add(Triple(stringResource(R.string.stream_client), currentStreamClient, R.drawable.play))
+                            add(Triple(stringResource(R.string.format_player_hash), if (isWebStream) playerHash else notApplicable, R.drawable.lock))
+                            add(Triple(stringResource(R.string.format_cipher_support_added), if (isWebStream) PlayerDatesStore.get(playerHash) else notApplicable, R.drawable.key_vertical))
+                            add(Triple(stringResource(R.string.mime_type), currentFormat?.mimeType, R.drawable.info))
+                            add(Triple(stringResource(R.string.codecs), currentFormat?.codecs, R.drawable.radio))
+                            add(Triple(stringResource(R.string.bitrate), currentFormat?.bitrate?.let { "${it / 1000} Kbps" }, R.drawable.gradient))
+                            add(Triple(stringResource(R.string.sample_rate), currentFormat?.sampleRate?.let { "$it Hz" }, R.drawable.contrast))
+                            add(Triple(stringResource(R.string.loudness), measuredLufs?.let { String.format(LocalLocale.current.platformLocale, "%.2f dB", it - targetLufs) }, R.drawable.volume_up))
+                            add(Triple(stringResource(R.string.loudness_level), getLoudnessLevelLabel(loudnessLevel), R.drawable.volume_up))
+                            add(Triple(stringResource(R.string.volume), if (playerConnection != null) "${(playerConnection.player.volume * 100).toInt()}%" else null, R.drawable.volume_mute))
+                            add(Triple(stringResource(R.string.file_size), currentFormat?.contentLength?.let { Formatter.formatShortFileSize(context, it) }, R.drawable.content_copy))
+                        }
                     }
 
                     val cardsBaseList = mutableListOf<Material3SettingsItem>()
                     val cardsExtendedList = mutableListOf<Material3SettingsItem>()
                     val cm = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
 
-                    baseList.forEachIndexed { index, (label, text) ->
+                    baseList.forEach { (label, text, iconRes) ->
                         val displayText = text ?: stringResource(R.string.unknown)
                         cardsBaseList += Material3SettingsItem(
                             title = { Text(label) },
                             description = { Text(displayText) },
-                            icon = painterResource(baseIconsList[index]),
+                            icon = painterResource(iconRes),
                             onClick = {
                                 cm.setPrimaryClip(ClipData.newPlainText("text", displayText))
                                 Toast.makeText(context, R.string.copied, Toast.LENGTH_SHORT).show()
@@ -211,12 +213,12 @@ fun ShowMediaInfo(videoId: String) {
                         )
                     }
 
-                    extendedList.forEachIndexed { index, (label, text) ->
+                    extendedList.forEach { (label, text, iconRes) ->
                         val displayText = text ?: stringResource(R.string.unknown)
                         cardsExtendedList += Material3SettingsItem(
                             title = { Text(label) },
                             description = { Text(displayText) },
-                            icon = painterResource(iconsList[index]),
+                            icon = painterResource(iconRes),
                             onClick = {
                                 cm.setPrimaryClip(ClipData.newPlainText("text", displayText))
                                 Toast.makeText(context, R.string.copied, Toast.LENGTH_SHORT).show()
@@ -229,12 +231,14 @@ fun ShowMediaInfo(videoId: String) {
                         items = cardsBaseList
                     )
 
-                    Spacer(Modifier.height(8.dp))
+                    if (cardsExtendedList.isNotEmpty()) {
+                        Spacer(Modifier.height(8.dp))
 
-                    Material3SettingsGroup(
-                        title = stringResource(R.string.information),
-                        items = cardsExtendedList
-                    )
+                        Material3SettingsGroup(
+                            title = stringResource(R.string.information),
+                            items = cardsExtendedList
+                        )
+                    }
 
                     Spacer(Modifier.height(8.dp))
 
