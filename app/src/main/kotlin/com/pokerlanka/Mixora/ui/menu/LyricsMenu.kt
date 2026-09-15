@@ -440,12 +440,7 @@ fun LyricsMenu(
                                             contentDescription = null,
                                             modifier = Modifier.size(SwitchDefaults.IconSize)
                                         )
-                                    },
-                                    colors = SwitchDefaults.colors(
-                                        uncheckedThumbColor = MaterialTheme.colorScheme.primaryContainer,
-                                        checkedThumbColor = MaterialTheme.colorScheme.onPrimary,
-                                        checkedTrackColor = MaterialTheme.colorScheme.primary
-                                    )
+                                    }
                                 )
                             }
                         )
