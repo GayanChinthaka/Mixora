@@ -145,7 +145,6 @@ import com.pokerlanka.mixora.constants.MiniPlayerBottomSpacing
 import com.pokerlanka.mixora.constants.MiniPlayerHeight
 import com.pokerlanka.mixora.constants.NavigationBarAnimationSpec
 import com.pokerlanka.mixora.constants.NavigationBarHeight
-import com.pokerlanka.mixora.constants.PauseListenHistoryKey
 import com.pokerlanka.mixora.constants.PauseSearchHistoryKey
 import com.pokerlanka.mixora.constants.PureBlackKey
 import com.pokerlanka.mixora.constants.SYSTEM_DEFAULT
@@ -536,7 +535,7 @@ class MainActivity : ComponentActivity() {
                         .background(if (pureBlack) Color.Black else MaterialTheme.colorScheme.surface),
             ) {
                 val density = LocalDensity.current
-                val configuration = LocalWindowInfo.current
+                val configuration = LocalConfiguration.current
                 val cutoutInsets = WindowInsets.displayCutout
                 val windowsInsets = WindowInsets.systemBars
                 val bottomInset = with(density) { windowsInsets.getBottom(density).toDp() }
@@ -614,8 +613,8 @@ class MainActivity : ComponentActivity() {
                             currentRoute!!.startsWith("search/")
                     }
 
-                val isLandscape = configuration.containerDpSize.width > configuration.containerDpSize.height
-                val isTablet = configuration.containerDpSize.width >= 600.dp
+                val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+                val isTablet = configuration.smallestScreenWidthDp >= 600
 
                 val showRail = (isLandscape || isTablet) && !inSearchScreen
 
@@ -809,13 +808,6 @@ class MainActivity : ComponentActivity() {
                         }
                     }
 
-                val pauseListenHistory by rememberPreference(PauseListenHistoryKey, defaultValue = false)
-                val eventCount by database.eventCount().collectAsStateWithLifecycle(initialValue = 0)
-                val showHistoryButton =
-                    remember(pauseListenHistory, eventCount) {
-                        !(pauseListenHistory && eventCount == 0)
-                    }
-
                 val baseBg = if (pureBlack) Color.Black else MaterialTheme.colorScheme.surfaceContainer
 
                 CompositionLocalProvider(
@@ -846,14 +838,6 @@ class MainActivity : ComponentActivity() {
                                             )
                                         },
                                         actions = {
-                                            if (showHistoryButton) {
-                                                IconButton(onClick = { navController.navigate("history") }) {
-                                                    Icon(
-                                                        painter = painterResource(R.drawable.history),
-                                                        contentDescription = stringResource(R.string.history),
-                                                    )
-                                                }
-                                            }
                                             IconButton(onClick = {
                                                 navController.navigate("settings")
                                             }) {

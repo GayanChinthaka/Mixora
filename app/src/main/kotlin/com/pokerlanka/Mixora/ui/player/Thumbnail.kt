@@ -7,6 +7,9 @@
 package com.pokerlanka.mixora.ui.player
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
@@ -17,7 +20,9 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -33,14 +38,19 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -78,7 +88,12 @@ import com.pokerlanka.mixora.ui.component.CastButton
 import com.pokerlanka.mixora.utils.makeTimeString
 import com.pokerlanka.mixora.utils.rememberEnumPreference
 import com.pokerlanka.mixora.utils.rememberPreference
+import com.pokerlanka.innertube.models.MediaInfo
+import com.pokerlanka.mixora.ui.utils.MediaDateCache
+import com.pokerlanka.mixora.ui.utils.formatMediaDate
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 /**
  * Pre-calculated thumbnail dimensions to avoid repeated calculations during recomposition.
@@ -220,6 +235,7 @@ fun Thumbnail(
     // Seek effect state
     var showSeekEffect by remember { mutableStateOf(false) }
     var seekDirection by remember { mutableStateOf("") }
+    var seekEffectTrigger by remember { mutableLongStateOf(0L) }
 
     Box(
         modifier = modifier
@@ -292,6 +308,7 @@ fun Thumbnail(
                         { direction: String, showEffect: Boolean ->
                             seekDirection = direction
                             showSeekEffect = showEffect
+                            seekEffectTrigger = System.currentTimeMillis()
                         }
                     }
 
@@ -344,8 +361,8 @@ fun Thumbnail(
         }
 
         // Seek effect
-        LaunchedEffect(showSeekEffect) {
-            if (showSeekEffect) {
+        LaunchedEffect(seekEffectTrigger) {
+            if (seekEffectTrigger > 0L && showSeekEffect) {
                 delay(1000)
                 showSeekEffect = false
             }
@@ -451,6 +468,33 @@ private fun ThumbnailItem(
     currentMediaThumbnail: String? = null,
     modifier: Modifier = Modifier,
 ) {
+    val coroutineScope = rememberCoroutineScope()
+
+    // Flash animation alpha for the 3 columns
+    val leftFlashAlpha = remember { Animatable(0f) }
+    val centerFlashAlpha = remember { Animatable(0f) }
+    val rightFlashAlpha = remember { Animatable(0f) }
+
+    // Tap counting and continuous seek accumulation state
+    var leftTapCount by remember { mutableIntStateOf(0) }
+    var leftAccumulatedSec by remember { mutableIntStateOf(0) }
+    var leftResetJob by remember { mutableStateOf<Job?>(null) }
+
+    var rightTapCount by remember { mutableIntStateOf(0) }
+    var rightAccumulatedSec by remember { mutableIntStateOf(0) }
+    var rightResetJob by remember { mutableStateOf<Job?>(null) }
+
+    // Date metadata
+    val mediaInfo by produceState<MediaInfo?>(initialValue = null, item.mediaId) {
+        value = MediaDateCache.getMediaInfo(item.mediaId)
+    }
+    val mediaDate = formatMediaDate(
+        uploadDate = mediaInfo?.uploadDate,
+        relativeDate = mediaInfo?.relativeDate,
+    )
+
+    val overlayColor = MaterialTheme.colorScheme.onSurface
+
     Box(
         modifier = modifier
             .then(
@@ -466,45 +510,6 @@ private fun ThumbnailItem(
             .graphicsLayer {
                 // Render entire thumbnail item on separate hardware layer for smooth animations
                 compositingStrategy = CompositingStrategy.Offscreen
-            }
-            .pointerInput(Unit) {
-                detectTapGestures(
-                    onTap = {
-                        val isCasting = playerConnection.service.castConnectionHandler?.isCasting?.value == true
-                        val castIsPlaying = playerConnection.service.castConnectionHandler?.castIsPlaying?.value == true
-                        val castHandler = playerConnection.service.castConnectionHandler
-                        val playbackState = playerConnection.playbackState.value
-
-                        if (isCasting) {
-                            if (castIsPlaying) {
-                                castHandler?.pause()
-                            } else {
-                                castHandler?.play()
-                            }
-                        } else if (playbackState == Player.STATE_ENDED) {
-                            playerConnection.player.seekTo(0, 0)
-                            playerConnection.player.playWhenReady = true
-                        } else {
-                            playerConnection.togglePlayPause()
-                        }
-                    },
-                    onDoubleTap = { offset ->
-                        val currentPosition = playerConnection.player.currentPosition
-                        val duration = playerConnection.player.duration
-                        val skipAmount = 5000L
-
-                        val isLeftSide = (layoutDirection == LayoutDirection.Ltr && offset.x < size.width / 2) ||
-                                (layoutDirection == LayoutDirection.Rtl && offset.x > size.width / 2)
-
-                        if (isLeftSide) {
-                            playerConnection.player.seekTo((currentPosition - skipAmount).coerceAtLeast(0))
-                            onSeek(context.getString(R.string.seek_backward_dynamic, 5), true)
-                        } else {
-                            playerConnection.player.seekTo((currentPosition + skipAmount).coerceAtMost(duration))
-                            onSeek(context.getString(R.string.seek_forward_dynamic, 5), true)
-                        }
-                    }
-                )
             },
         contentAlignment = Alignment.Center
     ) {
@@ -523,6 +528,160 @@ private fun ThumbnailItem(
                 artworkUri = artworkUriToUse,
                 cropArtwork = cropArtwork
             )
+
+            // Date Badge at BottomStart
+            if (mediaDate != null) {
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.BottomStart)
+                        .padding(8.dp)
+                        .background(
+                            Color.Black.copy(alpha = 0.65f),
+                            RoundedCornerShape(8.dp)
+                        )
+                        .padding(horizontal = 8.dp, vertical = 4.dp)
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Icon(
+                            painter = painterResource(R.drawable.calendar),
+                            contentDescription = null,
+                            tint = Color.White,
+                            modifier = Modifier.size(12.dp)
+                        )
+                        Text(
+                            text = mediaDate.dateText,
+                            color = Color.White,
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+                }
+            }
+
+            // 3-Column Touch Layer with Flash Overlays
+            CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+                Row(modifier = Modifier.fillMaxSize()) {
+                    // Column 1: Backward Seek (Left 1/3)
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxHeight()
+                            .background(overlayColor.copy(alpha = leftFlashAlpha.value))
+                            .pointerInput(Unit) {
+                                detectTapGestures(
+                                    onTap = {
+                                        coroutineScope.launch {
+                                            leftFlashAlpha.snapTo(0.22f)
+                                            leftFlashAlpha.animateTo(0f, tween(300, easing = FastOutSlowInEasing))
+                                        }
+
+                                        leftResetJob?.cancel()
+                                        leftTapCount++
+
+                                        if (leftTapCount == 1) {
+                                            leftResetJob = coroutineScope.launch {
+                                                delay(400)
+                                                leftTapCount = 0
+                                                leftAccumulatedSec = 0
+                                            }
+                                        } else {
+                                            leftAccumulatedSec += 5
+                                            val currentPosition = playerConnection.player.currentPosition
+                                            playerConnection.player.seekTo((currentPosition - 5000L).coerceAtLeast(0))
+                                            onSeek(context.getString(R.string.seek_backward_accumulated, leftAccumulatedSec), true)
+
+                                            leftResetJob = coroutineScope.launch {
+                                                delay(650)
+                                                leftTapCount = 0
+                                                leftAccumulatedSec = 0
+                                            }
+                                        }
+                                    }
+                                )
+                            }
+                    )
+
+                    // Column 2: Play / Pause (Center 1/3)
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxHeight()
+                            .background(overlayColor.copy(alpha = centerFlashAlpha.value))
+                            .pointerInput(Unit) {
+                                detectTapGestures(
+                                    onTap = {
+                                        coroutineScope.launch {
+                                            centerFlashAlpha.snapTo(0.22f)
+                                            centerFlashAlpha.animateTo(0f, tween(300, easing = FastOutSlowInEasing))
+                                        }
+
+                                        val isCasting = playerConnection.service.castConnectionHandler?.isCasting?.value == true
+                                        val castIsPlaying = playerConnection.service.castConnectionHandler?.castIsPlaying?.value == true
+                                        val castHandler = playerConnection.service.castConnectionHandler
+                                        val playbackState = playerConnection.playbackState.value
+
+                                        if (isCasting) {
+                                            if (castIsPlaying) {
+                                                castHandler?.pause()
+                                            } else {
+                                                castHandler?.play()
+                                            }
+                                        } else if (playbackState == Player.STATE_ENDED) {
+                                            playerConnection.player.seekTo(0, 0)
+                                            playerConnection.player.playWhenReady = true
+                                        } else {
+                                            playerConnection.togglePlayPause()
+                                        }
+                                    }
+                                )
+                            }
+                    )
+
+                    // Column 3: Forward Seek (Right 1/3)
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxHeight()
+                            .background(overlayColor.copy(alpha = rightFlashAlpha.value))
+                            .pointerInput(Unit) {
+                                detectTapGestures(
+                                    onTap = {
+                                        coroutineScope.launch {
+                                            rightFlashAlpha.snapTo(0.22f)
+                                            rightFlashAlpha.animateTo(0f, tween(300, easing = FastOutSlowInEasing))
+                                        }
+
+                                        rightResetJob?.cancel()
+                                        rightTapCount++
+
+                                        if (rightTapCount == 1) {
+                                            rightResetJob = coroutineScope.launch {
+                                                delay(400)
+                                                rightTapCount = 0
+                                                rightAccumulatedSec = 0
+                                            }
+                                        } else {
+                                            rightAccumulatedSec += 5
+                                            val currentPosition = playerConnection.player.currentPosition
+                                            val duration = playerConnection.player.duration
+                                            playerConnection.player.seekTo((currentPosition + 5000L).coerceAtMost(duration))
+                                            onSeek(context.getString(R.string.seek_forward_accumulated, rightAccumulatedSec), true)
+
+                                            rightResetJob = coroutineScope.launch {
+                                                delay(650)
+                                                rightTapCount = 0
+                                                rightAccumulatedSec = 0
+                                            }
+                                        }
+                                    }
+                                )
+                            }
+                    )
+                }
+            }
 
             // Cast button at top-right corner of thumbnail
             CastButton(

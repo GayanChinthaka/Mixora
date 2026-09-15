@@ -80,6 +80,7 @@ import com.pokerlanka.mixora.constants.PlayerBackgroundStyleKey
 import com.pokerlanka.mixora.constants.SelectedThemeColorKey
 import com.pokerlanka.mixora.constants.ShowCachedPlaylistKey
 import com.pokerlanka.mixora.constants.ShowDownloadedPlaylistKey
+import com.pokerlanka.mixora.constants.ShowHistoryPlaylistKey
 import com.pokerlanka.mixora.constants.ShowLikedPlaylistKey
 import com.pokerlanka.mixora.constants.ShowTopPlaylistKey
 import com.pokerlanka.mixora.constants.ShowUploadedPlaylistKey
@@ -166,6 +167,11 @@ fun AppearanceSettings(
     val (showUploadedPlaylist, onShowUploadedPlaylistChange) =
         rememberPreference(
             ShowUploadedPlaylistKey,
+            defaultValue = true,
+        )
+    val (showHistoryPlaylist, onShowHistoryPlaylistChange) =
+        rememberPreference(
+            ShowHistoryPlaylistKey,
             defaultValue = true,
         )
 
@@ -621,6 +627,27 @@ fun AppearanceSettings(
                             )
                         },
                         onClick = { onShowUploadedPlaylistChange(!showUploadedPlaylist) },
+                    ),
+                    Material3SettingsItem(
+                        icon = painterResource(R.drawable.history),
+                        title = { Text(stringResource(R.string.show_history_playlist)) },
+                        trailingContent = {
+                            Switch(
+                                checked = showHistoryPlaylist,
+                                onCheckedChange = onShowHistoryPlaylistChange,
+                                thumbContent = {
+                                    Icon(
+                                        painter =
+                                            painterResource(
+                                                id = if (showHistoryPlaylist) R.drawable.check else R.drawable.close,
+                                            ),
+                                        contentDescription = null,
+                                        modifier = Modifier.size(SwitchDefaults.IconSize),
+                                    )
+                                },
+                            )
+                        },
+                        onClick = { onShowHistoryPlaylistChange(!showHistoryPlaylist) },
                     ),
                 ),
         )

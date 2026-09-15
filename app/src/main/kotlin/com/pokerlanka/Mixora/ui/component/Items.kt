@@ -915,7 +915,15 @@ fun PlaylistListItem(
 ) = ListItem(
     title = playlist.playlist.name,
     subtitle = if (autoPlaylist) {
-        ""
+        if (playlist.songCount > 0) {
+            pluralStringResource(
+                R.plurals.n_song,
+                playlist.songCount,
+                playlist.songCount
+            )
+        } else {
+            ""
+        }
     } else {
         if (playlist.songCount == 0 && playlist.playlist.remoteSongCount != null) {
             pluralStringResource(
@@ -941,6 +949,7 @@ fun PlaylistListItem(
                     stringResource(R.string.liked) -> R.drawable.favorite_border
                     stringResource(R.string.offline) -> R.drawable.offline
                     stringResource(R.string.cached_playlist) -> R.drawable.cached
+                    stringResource(R.string.history) -> R.drawable.history
                     // R.drawable.backup as placeholder
                     stringResource(R.string.uploaded_playlist) -> R.drawable.backup
                     else -> if (autoPlaylist) R.drawable.trending_up else R.drawable.queue_music
@@ -1006,7 +1015,15 @@ fun PlaylistGridItem(
     },
     subtitle = {
         val subtitle = if (autoPlaylist) {
-            ""
+            if (playlist.songCount > 0) {
+                pluralStringResource(
+                    R.plurals.n_song,
+                    playlist.songCount,
+                    playlist.songCount
+                )
+            } else {
+                ""
+            }
         } else {
             if (playlist.songCount == 0 && playlist.playlist.remoteSongCount != null) {
                 pluralStringResource(
@@ -1041,6 +1058,7 @@ fun PlaylistGridItem(
                     stringResource(R.string.liked) -> R.drawable.favorite_border
                     stringResource(R.string.offline) -> R.drawable.offline
                     stringResource(R.string.cached_playlist) -> R.drawable.cached
+                    stringResource(R.string.history) -> R.drawable.history
                     // R.drawable.backup as placeholder
                     stringResource(R.string.uploaded_playlist) -> R.drawable.backup
                     else -> if (autoPlaylist) R.drawable.trending_up else R.drawable.queue_music

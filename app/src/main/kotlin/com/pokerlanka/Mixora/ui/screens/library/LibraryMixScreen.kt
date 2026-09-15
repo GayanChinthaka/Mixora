@@ -67,9 +67,11 @@ import com.pokerlanka.mixora.constants.CONTENT_TYPE_PLAYLIST
 import com.pokerlanka.mixora.constants.LibraryViewType
 import com.pokerlanka.mixora.constants.MixSortDescendingKey
 import com.pokerlanka.mixora.constants.MixSortType
+import com.pokerlanka.mixora.LocalDatabase
 import com.pokerlanka.mixora.constants.MixSortTypeKey
 import com.pokerlanka.mixora.constants.ShowCachedPlaylistKey
 import com.pokerlanka.mixora.constants.ShowDownloadedPlaylistKey
+import com.pokerlanka.mixora.constants.ShowHistoryPlaylistKey
 import com.pokerlanka.mixora.constants.ShowLikedPlaylistKey
 import com.pokerlanka.mixora.constants.ShowTopPlaylistKey
 import com.pokerlanka.mixora.constants.ShowUploadedPlaylistKey
@@ -220,6 +222,19 @@ fun LibraryMixScreen(
     val (showTop) = rememberPreference(ShowTopPlaylistKey, true)
     val (showCached) = rememberPreference(ShowCachedPlaylistKey, true)
     val (showUploaded) = rememberPreference(ShowUploadedPlaylistKey, true)
+    val (showHistory) = rememberPreference(ShowHistoryPlaylistKey, true)
+
+    val eventCount by LocalDatabase.current.eventCount().collectAsStateWithLifecycle(initialValue = 0)
+    val historyPlaylist =
+        Playlist(
+            playlist =
+                PlaylistEntity(
+                    id = UUID.randomUUID().toString(),
+                    name = stringResource(R.string.history),
+                ),
+            songCount = eventCount,
+            songThumbnails = emptyList(),
+        )
     
     val showLikedPlaylist = showLiked && matchesNormalizedQuery(normalizedQuery, likedPlaylist.playlist.name)
     val showDownloadedPlaylist =
@@ -228,6 +243,7 @@ fun LibraryMixScreen(
     val showUploadedPlaylists =
         showUploaded && matchesNormalizedQuery(normalizedQuery, uploadedPlaylist.playlist.name)
     val showCachedPlaylists = showCached && matchesNormalizedQuery(normalizedQuery, cachedPlaylist.playlist.name)
+    val showHistoryPlaylist = showHistory && matchesNormalizedQuery(normalizedQuery, historyPlaylist.playlist.name)
 
 
     val albums = viewModel.albums.collectAsStateWithLifecycle()
@@ -554,6 +570,24 @@ fun LibraryMixScreen(
                                         .fillMaxWidth()
                                         .clickable {
                                             navController.navigate("auto_playlist/uploaded")
+                                        }.animateItem(),
+                            )
+                        }
+                    }
+
+                    if (showHistoryPlaylist) {
+                        item(
+                            key = "historyPlaylist",
+                            contentType = { CONTENT_TYPE_PLAYLIST },
+                        ) {
+                            PlaylistListItem(
+                                playlist = historyPlaylist,
+                                autoPlaylist = true,
+                                modifier =
+                                    Modifier
+                                        .fillMaxWidth()
+                                        .clickable {
+                                            navController.navigate("history")
                                         }.animateItem(),
                             )
                         }
@@ -895,6 +929,25 @@ fun LibraryMixScreen(
                                         .fillMaxWidth()
                                         .clickable {
                                             navController.navigate("auto_playlist/uploaded")
+                                        }.animateItem(),
+                            )
+                        }
+                    }
+
+                    if (showHistoryPlaylist) {
+                        item(
+                            key = "historyPlaylist",
+                            contentType = { CONTENT_TYPE_PLAYLIST },
+                        ) {
+                            PlaylistGridItem(
+                                playlist = historyPlaylist,
+                                fillMaxWidth = true,
+                                autoPlaylist = true,
+                                modifier =
+                                    Modifier
+                                        .fillMaxWidth()
+                                        .clickable {
+                                            navController.navigate("history")
                                         }.animateItem(),
                             )
                         }

@@ -72,7 +72,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.produceState
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.pokerlanka.innertube.models.MediaInfo
+import com.pokerlanka.mixora.ui.utils.MediaDateCache
+import com.pokerlanka.mixora.ui.utils.formatMediaDate
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -1040,6 +1044,15 @@ fun BottomSheetPlayer(
         },
     ) {
         val controlsContent: @Composable ColumnScope.(MediaMetadata) -> Unit = { mediaMetadata ->
+            val mediaInfo by produceState<MediaInfo?>(initialValue = null, mediaMetadata.id) {
+                value = MediaDateCache.getMediaInfo(mediaMetadata.id)
+            }
+            val mediaDate = formatMediaDate(
+                uploadDate = mediaInfo?.uploadDate,
+                relativeDate = mediaInfo?.relativeDate,
+                year = currentSong?.song?.year,
+            )
+
             val playPauseRoundness by animateDpAsState(
                 targetValue = if (isPlaying) 24.dp else 36.dp,
                 animationSpec = tween(durationMillis = 90, easing = LinearEasing),
@@ -1222,6 +1235,20 @@ fun BottomSheetPlayer(
                                 )
                             }
                         }
+                    }
+
+                    if (mediaDate != null) {
+                        Spacer(modifier = Modifier.height(2.dp))
+                        Text(
+                            text = mediaDate.fullText,
+                            style = MaterialTheme.typography.bodySmall.copy(
+                                color = TextBackgroundColor.copy(alpha = 0.7f),
+                                fontSize = 12.sp,
+                            ),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.basicMarquee(iterations = 1, initialDelayMillis = 3000, velocity = 30.dp),
+                        )
                     }
                 }
 

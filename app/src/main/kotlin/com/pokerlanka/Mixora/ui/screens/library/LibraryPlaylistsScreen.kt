@@ -62,11 +62,13 @@ import com.pokerlanka.mixora.constants.CONTENT_TYPE_PLAYLIST
 import com.pokerlanka.mixora.constants.InnerTubeCookieKey
 import com.pokerlanka.mixora.constants.LibraryViewType
 import com.pokerlanka.mixora.constants.PlaylistSortDescendingKey
+import com.pokerlanka.mixora.LocalDatabase
 import com.pokerlanka.mixora.constants.PlaylistSortType
 import com.pokerlanka.mixora.constants.PlaylistSortTypeKey
 import com.pokerlanka.mixora.constants.PlaylistViewTypeKey
 import com.pokerlanka.mixora.constants.ShowCachedPlaylistKey
 import com.pokerlanka.mixora.constants.ShowDownloadedPlaylistKey
+import com.pokerlanka.mixora.constants.ShowHistoryPlaylistKey
 import com.pokerlanka.mixora.constants.ShowLikedPlaylistKey
 import com.pokerlanka.mixora.constants.ShowTopPlaylistKey
 import com.pokerlanka.mixora.constants.ShowUploadedPlaylistKey
@@ -197,6 +199,20 @@ fun LibraryPlaylistsScreen(
     val (showTop) = rememberPreference(ShowTopPlaylistKey, true)
     val (showUploaded) = rememberPreference(ShowUploadedPlaylistKey, true)
     val (showCached) = rememberPreference(ShowCachedPlaylistKey, true)
+    val (showHistory) = rememberPreference(ShowHistoryPlaylistKey, true)
+
+    val eventCount by LocalDatabase.current.eventCount().collectAsStateWithLifecycle(initialValue = 0)
+    val historyPlaylist =
+        Playlist(
+            playlist =
+                PlaylistEntity(
+                    id = UUID.randomUUID().toString(),
+                    name = stringResource(R.string.history),
+                ),
+            songCount = eventCount,
+            songThumbnails = emptyList(),
+        )
+
     val showLikedPlaylist = showLiked && matchesNormalizedQuery(normalizedQuery, likedPlaylist.playlist.name)
     val showDownloadedPlaylist =
         showDownloaded && matchesNormalizedQuery(normalizedQuery, downloadPlaylist.playlist.name)
@@ -204,6 +220,7 @@ fun LibraryPlaylistsScreen(
     val showTopPlaylists = showTop && matchesNormalizedQuery(normalizedQuery, topPlaylist.playlist.name)
     val showUploadedPlaylists =
         showUploaded && matchesNormalizedQuery(normalizedQuery, uploadedPlaylist.playlist.name)
+    val showHistoryPlaylist = showHistory && matchesNormalizedQuery(normalizedQuery, historyPlaylist.playlist.name)
 
     val visibleResults = remember(
         filteredPlaylists,
@@ -212,6 +229,7 @@ fun LibraryPlaylistsScreen(
         showCachedPlaylists,
         showTopPlaylists,
         showUploadedPlaylists,
+        showHistoryPlaylist,
         topSize,
     ) {
         buildList {
@@ -262,6 +280,16 @@ fun LibraryPlaylistsScreen(
                         playlist = uploadedPlaylist,
                         autoPlaylist = true,
                         route = "auto_playlist/uploaded",
+                    ),
+                )
+            }
+            if (showHistoryPlaylist) {
+                add(
+                    VisiblePlaylistItem(
+                        key = "historyPlaylist",
+                        playlist = historyPlaylist,
+                        autoPlaylist = true,
+                        route = "history",
                     ),
                 )
             }
