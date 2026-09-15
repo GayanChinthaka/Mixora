@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Mixora Project (C) 2026
  * Author : Gayan Chinthaka
  * Company: Pokerlanka
@@ -10,7 +10,7 @@ import android.content.Context
 import com.pokerlanka.innertube.YouTube
 
 object YouTubeSubtitleLyricsProvider : LyricsProvider {
-    override val name = "YouTube Subtitle"
+    override val name = "YouTubeSubtitle"
 
     override fun isEnabled(context: Context) = true
 

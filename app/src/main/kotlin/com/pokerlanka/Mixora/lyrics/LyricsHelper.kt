@@ -23,6 +23,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -194,18 +195,24 @@ constructor(
             }
 
             val result = coroutineScope {
-                val completionSignals = List(enabledProviders.size) { CompletableDeferred<Unit>() }
+                val startSignals = List(enabledProviders.size) { CompletableDeferred<Unit>() }
+                startSignals[0].complete(Unit)
 
                 val attempts = enabledProviders.mapIndexed { index, provider ->
                     provider to async {
-                        // Staggered start: wait until the preceding provider finishes (error/not found)
-                        // OR until PROVIDER_STAGGER_MS elapses, whichever comes first.
-                        if (index > 0) {
-                            withTimeoutOrNull(PROVIDER_STAGGER_MS) {
-                                completionSignals[index - 1].await()
-                            }
-                        }
+                        // Wait until our turn: either previous provider finished (error/not found)
+                        // OR PROVIDER_STAGGER_MS elapsed while previous was still running.
+                        startSignals[index].await()
                         Timber.tag(TAG).d("Trying provider: ${provider.name}")
+
+                        // Stagger the next provider after PROVIDER_STAGGER_MS if we are still running
+                        val nextTriggerJob = if (index + 1 < enabledProviders.size) {
+                            launch {
+                                delay(PROVIDER_STAGGER_MS)
+                                startSignals[index + 1].complete(Unit)
+                            }
+                        } else null
+
                         try {
                             withTimeoutOrNull(PER_PROVIDER_TIMEOUT_MS) {
                                 provider.getLyrics(
@@ -223,7 +230,10 @@ constructor(
                             Timber.tag(TAG).w("${provider.name} threw: ${e.message}")
                             null
                         } finally {
-                            completionSignals[index].complete(Unit)
+                            nextTriggerJob?.cancel()
+                            if (index + 1 < enabledProviders.size) {
+                                startSignals[index + 1].complete(Unit)
+                            }
                         }
                     }
                 }
@@ -258,6 +268,9 @@ constructor(
 
             if (result.lyrics != LYRICS_NOT_FOUND) {
                 cache.put(mediaMetadata.id, listOf(LyricsResult(result.provider, result.lyrics)))
+            } else {
+                // Cache negative result in session cache to prevent infinite refetching on every UI visit
+                cache.put(mediaMetadata.id, listOf(LyricsResult(PROVIDER_NONE, LYRICS_NOT_FOUND)))
             }
             return result
         } finally {

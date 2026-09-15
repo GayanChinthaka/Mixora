@@ -173,7 +173,7 @@ fun LyricsMenu(
         val providerDisplayNames = mapOf(
             "LrcLib" to "LrcLib",
             "Paxsenix" to "Paxsenix",
-            "YouTube" to "YouTube",
+            "YouTube" to "YouTube Music",
             "YouTubeSubtitle" to "YouTube Subtitles",
             "SinhalaLyrics" to "Sinhala Lyrics",
             "AiLyrics" to "AI Lyrics",

@@ -28,7 +28,7 @@ import java.util.Locale
 
 object SinhalaLyricsProvider : LyricsProvider {
     private const val TAG = "SinhalaLyricsProvider"
-    override val name = "Sinhala Lyrics"
+    override val name = "SinhalaLyrics"
 
     private val httpClient by lazy {
         HttpClient(CIO) {
@@ -53,19 +53,26 @@ object SinhalaLyricsProvider : LyricsProvider {
         album: String?,
     ): Result<String> = withContext(Dispatchers.IO) {
         try {
-            val titleCandidates = LyricsUtils.extractSearchCandidateTitles(title, artist)
-            Timber.tag(TAG).d("Searching Sinhala lyrics for titles: $titleCandidates, artist: '$artist'")
+            val isSinhalaContent = LyricsUtils.hasSinhalaScript(title) ||
+                LyricsUtils.hasSinhalaScript(artist) ||
+                title.contains("sinhala", ignoreCase = true) ||
+                artist.contains("sinhala", ignoreCase = true)
 
-            // 1. Try direct slug matching on lyrics-lk.com
+            val titleCandidates = LyricsUtils.extractSearchCandidateTitles(title, artist)
+            Timber.tag(TAG).d("Searching Sinhala lyrics for titles: $titleCandidates, artist: '$artist' (isSinhala=$isSinhalaContent)")
+
+            // 1. Try direct slug matching on lyrics-lk.com (fast HTTP GET)
             val directResult = tryDirectSlugLookup(titleCandidates, artist)
             if (directResult != null) {
                 return@withContext Result.success(directResult)
             }
 
-            // 2. Try DuckDuckGo search fallback
-            val searchResult = trySearchFallback(titleCandidates, artist)
-            if (searchResult != null) {
-                return@withContext Result.success(searchResult)
+            // 2. Try DuckDuckGo search fallback ONLY if track has Sinhala content
+            if (isSinhalaContent) {
+                val searchResult = trySearchFallback(titleCandidates, artist)
+                if (searchResult != null) {
+                    return@withContext Result.success(searchResult)
+                }
             }
 
             Result.failure(IllegalStateException("No Sinhala lyrics found"))
@@ -191,7 +198,12 @@ object SinhalaLyricsProvider : LyricsProvider {
     }
 
     private fun slugify(input: String): String {
-        return input.lowercase(Locale.ROOT)
+        val converted = if (LyricsUtils.hasSinhalaScript(input)) {
+            LyricsUtils.transliterateSinhalaToLatin(input)
+        } else {
+            input
+        }
+        return converted.lowercase(Locale.ROOT)
             .replace(Regex("""[^a-z0-9]+"""), "-")
             .trim('-')
     }

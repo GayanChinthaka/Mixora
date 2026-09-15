@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Mixora Project (C) 2026
  * Author : Gayan Chinthaka
  * Company: Pokerlanka
@@ -14,7 +14,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 object YouTubeLyricsProvider : LyricsProvider {
-    override val name = "YouTube Music"
+    override val name = "YouTube"
 
     override fun isEnabled(context: Context) = true
 

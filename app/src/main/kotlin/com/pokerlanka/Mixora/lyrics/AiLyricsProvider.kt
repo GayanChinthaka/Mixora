@@ -26,10 +26,10 @@ import timber.log.Timber
 
 object AiLyricsProvider : LyricsProvider {
     private const val TAG = "AiLyricsProvider"
-    override val name = "AI Lyrics"
+    override val name = "AiLyrics"
 
     override fun isEnabled(context: Context): Boolean {
-        val enabled = context.dataStore[EnableAiLyricsKey] ?: true
+        val enabled = context.dataStore[EnableAiLyricsKey] ?: false
         val provider = context.dataStore[AiProviderKey].toEnum(AiProvider.NONE)
         val apiKey = context.dataStore[AiApiKeyKey].orEmpty()
         return enabled && provider != AiProvider.NONE && apiKey.isNotBlank()

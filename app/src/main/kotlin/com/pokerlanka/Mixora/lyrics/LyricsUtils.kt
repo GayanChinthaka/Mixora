@@ -104,6 +104,57 @@ object LyricsUtils {
     fun hasSinhalaScript(text: String): Boolean =
         text.any { it.code in 0x0D80..0x0DFF }
 
+    private val SINHALA_CONSONANTS = mapOf(
+        '\u0D9A' to "k", '\u0D9B' to "kh", '\u0D9C' to "g", '\u0D9D' to "gh", '\u0D9E' to "ng", '\u0D9F' to "ng",
+        '\u0DA0' to "ch", '\u0DA1' to "chh", '\u0DA2' to "j", '\u0DA3' to "jh", '\u0DA4' to "ny", '\u0DA5' to "jny", '\u0DA6' to "ndj",
+        '\u0DA7' to "t", '\u0DA8' to "th", '\u0DA9' to "d", '\u0DAA' to "dh", '\u0DAB' to "n", '\u0DAC' to "nd",
+        '\u0DAD' to "th", '\u0DAE' to "th", '\u0DAF' to "d", '\u0DB0' to "dh", '\u0DB1' to "n", '\u0DB3' to "nd",
+        '\u0DB4' to "p", '\u0DB5' to "ph", '\u0DB6' to "b", '\u0DB7' to "bh", '\u0DB8' to "m", '\u0DB9' to "mb",
+        '\u0DBA' to "y", '\u0DBB' to "r", '\u0DBD' to "l", '\u0DC0' to "w",
+        '\u0DC1' to "sh", '\u0DC2' to "sh", '\u0DC3' to "s", '\u0DC4' to "h", '\u0DC5' to "l", '\u0DC6' to "f",
+    )
+
+    private val SINHALA_VOWEL_SIGNS = mapOf(
+        '\u0DCF' to "a", '\u0DD0' to "a", '\u0DD1' to "aa", '\u0DD2' to "i", '\u0DD3' to "ee",
+        '\u0DD4' to "u", '\u0DD6' to "oo", '\u0DD8' to "ru", '\u0DD9' to "e", '\u0DDA' to "e",
+        '\u0DDB' to "ai", '\u0DDC' to "o", '\u0DDD' to "o", '\u0DDE' to "au", '\u0DCA' to "",
+    )
+
+    private val SINHALA_INDEP_VOWELS = mapOf(
+        '\u0D85' to "a", '\u0D86' to "aa", '\u0D87' to "ae", '\u0D88' to "aae", '\u0D89' to "i",
+        '\u0D8A' to "ee", '\u0D8B' to "u", '\u0D8C' to "oo", '\u0D8F' to "e", '\u0D90' to "e",
+        '\u0D91' to "e", '\u0D92' to "e", '\u0D93' to "ai", '\u0D94' to "o", '\u0D95' to "o", '\u0D96' to "au",
+    )
+
+    fun transliterateSinhalaToLatin(input: String): String {
+        val out = StringBuilder()
+        var i = 0
+        while (i < input.length) {
+            val c = input[i]
+            val indep = SINHALA_INDEP_VOWELS[c]
+            if (indep != null) {
+                out.append(indep)
+                i++
+            } else {
+                val cons = SINHALA_CONSONANTS[c]
+                if (cons != null) {
+                    i++
+                    if (i < input.length && SINHALA_VOWEL_SIGNS.containsKey(input[i])) {
+                        val vs = SINHALA_VOWEL_SIGNS[input[i]].orEmpty()
+                        out.append(cons).append(vs)
+                        i++
+                    } else {
+                        out.append(cons).append("a")
+                    }
+                } else {
+                    out.append(c)
+                    i++
+                }
+            }
+        }
+        return out.toString()
+    }
+
     /**
      * Extracts candidate search titles from a potentially bilingual or bracketed title.
      * E.g. "සරාගයේ (Saragaye)" -> ["සරාගයේ", "Saragaye"]
@@ -113,6 +164,12 @@ object LyricsUtils {
         val (cleanedTitle, _) = cleanTitleAndArtist(rawTitle, rawArtist)
         if (cleanedTitle.isNotBlank()) {
             candidates.add(cleanedTitle)
+            if (hasSinhalaScript(cleanedTitle)) {
+                val transliterated = transliterateSinhalaToLatin(cleanedTitle).trim()
+                if (transliterated.isNotBlank()) {
+                    candidates.add(transliterated)
+                }
+            }
         }
 
         val bracketMatch = Regex("""\(([^)]+)\)""").find(rawTitle)
@@ -123,9 +180,21 @@ object LyricsUtils {
             val (cleanedOutside, _) = cleanTitleAndArtist(outside, rawArtist)
             if (cleanedInside.isNotBlank() && cleanedInside.length > 2 && !candidates.contains(cleanedInside)) {
                 candidates.add(cleanedInside)
+                if (hasSinhalaScript(cleanedInside)) {
+                    val transliterated = transliterateSinhalaToLatin(cleanedInside).trim()
+                    if (transliterated.isNotBlank() && !candidates.contains(transliterated)) {
+                        candidates.add(transliterated)
+                    }
+                }
             }
             if (cleanedOutside.isNotBlank() && cleanedOutside.length > 2 && !candidates.contains(cleanedOutside)) {
                 candidates.add(cleanedOutside)
+                if (hasSinhalaScript(cleanedOutside)) {
+                    val transliterated = transliterateSinhalaToLatin(cleanedOutside).trim()
+                    if (transliterated.isNotBlank() && !candidates.contains(transliterated)) {
+                        candidates.add(transliterated)
+                    }
+                }
             }
         }
         return candidates.distinct()

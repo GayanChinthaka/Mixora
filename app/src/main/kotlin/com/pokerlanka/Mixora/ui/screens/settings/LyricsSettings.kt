@@ -95,7 +95,7 @@ fun LyricsSettings(
     val (enableLrclib, onEnableLrclibChange) = rememberPreference(key = EnableLrcLibKey, defaultValue = true)
     val (enablePaxsenix, onEnablePaxsenixChange) = rememberPreference(key = EnablePaxsenixKey, defaultValue = true)
     val (enableSinhalaLyrics, onEnableSinhalaLyricsChange) = rememberPreference(key = EnableSinhalaLyricsKey, defaultValue = true)
-    val (enableAiLyrics, onEnableAiLyricsChange) = rememberPreference(key = EnableAiLyricsKey, defaultValue = true)
+    val (enableAiLyrics, onEnableAiLyricsChange) = rememberPreference(key = EnableAiLyricsKey, defaultValue = false)
     val (lyricsProviderOrder, onLyricsProviderOrderChange) = rememberPreference(
         key = LyricsProviderOrderKey,
         defaultValue = LyricsProviderRegistry.serializeProviderOrder(LyricsProviderRegistry.getDefaultProviderOrder())
@@ -152,7 +152,7 @@ fun LyricsSettings(
             "Paxsenix" to "Paxsenix",
             "LrcLib" to "LrcLib",
             "YouTubeSubtitle" to "YouTube Subtitles",
-            "YouTube" to "YouTube",
+            "YouTube" to "YouTube Music",
             "SinhalaLyrics" to "Sinhala Lyrics",
             "AiLyrics" to "AI Lyrics",
         )
