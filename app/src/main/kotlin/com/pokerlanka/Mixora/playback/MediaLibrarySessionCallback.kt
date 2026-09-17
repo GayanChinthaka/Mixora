@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Mixora Project (C) 2026
  * Author : Gayan Chinthaka
  * Company: Pokerlanka
@@ -151,7 +151,7 @@ constructor(
                         MediaMetadata
                             .Builder()
                             .setIsPlayable(false)
-                            .setIsBrowsable(false)
+                            .setIsBrowsable(true)
                             .setMediaType(MediaMetadata.MEDIA_TYPE_FOLDER_MIXED)
                             .build(),
                     ).build(),
