@@ -76,9 +76,9 @@ fun IntegrationScreen(
             title = stringResource(R.string.lyrics_services),
             items = listOf(
                 IntegrationCardItem(
-                    icon = painterResource(R.drawable.lyrics),
-                    title = { Text("AI Lyrics & Romanization") },
-                    description = { Text("Gemini, ChatGPT, or OpenRouter fallback for missing lyrics") },
+                    icon = painterResource(R.drawable.language_korean_latin),
+                    title = { Text("AI Romanization") },
+                    description = { Text("Gemini, ChatGPT, or OpenRouter for romanizing lyrics") },
                     trailingContent = {
                         Badge(
                             containerColor = if (isAiConnected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.5f),

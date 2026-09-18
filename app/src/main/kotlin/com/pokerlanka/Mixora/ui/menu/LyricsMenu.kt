@@ -176,7 +176,6 @@ fun LyricsMenu(
             "YouTube" to "YouTube Music",
             "YouTubeSubtitle" to "YouTube Subtitles",
             "SinhalaLyrics" to "Sinhala Lyrics",
-            "AiLyrics" to "AI Lyrics",
         )
 
         AlertDialog(

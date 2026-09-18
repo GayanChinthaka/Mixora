@@ -13,7 +13,6 @@ object LyricsProviderRegistry {
         "YouTubeSubtitle" to YouTubeSubtitleLyricsProvider,
         "YouTube" to YouTubeLyricsProvider,
         "SinhalaLyrics" to SinhalaLyricsProvider,
-        "AiLyrics" to AiLyricsProvider,
     )
 
     val providerNames = providerMap.keys.toList()
@@ -25,7 +24,6 @@ object LyricsProviderRegistry {
         // Alternate name matching
         return when (name.lowercase().replace(" ", "")) {
             "sinhalalyrics", "sinhala" -> SinhalaLyricsProvider
-            "ailyrics", "ai", "aifallback" -> AiLyricsProvider
             "youtube", "youtubemusic" -> YouTubeLyricsProvider
             "youtubesubtitle", "youtubesubtitles" -> YouTubeSubtitleLyricsProvider
             "lrclib" -> LrcLibLyricsProvider
