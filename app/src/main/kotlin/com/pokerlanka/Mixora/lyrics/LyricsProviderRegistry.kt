@@ -12,7 +12,7 @@ object LyricsProviderRegistry {
         "Paxsenix" to PaxsenixLyricsProvider,
         "YouTubeSubtitle" to YouTubeSubtitleLyricsProvider,
         "YouTube" to YouTubeLyricsProvider,
-        "SinhalaLyrics" to SinhalaLyricsProvider,
+        "DuckDuckGo" to DuckDuckGoLyricsProvider,
     )
 
     val providerNames = providerMap.keys.toList()
@@ -23,7 +23,7 @@ object LyricsProviderRegistry {
         providerMap.entries.firstOrNull { it.key.equals(name, ignoreCase = true) }?.value?.let { return it }
         // Alternate name matching
         return when (name.lowercase().replace(" ", "")) {
-            "sinhalalyrics", "sinhala" -> SinhalaLyricsProvider
+            "duckduckgo", "ddg", "web", "sinhalalyrics", "sinhala" -> DuckDuckGoLyricsProvider
             "youtube", "youtubemusic" -> YouTubeLyricsProvider
             "youtubesubtitle", "youtubesubtitles" -> YouTubeSubtitleLyricsProvider
             "lrclib" -> LrcLibLyricsProvider
@@ -43,6 +43,7 @@ object LyricsProviderRegistry {
         val saved = orderString
             .split(",")
             .map { it.trim() }
+            .map { if (it == "SinhalaLyrics") "DuckDuckGo" else it }
             .filter { it in providerNames }
         val missing = defaults.filter { it !in saved }
         return (saved + missing).ifEmpty { defaults }
@@ -57,7 +58,7 @@ object LyricsProviderRegistry {
         "Paxsenix",
         "YouTube",
         "YouTubeSubtitle",
-        "SinhalaLyrics",
+        "DuckDuckGo",
     )
 
     fun getOrderedProviders(orderString: String): List<LyricsProvider> {

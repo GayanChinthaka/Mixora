@@ -175,7 +175,7 @@ fun LyricsMenu(
             "Paxsenix" to "Paxsenix",
             "YouTube" to "YouTube Music",
             "YouTubeSubtitle" to "YouTube Subtitles",
-            "SinhalaLyrics" to "Sinhala Lyrics",
+            "DuckDuckGo" to "DuckDuckGo",
         )
 
         AlertDialog(

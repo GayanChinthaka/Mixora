@@ -56,7 +56,7 @@ import com.pokerlanka.mixora.constants.AiRomanizationEnabledKey
 import com.pokerlanka.mixora.constants.AiSelectedModelKey
 import com.pokerlanka.mixora.constants.EnableLrcLibKey
 import com.pokerlanka.mixora.constants.EnablePaxsenixKey
-import com.pokerlanka.mixora.constants.EnableSinhalaLyricsKey
+import com.pokerlanka.mixora.constants.EnableDuckDuckGoKey
 import com.pokerlanka.mixora.constants.LyricsBackgroundStyle
 import com.pokerlanka.mixora.constants.LyricsBackgroundStyleKey
 import com.pokerlanka.mixora.constants.LyricsClickKey
@@ -93,7 +93,7 @@ fun LyricsSettings(
 ) {
     val (enableLrclib, onEnableLrclibChange) = rememberPreference(key = EnableLrcLibKey, defaultValue = true)
     val (enablePaxsenix, onEnablePaxsenixChange) = rememberPreference(key = EnablePaxsenixKey, defaultValue = true)
-    val (enableSinhalaLyrics, onEnableSinhalaLyricsChange) = rememberPreference(key = EnableSinhalaLyricsKey, defaultValue = true)
+    val (enableDuckDuckGo, onEnableDuckDuckGoChange) = rememberPreference(key = EnableDuckDuckGoKey, defaultValue = true)
     val (lyricsProviderOrder, onLyricsProviderOrderChange) = rememberPreference(
         key = LyricsProviderOrderKey,
         defaultValue = LyricsProviderRegistry.serializeProviderOrder(LyricsProviderRegistry.getDefaultProviderOrder())
@@ -151,7 +151,7 @@ fun LyricsSettings(
             "LrcLib" to "LrcLib",
             "YouTubeSubtitle" to "YouTube Subtitles",
             "YouTube" to "YouTube Music",
-            "SinhalaLyrics" to "Sinhala Lyrics",
+            "DuckDuckGo" to "DuckDuckGo",
         )
 
     if (showRomanizationSetupDialog) {
@@ -170,13 +170,13 @@ fun LyricsSettings(
         val normalizedOrder = currentOrder.filter { it in defaultOrder } +
             defaultOrder.filter { it !in currentOrder }
 
-        val toggleableProviders = listOf("LrcLib", "Paxsenix", "SinhalaLyrics")
+        val toggleableProviders = listOf("LrcLib", "Paxsenix", "DuckDuckGo")
 
         val isProviderEnabled: (String) -> Boolean = { id ->
             when (id) {
                 "Paxsenix" -> enablePaxsenix
                 "LrcLib" -> enableLrclib
-                "SinhalaLyrics" -> enableSinhalaLyrics
+                "DuckDuckGo" -> enableDuckDuckGo
                 else -> true
             }
         }
@@ -184,7 +184,7 @@ fun LyricsSettings(
             when (id) {
                 "Paxsenix" -> onEnablePaxsenixChange(value)
                 "LrcLib" -> onEnableLrclibChange(value)
-                "SinhalaLyrics" -> onEnableSinhalaLyricsChange(value)
+                "DuckDuckGo" -> onEnableDuckDuckGoChange(value)
                 else -> Unit
             }
         }
@@ -193,7 +193,7 @@ fun LyricsSettings(
             mapOf(
                 "Paxsenix" to stringResource(R.string.enable_paxsenix_desc),
                 "LrcLib" to stringResource(R.string.enable_lrclib_desc),
-                "SinhalaLyrics" to stringResource(R.string.enable_sinhala_lyrics_desc),
+                "DuckDuckGo" to stringResource(R.string.enable_duckduckgo_desc),
             )
         val lyricsIcon = painterResource(R.drawable.lyrics)
         val draggableItems = remember { mutableStateListOf<DraggableLyricsProviderItem>() }
@@ -202,7 +202,7 @@ fun LyricsSettings(
             normalizedOrder,
             enablePaxsenix,
             enableLrclib,
-            enableSinhalaLyrics,
+            enableDuckDuckGo,
             aiConfigured,
         ) {
             val ordered = normalizedOrder.filter { it in toggleableProviders } +

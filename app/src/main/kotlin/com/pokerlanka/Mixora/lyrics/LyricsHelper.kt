@@ -215,7 +215,7 @@ constructor(
 
                         try {
                             withTimeoutOrNull(PER_PROVIDER_TIMEOUT_MS) {
-                                provider.getLyrics(
+                                provider.getLyricsWithSource(
                                     context,
                                     mediaMetadata.id,
                                     cleanedTitle,
@@ -245,12 +245,14 @@ constructor(
                     for ((provider, attempt) in attempts) {
                         setSearchingProvider(mediaMetadata.id, provider.name)
                         val providerResult = attempt.await()
-                        val lyrics = providerResult?.getOrNull()
+                        val lyricsWithSource = providerResult?.getOrNull()
+                        val lyrics = lyricsWithSource?.lyrics
+                        val source = lyricsWithSource?.sourceName ?: provider.name
                         if (providerResult != null && providerResult.isSuccess && !lyrics.isNullOrBlank()) {
-                            Timber.tag(TAG).i("Got lyrics from ${provider.name}")
+                            Timber.tag(TAG).i("Got lyrics from $source")
                             return@coroutineScope LyricsWithProvider(
                                 LyricsUtils.filterLyricsCreditLines(lyrics),
-                                provider.name,
+                                source,
                             )
                         }
                         val errorMsg = providerResult?.exceptionOrNull()?.message ?: "timeout or not found"
@@ -307,7 +309,7 @@ constructor(
 
             val providerResult = try {
                 withTimeoutOrNull(SINGLE_PROVIDER_TIMEOUT_MS) {
-                    provider.getLyrics(
+                    provider.getLyricsWithSource(
                         context,
                         mediaMetadata.id,
                         cleanedTitle,
@@ -324,12 +326,14 @@ constructor(
             }
 
             if (providerResult != null && providerResult.isSuccess) {
-                val rawLyrics = providerResult.getOrNull()
+                val lyricsWithSource = providerResult.getOrNull()
+                val rawLyrics = lyricsWithSource?.lyrics
+                val source = lyricsWithSource?.sourceName ?: provider.name
                 if (!rawLyrics.isNullOrBlank()) {
-                    Timber.tag(TAG).i("Got lyrics from ${provider.name}")
+                    Timber.tag(TAG).i("Got lyrics from $source")
                     val filtered = LyricsUtils.filterLyricsCreditLines(rawLyrics)
-                    cache.put(mediaMetadata.id, listOf(LyricsResult(provider.name, filtered)))
-                    return LyricsWithProvider(filtered, provider.name)
+                    cache.put(mediaMetadata.id, listOf(LyricsResult(source, filtered)))
+                    return LyricsWithProvider(filtered, source)
                 }
             }
             Timber.tag(TAG).w("No lyrics found from ${provider.name}")
