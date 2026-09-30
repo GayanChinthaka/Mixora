@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Mixora Project (C) 2026
  * Author : Gayan Chinthaka
  * Company: Pokerlanka
@@ -334,6 +334,9 @@ fun TopPlaylistScreen(
                                             menuState.show {
                                                 SongMenu(
                                                     originalSong = song,
+                                                    onRemoveFromPlaylist = {
+                                                        viewModel.removeSongFromTop(song.id)
+                                                    },
                                                     onDismiss = menuState::dismiss,
                                                 )
                                             }
@@ -499,6 +502,9 @@ fun TopPlaylistScreen(
                                     songSelection = filteredSongs.filter { it.id in selection },
                                     onDismiss = menuState::dismiss,
                                     clearAction = onExitSelectionMode,
+                                    onRemoveFromPlaylist = {
+                                        viewModel.removeSongsFromTop(selection.toList())
+                                    },
                                 )
                             }
                         },

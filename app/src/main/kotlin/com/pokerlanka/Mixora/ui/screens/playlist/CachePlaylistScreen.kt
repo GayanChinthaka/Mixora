@@ -279,6 +279,9 @@ fun CachePlaylistScreen(
                                     menuState.show {
                                         SongMenu(
                                             originalSong = song,
+                                            onRemoveFromPlaylist = {
+                                                viewModel.removeSongFromCache(song.id)
+                                            },
                                             onDismiss = menuState::dismiss,
                                             isFromCache = true,
                                         )
@@ -443,7 +446,10 @@ fun CachePlaylistScreen(
                                 SelectionSongMenu(
                                     songSelection = filteredSongs.filter { it.id in selection },
                                     onDismiss = menuState::dismiss,
-                                    clearAction = onExitSelectionMode
+                                    clearAction = onExitSelectionMode,
+                                    onRemoveFromPlaylist = {
+                                        viewModel.removeSongsFromCache(selection.toList())
+                                    },
                                 )
                             }
                         }

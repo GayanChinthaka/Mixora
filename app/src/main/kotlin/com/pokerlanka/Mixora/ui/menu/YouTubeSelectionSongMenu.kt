@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Mixora Project (C) 2026
  * Author : Gayan Chinthaka
  * Company: Pokerlanka
@@ -59,6 +59,7 @@ fun YouTubeSelectionSongMenu(
     songSelection: List<SongItem>,
     onDismiss: () -> Unit,
     clearAction: () -> Unit,
+    onRemoveFromPlaylist: (() -> Unit)? = null,
 ) {
     val context = LocalContext.current
     val database = LocalDatabase.current
@@ -320,6 +321,17 @@ fun YouTubeSelectionSongMenu(
                             onDismiss()
                         },
                     ),
+                    if (onRemoveFromPlaylist != null) {
+                        Material3MenuItemData(
+                            icon = { Icon(painterResource(R.drawable.delete), null) },
+                            title = { Text(stringResource(R.string.remove_from_playlist)) },
+                            onClick = {
+                                onRemoveFromPlaylist()
+                                clearAction()
+                                onDismiss()
+                            },
+                        )
+                    } else null,
                     when (downloadState) {
                         Download.STATE_COMPLETED -> {
                             Material3MenuItemData(

@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Mixora Project (C) 2026
  * Author : Gayan Chinthaka
  * Company: Pokerlanka
@@ -112,6 +112,7 @@ fun SongMenu(
     playlistBrowseId: String? = null,
     onDismiss: () -> Unit,
     isFromCache: Boolean = false,
+    onRemoveFromPlaylist: (() -> Unit)? = null,
 ) {
     val navController = LocalNavController.current
     val context = LocalContext.current
@@ -776,7 +777,23 @@ fun SongMenu(
                                 ),
                             )
                         }
-                        if (playlistSong != null) {
+                        if (onRemoveFromPlaylist != null) {
+                            add(
+                                Material3MenuItemData(
+                                    title = { Text(text = stringResource(R.string.remove_from_playlist)) },
+                                    icon = {
+                                        Icon(
+                                            painter = painterResource(R.drawable.delete),
+                                            contentDescription = null,
+                                        )
+                                    },
+                                    onClick = {
+                                        onRemoveFromPlaylist()
+                                        onDismiss()
+                                    },
+                                ),
+                            )
+                        } else if (playlistSong != null) {
                             add(
                                 Material3MenuItemData(
                                     title = { Text(text = stringResource(R.string.remove_from_playlist)) },

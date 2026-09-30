@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Mixora Project (C) 2026
  * Author : Gayan Chinthaka
  * Company: Pokerlanka
@@ -17,6 +17,7 @@ import com.pokerlanka.mixora.utils.dataStore
 import java.time.LocalDateTime
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -25,6 +26,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
@@ -32,7 +34,7 @@ class TopPlaylistViewModel
 @Inject
 constructor(
     @ApplicationContext context: Context,
-    database: MusicDatabase,
+    private val database: MusicDatabase,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
     val top = savedStateHandle.get<String>("top")!!
@@ -46,14 +48,26 @@ constructor(
             context.dataStore.data.map { it[HideVideoSongsKey] ?: false }.distinctUntilChanged()
         ) { period, hideVideoSongs -> period to hideVideoSongs }
             .flatMapLatest { (period, hideVideoSongs) ->
-                val now = LocalDateTime.now()
                 database.mostPlayedSongs(
                     fromTimeStamp = period.toLocalDateTime(),
                     limit = top.toInt(),
                     offset = 0,
-                    toTimeStamp = now
+                    toTimeStamp = null
                 ).map { songs ->
                     if (hideVideoSongs) songs.filter { !it.song.isVideo } else songs
                 }
             }.stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
+
+    fun removeSongFromTop(songId: String) {
+        viewModelScope.launch(Dispatchers.IO) {
+            database.removeSongFromTop(songId)
+        }
+    }
+
+    fun removeSongsFromTop(songIds: List<String>) {
+        viewModelScope.launch(Dispatchers.IO) {
+            database.removeSongsFromTop(songIds)
+        }
+    }
 }
+

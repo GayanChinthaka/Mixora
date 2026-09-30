@@ -78,6 +78,7 @@ fun SelectionSongMenu(
     clearAction: () -> Unit,
     songPosition: List<PlaylistSongMap>? = emptyList(),
     isUploadedPlaylist: Boolean = false,
+    onRemoveFromPlaylist: (() -> Unit)? = null,
 ) {
     val context = LocalContext.current
     val database = LocalDatabase.current
@@ -602,7 +603,24 @@ fun SelectionSongMenu(
                                 },
                             ),
                         )
-                        if (songPosition?.isNotEmpty() == true) {
+                        if (onRemoveFromPlaylist != null) {
+                            add(
+                                Material3MenuItemData(
+                                    title = { Text(text = stringResource(R.string.remove_from_playlist)) },
+                                    icon = {
+                                        Icon(
+                                            painter = painterResource(R.drawable.delete),
+                                            contentDescription = null,
+                                        )
+                                    },
+                                    onClick = {
+                                        onRemoveFromPlaylist()
+                                        clearAction()
+                                        onDismiss()
+                                    },
+                                ),
+                            )
+                        } else if (songPosition?.isNotEmpty() == true) {
                             add(
                                 Material3MenuItemData(
                                     title = { Text(text = stringResource(R.string.delete)) },

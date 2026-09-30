@@ -88,9 +88,6 @@ import com.pokerlanka.mixora.ui.component.CastButton
 import com.pokerlanka.mixora.utils.makeTimeString
 import com.pokerlanka.mixora.utils.rememberEnumPreference
 import com.pokerlanka.mixora.utils.rememberPreference
-import com.pokerlanka.innertube.models.MediaInfo
-import com.pokerlanka.mixora.ui.utils.MediaDateCache
-import com.pokerlanka.mixora.ui.utils.formatMediaDate
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -484,14 +481,6 @@ private fun ThumbnailItem(
     var rightAccumulatedSec by remember { mutableIntStateOf(0) }
     var rightResetJob by remember { mutableStateOf<Job?>(null) }
 
-    // Date metadata
-    val mediaInfo by produceState<MediaInfo?>(initialValue = null, item.mediaId) {
-        value = MediaDateCache.getMediaInfo(item.mediaId)
-    }
-    val mediaDate = formatMediaDate(
-        uploadDate = mediaInfo?.uploadDate,
-        relativeDate = mediaInfo?.relativeDate,
-    )
 
     val overlayColor = MaterialTheme.colorScheme.onSurface
 
@@ -529,37 +518,6 @@ private fun ThumbnailItem(
                 cropArtwork = cropArtwork
             )
 
-            // Date Badge at BottomStart
-            if (mediaDate != null) {
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.BottomStart)
-                        .padding(8.dp)
-                        .background(
-                            Color.Black.copy(alpha = 0.65f),
-                            RoundedCornerShape(8.dp)
-                        )
-                        .padding(horizontal = 8.dp, vertical = 4.dp)
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
-                    ) {
-                        Icon(
-                            painter = painterResource(R.drawable.calendar),
-                            contentDescription = null,
-                            tint = Color.White,
-                            modifier = Modifier.size(12.dp)
-                        )
-                        Text(
-                            text = mediaDate.dateText,
-                            color = Color.White,
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Medium
-                        )
-                    }
-                }
-            }
 
             // 3-Column Touch Layer with Flash Overlays
             CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {

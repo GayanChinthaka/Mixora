@@ -330,7 +330,13 @@ fun OnlinePlaylistScreen(
                                 } else {
                                     IconButton(onClick = {
                                         menuState.show {
-                                            YouTubeSongMenu(songItem, menuState::dismiss)
+                                            YouTubeSongMenu(
+                                                song = songItem,
+                                                onDismiss = menuState::dismiss,
+                                                onRemoveFromPlaylist = if (playlist.isEditable || dbPlaylist != null) {
+                                                    { viewModel.removeSong(songItem) }
+                                                } else null,
+                                            )
                                         }
                                     }) {
                                         Icon(painterResource(R.drawable.more_vert), null)
@@ -450,6 +456,15 @@ fun OnlinePlaylistScreen(
                                             .map { it.second },
                                     onDismiss = menuState::dismiss,
                                     clearAction = onExitSelectionMode,
+                                    onRemoveFromPlaylist = if (playlist?.isEditable == true || dbPlaylist != null) {
+                                        {
+                                            viewModel.removeSongs(
+                                                filteredSongs
+                                                    .filter { it.second.id in selection }
+                                                    .map { it.second }
+                                            )
+                                        }
+                                    } else null,
                                 )
                             }
                         },

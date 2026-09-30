@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Mixora Project (C) 2026
  * Author : Gayan Chinthaka
  * Company: Pokerlanka
@@ -16,6 +16,7 @@ import com.pokerlanka.mixora.constants.SongSortDescendingKey
 import com.pokerlanka.mixora.constants.SongSortType
 import com.pokerlanka.mixora.constants.SongSortTypeKey
 import com.pokerlanka.mixora.db.MusicDatabase
+import com.pokerlanka.mixora.db.entities.Song
 import com.pokerlanka.mixora.extensions.filterExplicit
 import com.pokerlanka.mixora.extensions.filterVideoSongs
 import com.pokerlanka.mixora.extensions.toEnum
@@ -84,6 +85,52 @@ constructor(
 
     fun syncUploadedSongs() {
         viewModelScope.launch(Dispatchers.IO) { syncUtils.syncUploadedSongs() }
+    }
+
+    fun removeSong(song: Song, context: Context) {
+        viewModelScope.launch(Dispatchers.IO) {
+            when (playlist) {
+                "liked" -> {
+                    val s = song.song.toggleLike()
+                    database.query { update(s) }
+                    syncUtils.likeSong(s)
+                }
+                "downloaded" -> {
+                    androidx.media3.exoplayer.offline.DownloadService.sendRemoveDownload(
+                        context,
+                        com.pokerlanka.mixora.playback.ExoDownloadService::class.java,
+                        song.song.id,
+                        false,
+                    )
+                }
+            }
+        }
+    }
+
+    fun removeSongs(songs: List<Song>, context: Context) {
+        viewModelScope.launch(Dispatchers.IO) {
+            when (playlist) {
+                "liked" -> {
+                    database.query {
+                        songs.forEach { song ->
+                            val s = song.song.toggleLike()
+                            update(s)
+                            syncUtils.likeSong(s)
+                        }
+                    }
+                }
+                "downloaded" -> {
+                    songs.forEach { song ->
+                        androidx.media3.exoplayer.offline.DownloadService.sendRemoveDownload(
+                            context,
+                            com.pokerlanka.mixora.playback.ExoDownloadService::class.java,
+                            song.song.id,
+                            false,
+                        )
+                    }
+                }
+            }
+        }
     }
 
     fun refresh() {

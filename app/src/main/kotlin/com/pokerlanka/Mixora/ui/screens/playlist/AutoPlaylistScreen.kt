@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Mixora Project (C) 2026
  * Author : Gayan Chinthaka
  * Company: Pokerlanka
@@ -616,6 +616,9 @@ fun AutoPlaylistScreen(
                                             menuState.show {
                                                 SongMenu(
                                                     originalSong = song,
+                                                    onRemoveFromPlaylist = if (playlistType != PlaylistType.UPLOADED) {
+                                                        { viewModel.removeSong(song, context) }
+                                                    } else null,
                                                     onDismiss = menuState::dismiss,
                                                 )
                                             }
@@ -841,6 +844,9 @@ fun AutoPlaylistScreen(
                                     onDismiss = menuState::dismiss,
                                     clearAction = onExitSelectionMode,
                                     isUploadedPlaylist = playlistType == PlaylistType.UPLOADED,
+                                    onRemoveFromPlaylist = if (playlistType != PlaylistType.UPLOADED) {
+                                        { viewModel.removeSongs(filteredSongs.filter { it.id in selection }, context) }
+                                    } else null,
                                 )
                             }
                         },

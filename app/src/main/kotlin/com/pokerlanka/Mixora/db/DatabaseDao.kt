@@ -309,13 +309,13 @@ interface DatabaseDao {
             SELECT e.songId, SUM(e.playTime) as totalPlayTime
             FROM event e
             JOIN song_artist_map sam ON e.songId = sam.songId
-            WHERE sam.artistId = :artistId AND e.timestamp >= :fromTimeStamp AND e.timestamp <= :toTimeStamp
+            WHERE sam.artistId = :artistId AND e.timestamp >= :fromTimeStamp AND (:toTimeStamp IS NULL OR e.timestamp <= :toTimeStamp)
             GROUP BY e.songId
         ) AS play_times ON s.id = play_times.songId
         ORDER BY play_times.totalPlayTime DESC
         """
     )
-    fun mostPlayedSongsByArtist(artistId: String, fromTimeStamp: LocalDateTime, toTimeStamp: LocalDateTime): Flow<List<Song>>
+    fun mostPlayedSongsByArtist(artistId: String, fromTimeStamp: LocalDateTime, toTimeStamp: LocalDateTime? = null): Flow<List<Song>>
 
     @Transaction
     @Query(
@@ -377,7 +377,7 @@ interface DatabaseDao {
         JOIN (SELECT songId
               FROM event
               WHERE timestamp > :fromTimeStamp
-                AND timestamp <= :toTimeStamp
+                AND (:toTimeStamp IS NULL OR timestamp <= :toTimeStamp)
               GROUP BY songId
               ORDER BY SUM(playTime) DESC
               LIMIT :limit OFFSET :offset) AS top_songs ON s.id = top_songs.songId
@@ -389,7 +389,7 @@ interface DatabaseDao {
         fromTimeStamp: LocalDateTime,
         limit: Int = 6,
         offset: Int = 0,
-        toTimeStamp: LocalDateTime? = LocalDateTime.now(),
+        toTimeStamp: LocalDateTime? = null,
     ): Flow<List<SongWithStats>>
 
     // Time Transfer
@@ -417,6 +417,42 @@ interface DatabaseDao {
 
     @Query("DELETE FROM playCount WHERE song = :fromSongId")
     suspend fun deletePlayCountsForSong(fromSongId: String): Int
+
+    @Query("DELETE FROM playCount WHERE song IN (:songIds)")
+    suspend fun deletePlayCountsForSongs(songIds: List<String>): Int
+
+    @Query("DELETE FROM event WHERE songId = :songId")
+    suspend fun deleteEventsForSong(songId: String): Int
+
+    @Query("DELETE FROM event WHERE songId IN (:songIds)")
+    suspend fun deleteEventsForSongs(songIds: List<String>): Int
+
+    @Query("UPDATE song SET totalPlayTime = 0 WHERE id = :songId")
+    suspend fun resetSongTotalPlayTime(songId: String): Int
+
+    @Query("UPDATE song SET totalPlayTime = 0 WHERE id IN (:songIds)")
+    suspend fun resetSongsTotalPlayTime(songIds: List<String>): Int
+
+    @Query("UPDATE song SET dateDownload = null WHERE id = :songId")
+    suspend fun clearSongDateDownload(songId: String): Int
+
+    @Query("UPDATE song SET dateDownload = null WHERE id IN (:songIds)")
+    suspend fun clearSongsDateDownload(songIds: List<String>): Int
+
+    @Transaction
+    suspend fun removeSongFromTop(songId: String) {
+        deleteEventsForSong(songId)
+        deletePlayCountsForSong(songId)
+        resetSongTotalPlayTime(songId)
+    }
+
+    @Transaction
+    suspend fun removeSongsFromTop(songIds: List<String>) {
+        if (songIds.isEmpty()) return
+        deleteEventsForSongs(songIds)
+        deletePlayCountsForSongs(songIds)
+        resetSongsTotalPlayTime(songIds)
+    }
 
     @Transaction
     suspend fun transferSongStats(fromSongId: String, toSongId: String) {
@@ -460,27 +496,25 @@ interface DatabaseDao {
                (SELECT COUNT(1)
                 FROM event
                 WHERE songId = song.id
-                  AND timestamp > :fromTimeStamp AND timestamp <= :toTimeStamp) AS songCountListened,
-               (SELECT SUM(event.playTime)
-                FROM event
-                WHERE songId = song.id
-                  AND timestamp > :fromTimeStamp AND timestamp <= :toTimeStamp) AS timeListened
+                  AND timestamp > :fromTimeStamp AND (:toTimeStamp IS NULL OR timestamp <= :toTimeStamp)) AS songCountListened,
+               top.totalPlayTime AS timeListened
         FROM song
-        JOIN (SELECT songId
+        JOIN (SELECT songId, SUM(playTime) AS totalPlayTime
                      FROM event
                      WHERE timestamp > :fromTimeStamp
-                     AND timestamp <= :toTimeStamp
+                     AND (:toTimeStamp IS NULL OR timestamp <= :toTimeStamp)
                      GROUP BY songId
-                     ORDER BY SUM(playTime) DESC
-                     LIMIT :limit OFFSET :offset)
-        ON song.id = songId
+                     ORDER BY totalPlayTime DESC
+                     LIMIT :limit OFFSET :offset) AS top
+        ON song.id = top.songId
+        ORDER BY top.totalPlayTime DESC
     """,
     )
     fun mostPlayedSongs(
         fromTimeStamp: LocalDateTime,
         limit: Int = 6,
         offset: Int = 0,
-        toTimeStamp: LocalDateTime? = LocalDateTime.now(),
+        toTimeStamp: LocalDateTime? = null,
     ): Flow<List<Song>>
 
     @Transaction
@@ -492,33 +526,30 @@ interface DatabaseDao {
                 FROM song_artist_map
                          JOIN event ON song_artist_map.songId = event.songId
                 WHERE artistId = artist.id
-                  AND timestamp > :fromTimeStamp AND timestamp <= :toTimeStamp) AS songCount,
-               (SELECT SUM(event.playTime)
-                FROM song_artist_map
-                         JOIN event ON song_artist_map.songId = event.songId
-                WHERE artistId = artist.id
-                  AND timestamp > :fromTimeStamp AND timestamp <= :toTimeStamp) AS timeListened
+                  AND timestamp > :fromTimeStamp AND (:toTimeStamp IS NULL OR timestamp <= :toTimeStamp)) AS songCount,
+               top.totalPlayTime AS timeListened
         FROM artist
                  JOIN(SELECT artistId, SUM(songTotalPlayTime) AS totalPlayTime
                       FROM song_artist_map
                                JOIN (SELECT songId, SUM(playTime) AS songTotalPlayTime
                                      FROM event
                                      WHERE timestamp > :fromTimeStamp
-                                     AND timestamp <= :toTimeStamp
+                                     AND (:toTimeStamp IS NULL OR timestamp <= :toTimeStamp)
                                      GROUP BY songId) AS e
                                     ON song_artist_map.songId = e.songId
                       GROUP BY artistId
                       ORDER BY totalPlayTime DESC
                       LIMIT :limit
-                      OFFSET :offset)
-                     ON artist.id = artistId
+                      OFFSET :offset) AS top
+                     ON artist.id = top.artistId
+        ORDER BY top.totalPlayTime DESC
     """,
     )
     fun mostPlayedArtists(
         fromTimeStamp: LocalDateTime,
         limit: Int = 6,
         offset: Int = 0,
-        toTimeStamp: LocalDateTime? = LocalDateTime.now(),
+        toTimeStamp: LocalDateTime? = null,
     ): Flow<List<Artist>>
 
     @Transaction

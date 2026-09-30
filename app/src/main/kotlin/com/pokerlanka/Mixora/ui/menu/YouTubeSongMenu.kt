@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Mixora Project (C) 2026
  * Author : Gayan Chinthaka
  * Company: Pokerlanka
@@ -97,7 +97,8 @@ import java.time.LocalDateTime
 fun YouTubeSongMenu(
     song: SongItem,
     onDismiss: () -> Unit,
-    onHistoryRemoved: () -> Unit = {}
+    onHistoryRemoved: () -> Unit = {},
+    onRemoveFromPlaylist: (() -> Unit)? = null,
 ) {
     val navController = LocalNavController.current
     val context = LocalContext.current
@@ -463,6 +464,23 @@ fun YouTubeSongMenu(
                                     }
                                 }
                             )
+                        )
+                    }
+                    if (onRemoveFromPlaylist != null) {
+                        add(
+                            Material3MenuItemData(
+                                title = { Text(text = stringResource(R.string.remove_from_playlist)) },
+                                icon = {
+                                    Icon(
+                                        painter = painterResource(R.drawable.delete),
+                                        contentDescription = null,
+                                    )
+                                },
+                                onClick = {
+                                    onRemoveFromPlaylist()
+                                    onDismiss()
+                                },
+                            ),
                         )
                     }
                     add(

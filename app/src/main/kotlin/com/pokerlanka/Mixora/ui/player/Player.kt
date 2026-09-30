@@ -1240,7 +1240,7 @@ fun BottomSheetPlayer(
                     if (mediaDate != null) {
                         Spacer(modifier = Modifier.height(2.dp))
                         Text(
-                            text = mediaDate.fullText,
+                            text = mediaDate.dateText,
                             style = MaterialTheme.typography.bodySmall.copy(
                                 color = TextBackgroundColor.copy(alpha = 0.7f),
                                 fontSize = 12.sp,

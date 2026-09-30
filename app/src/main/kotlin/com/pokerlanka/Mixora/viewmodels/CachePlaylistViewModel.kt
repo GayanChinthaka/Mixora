@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Mixora Project (C) 2026
  * Author : Gayan Chinthaka
  * Company: Pokerlanka
@@ -95,6 +95,23 @@ class CachePlaylistViewModel
         }
 
         fun removeSongFromCache(songId: String) {
-            playerCache.removeResource(songId)
+            viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+                playerCache.removeResource(songId)
+                downloadCache.removeResource(songId)
+                database.clearSongDateDownload(songId)
+                _cachedSongs.value = _cachedSongs.value.filter { it.id != songId }
+            }
+        }
+
+        fun removeSongsFromCache(songIds: List<String>) {
+            viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+                songIds.forEach { songId ->
+                    playerCache.removeResource(songId)
+                    downloadCache.removeResource(songId)
+                }
+                database.clearSongsDateDownload(songIds)
+                val idSet = songIds.toSet()
+                _cachedSongs.value = _cachedSongs.value.filter { it.id !in idSet }
+            }
         }
     }

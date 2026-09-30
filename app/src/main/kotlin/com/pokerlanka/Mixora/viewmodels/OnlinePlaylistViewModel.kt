@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Mixora Project (C) 2026
  * Author : Gayan Chinthaka
  * Company: Pokerlanka
@@ -16,6 +16,7 @@ import com.pokerlanka.innertube.models.SongItem
 import com.pokerlanka.innertube.models.filterVideoSongs
 import com.pokerlanka.mixora.constants.HideVideoSongsKey
 import com.pokerlanka.mixora.db.MusicDatabase
+import com.pokerlanka.mixora.db.entities.PlaylistSongMap
 import com.pokerlanka.mixora.utils.dataStore
 import com.pokerlanka.mixora.utils.get
 import com.pokerlanka.mixora.utils.reportException
@@ -266,6 +267,52 @@ class OnlinePlaylistViewModel @Inject constructor(
         fetchInitialPlaylistData() // This will also restart proactive loading if applicable
     }
 
+    fun removeSong(song: SongItem) {
+        playlistSongs.value = playlistSongs.value.filter { it.id != song.id }
+        viewModelScope.launch(Dispatchers.IO) {
+            val pId = playlist.value?.id
+            val setVideoId = song.setVideoId
+            if (pId != null && setVideoId != null) {
+                YouTube.removeFromPlaylist(pId, song.id, setVideoId)
+            }
+            dbPlaylist.value?.let { dbp ->
+                val maps = database.playlistSongMaps(dbp.id, 0)
+                val map = maps.find { it.songId == song.id }
+                if (map != null) {
+                    database.transaction {
+                        move(map.playlistId, map.position, Int.MAX_VALUE)
+                        delete(map.copy(position = Int.MAX_VALUE))
+                    }
+                }
+            }
+        }
+    }
+
+    fun removeSongs(songs: List<SongItem>) {
+        val songIds = songs.map { it.id }.toSet()
+        playlistSongs.value = playlistSongs.value.filter { it.id !in songIds }
+        viewModelScope.launch(Dispatchers.IO) {
+            val pId = playlist.value?.id
+            if (pId != null) {
+                songs.forEach { song ->
+                    val setVideoId = song.setVideoId
+                    if (setVideoId != null) {
+                        YouTube.removeFromPlaylist(pId, song.id, setVideoId)
+                    }
+                }
+            }
+            dbPlaylist.value?.let { dbp ->
+                val maps = database.playlistSongMaps(dbp.id, 0)
+                maps.filter { it.songId in songIds }.forEach { map ->
+                    database.transaction {
+                        move(map.playlistId, map.position, Int.MAX_VALUE)
+                        delete(map.copy(position = Int.MAX_VALUE))
+                    }
+                }
+            }
+        }
+    }
+
     private fun applySongFilters(songs: List<SongItem>): List<SongItem> {
         val hideVideoSongs = context.dataStore.get(HideVideoSongsKey, false)
         return songs
@@ -278,3 +325,4 @@ class OnlinePlaylistViewModel @Inject constructor(
         proactiveLoadJob?.cancel()
     }
 }
+
