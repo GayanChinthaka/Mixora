@@ -24,6 +24,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -448,42 +449,35 @@ private fun StatusCard(
             verticalArrangement = Arrangement.spacedBy(Spacing.sm),
         ) {
             Row(
+                modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
             ) {
                 AccentIcon(iconResId = status.iconResId, accent = accent)
                 Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = stringResource(status.titleResId),
-                        style = MaterialTheme.typography.labelLarge,
-                        color = accent,
-                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    ) {
+                        Text(
+                            text = stringResource(status.titleResId),
+                            style = MaterialTheme.typography.labelLarge,
+                            color = accent,
+                        )
+                        if (status.active) {
+                            Box(
+                                modifier = Modifier
+                                    .size(8.dp)
+                                    .clip(CircleShape)
+                                    .background(accent),
+                            )
+                        }
+                    }
                     Text(
                         text = stringResource(status.stateLabelResId),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.SemiBold,
                     )
-                }
-                if (status.active) {
-                    Box(
-                        modifier = Modifier
-                            .size(10.dp)
-                            .clip(CircleShape)
-                            .background(accent),
-                    )
-                }
-                if (status.canLeave) {
-                    FilledTonalButton(
-                        onClick = onLeave,
-                    ) {
-                        Icon(
-                            painter = painterResource(R.drawable.leave),
-                            contentDescription = null,
-                            modifier = Modifier.size(18.dp),
-                        )
-                        Spacer(Modifier.width(Spacing.xs))
-                        Text(text = stringResource(R.string.together_leave_session))
-                    }
                 }
             }
 
@@ -504,6 +498,25 @@ private fun StatusCard(
 
             if (sessionShare != null) {
                 SessionShareCard(sessionShare = sessionShare, onCopy = onCopy, onShare = onShare)
+            }
+
+            if (status.canLeave) {
+                FilledTonalButton(
+                    onClick = onLeave,
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.filledTonalButtonColors(
+                        containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.5f),
+                        contentColor = MaterialTheme.colorScheme.onErrorContainer,
+                    ),
+                ) {
+                    Icon(
+                        painter = painterResource(R.drawable.leave),
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp),
+                    )
+                    Spacer(Modifier.width(Spacing.xs))
+                    Text(text = stringResource(R.string.together_leave_session))
+                }
             }
         }
     }
@@ -543,7 +556,10 @@ private fun SessionShareCard(
                     modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp),
                 )
             }
-            Row(horizontalArrangement = Arrangement.spacedBy(Spacing.xs)) {
+            FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(Spacing.xs),
+                verticalArrangement = Arrangement.spacedBy(Spacing.xs),
+            ) {
                 FilledTonalButton(
                     onClick = { onCopy(R.string.together_session_code, sessionShare.code) },
                 ) {
@@ -970,6 +986,7 @@ private fun ToggleRow(
         Text(
             text = stringResource(titleResId),
             style = MaterialTheme.typography.bodyLarge,
+            modifier = Modifier.weight(1f).padding(end = Spacing.xs),
         )
         Switch(
             checked = checked,

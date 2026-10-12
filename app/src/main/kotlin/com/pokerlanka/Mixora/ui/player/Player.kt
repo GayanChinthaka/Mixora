@@ -846,7 +846,7 @@ fun BottomSheetPlayer(
         mutableStateOf(false)
     }
 
-    // Position update - only for local playback
+    // Position update - handles local playback and Together guest
     // When casting, we use castPosition directly to avoid sync issues
     // Use isPlaying instead of playbackState to ensure continuous updates during playback
     LaunchedEffect(isPlaying, isCasting) {
@@ -854,9 +854,14 @@ fun BottomSheetPlayer(
             while (isActive) {
                 delay(100) // Update more frequently for smoother progress bar
                 if (sliderPosition == null) { // Only update if user isn't dragging
-                    position = playerConnection.player.currentPosition
-                    // Don't clobber a valid (metadata-derived) duration with 0/UNSET mid-resolve.
-                    playerConnection.player.duration.takeIf { it > 0 }?.let { duration = it }
+                    if (playerConnection.isTogetherGuest) {
+                        position = playerConnection.getTogetherCurrentPosition()
+                        playerConnection.getTogetherDuration().takeIf { it > 0 }?.let { duration = it }
+                    } else {
+                        position = playerConnection.player.currentPosition
+                        // Don't clobber a valid (metadata-derived) duration with 0/UNSET mid-resolve.
+                        playerConnection.player.duration.takeIf { it > 0 }?.let { duration = it }
+                    }
                 }
             }
         }
@@ -865,12 +870,30 @@ fun BottomSheetPlayer(
     // Also update position when playback state changes (e.g., song change, seek)
     LaunchedEffect(playbackState, mediaMetadata?.id) {
         if (!isCasting) {
-            position = playerConnection.player.currentPosition
-            // Prefer the song's known duration (from metadata, available instantly from the restored
-            // queue) so the slider range is right even when restored paused / before the stream
-            // resolves; fall back to the player's duration once it is known.
-            duration = (mediaMetadata?.duration?.takeIf { it > 0 }?.toLong()?.times(1000L))
-                ?: playerConnection.player.duration
+            if (playerConnection.isTogetherGuest) {
+                position = playerConnection.getTogetherCurrentPosition()
+                duration = playerConnection.getTogetherDuration().takeIf { it > 0 }
+                    ?: (mediaMetadata?.duration?.takeIf { it > 0 }?.toLong()?.times(1000L))
+                    ?: C.TIME_UNSET
+            } else {
+                position = playerConnection.player.currentPosition
+                // Prefer the song's known duration (from metadata, available instantly from the restored
+                // queue) so the slider range is right even when restored paused / before the stream
+                // resolves; fall back to the player's duration once it is known.
+                duration = (mediaMetadata?.duration?.takeIf { it > 0 }?.toLong()?.times(1000L))
+                    ?: playerConnection.player.duration
+            }
+        }
+    }
+
+    LaunchedEffect(playerConnection.isTogetherGuest) {
+        if (playerConnection.isTogetherGuest) {
+            playerConnection.service.togetherSessionState.collect {
+                if (sliderPosition == null) {
+                    position = playerConnection.getTogetherCurrentPosition()
+                    playerConnection.getTogetherDuration().takeIf { it > 0 }?.let { duration = it }
+                }
+            }
         }
     }
 
@@ -1031,9 +1054,7 @@ fun BottomSheetPlayer(
             }
         },
         onDismiss = {
-            playerConnection.service.clearAutomix()
-            playerConnection.player.stop()
-            playerConnection.player.clearMediaItems()
+            playerConnection.stop()
         },
         collapsedContent = {
             MiniPlayer(
@@ -1523,6 +1544,8 @@ fun BottomSheetPlayer(
                     if (isCasting) {
                         castHandler?.seekTo(it)
                         lastManualSeekTime = System.currentTimeMillis()
+                    } else if (playerConnection.isTogetherGuest) {
+                        playerConnection.seekTo(it)
                     } else {
                         playerConnection.player.seekTo(it)
                     }

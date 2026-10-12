@@ -7,6 +7,8 @@
 package com.pokerlanka.mixora.playback
 
 import android.content.Context
+import android.os.SystemClock
+import androidx.media3.common.C
 import androidx.media3.common.MediaItem
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
@@ -231,9 +233,7 @@ class PlayerConnection(
                 if (togetherState is TogetherSessionState.Joined && togetherState.role is TogetherRole.Guest) {
                     val roomState = togetherState.roomState
                     val track = roomState.queue.getOrNull(roomState.currentIndex)
-                    if (track != null) {
-                        mediaMetadata.value = track.toMediaMetadata()
-                    }
+                    mediaMetadata.value = track?.toMediaMetadata()
                     playbackState.value = if (roomState.isPlaying || roomState.queue.isNotEmpty()) Player.STATE_READY else Player.STATE_IDLE
                     playWhenReady.value = roomState.isPlaying
                     currentMediaItemIndex.value = roomState.currentIndex
@@ -443,6 +443,45 @@ class PlayerConnection(
         } catch (e: Exception) {
             Timber.tag(TAG).e(e, "Error in pause")
         }
+    }
+
+    /**
+     * Stop playback - handles Together and local playback
+     */
+    fun stop() {
+        try {
+            if (isTogetherGuest) {
+                service.requestTogetherControl(ControlAction.Stop)
+                mediaMetadata.value = null
+                return
+            }
+            service.clearAutomix()
+            player.stop()
+            player.clearMediaItems()
+        } catch (e: Exception) {
+            Timber.tag(TAG).e(e, "Error in stop")
+        }
+    }
+
+    fun getTogetherCurrentPosition(): Long {
+        val state = service.togetherSessionState.value as? TogetherSessionState.Joined ?: return 0L
+        val roomState = state.roomState
+        val currentTrack = roomState.queue.getOrNull(roomState.currentIndex)
+        val durationMs = if (currentTrack != null && currentTrack.durationSec > 0) currentTrack.durationSec * 1000L else Long.MAX_VALUE
+        val base = roomState.positionMs
+        val elapsed = if (roomState.isPlaying && roomState.sentAtElapsedRealtimeMs > 0) {
+            (SystemClock.elapsedRealtime() - roomState.sentAtElapsedRealtimeMs).coerceAtLeast(0L)
+        } else {
+            0L
+        }
+        return (base + elapsed).coerceIn(0L, durationMs)
+    }
+
+    fun getTogetherDuration(): Long {
+        val state = service.togetherSessionState.value as? TogetherSessionState.Joined ?: return C.TIME_UNSET
+        val roomState = state.roomState
+        val currentTrack = roomState.queue.getOrNull(roomState.currentIndex)
+        return if (currentTrack != null && currentTrack.durationSec > 0) currentTrack.durationSec * 1000L else C.TIME_UNSET
     }
 
     /**

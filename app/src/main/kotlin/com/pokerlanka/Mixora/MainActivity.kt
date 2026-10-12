@@ -48,6 +48,8 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
@@ -83,6 +85,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
@@ -176,6 +179,9 @@ import com.pokerlanka.mixora.ui.component.rememberBottomSheetState
 import com.pokerlanka.mixora.ui.component.shimmer.ShimmerTheme
 import com.pokerlanka.mixora.ui.menu.YouTubeSongMenu
 import com.pokerlanka.mixora.ui.player.BottomSheetPlayer
+import com.pokerlanka.mixora.together.TogetherRole
+import com.pokerlanka.mixora.together.TogetherSessionState
+import com.pokerlanka.mixora.together.isConnectedToSession
 import com.pokerlanka.mixora.ui.screens.Screens
 import com.pokerlanka.mixora.ui.screens.navigationBuilder
 import com.pokerlanka.mixora.ui.screens.settings.DarkMode
@@ -705,8 +711,9 @@ class MainActivity : ComponentActivity() {
 
                     topAppBarScrollBehavior.state.resetHeightOffset()
 
-                    // Collapse player when navigating to equalizer
-                    if (navBackStackEntry?.destination?.route == "equalizer" &&
+                    // Collapse player when navigating to equalizer or settings
+                    if ((navBackStackEntry?.destination?.route == "equalizer" ||
+                            navBackStackEntry?.destination?.route?.startsWith("settings") == true) &&
                         playerBottomSheetState.isExpanded
                     ) {
                         playerBottomSheetState.collapseSoft()
@@ -730,29 +737,31 @@ class MainActivity : ComponentActivity() {
                 // even though the service already has an item loaded, so the restored sheet was
                 // dismissed and then collapsed - dropping the user from the expanded player, lyrics
                 // and all, onto the mini player.
+                val currentBottomSheetState by rememberUpdatedState(playerBottomSheetState)
+
                 LaunchedEffect(activePlayerConnection) {
                     val connection = activePlayerConnection ?: return@LaunchedEffect
 
                     connection.mediaMetadata.collect { metadata ->
                         if (metadata == null) {
-                            if (!playerBottomSheetState.isDismissed) {
-                                playerBottomSheetState.dismiss()
+                            if (!currentBottomSheetState.isDismissed) {
+                                currentBottomSheetState.dismiss()
                             }
-                        } else if (playerBottomSheetState.targetAnchor == dismissedAnchor) {
+                        } else if (currentBottomSheetState.targetAnchor == dismissedAnchor) {
                             // Restores reveal the mini player only; openPlayerEvent still handles the
                             // expand-to-full-screen for playback the user actually started. Checking the
                             // target anchor rather than isDismissed matters: when the user taps a song both
                             // fire, and isDismissed is still true for the frames before the expand
                             // animation moves, so collapsing here would cancel it and strand the user on
                             // the mini player.
-                            playerBottomSheetState.collapseSoft()
+                            currentBottomSheetState.collapseSoft()
                         }
                     }
                 }
 
                 LaunchedEffect(playerConnection) {
                     playerConnection?.service?.openPlayerEvent?.collectLatest {
-                        playerBottomSheetState.expandSoft()
+                        currentBottomSheetState.expandSoft()
                     }
                 }
 
@@ -838,6 +847,44 @@ class MainActivity : ComponentActivity() {
                                             )
                                         },
                                         actions = {
+                                            val togetherState = playerConnection?.service?.togetherSessionState?.collectAsStateWithLifecycle()?.value
+                                            if (togetherState?.isConnectedToSession == true) {
+                                                val isHost = togetherState is TogetherSessionState.Hosting ||
+                                                    (togetherState is TogetherSessionState.Joined && togetherState.role is TogetherRole.Host)
+                                                Surface(
+                                                    onClick = {
+                                                        navController.navigate("settings/music_together")
+                                                    },
+                                                    shape = CircleShape,
+                                                    color = MaterialTheme.colorScheme.primaryContainer,
+                                                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                                                    modifier = Modifier.padding(end = 4.dp),
+                                                ) {
+                                                    Row(
+                                                        verticalAlignment = Alignment.CenterVertically,
+                                                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                                                    ) {
+                                                        Box(
+                                                            modifier = Modifier
+                                                                .size(7.dp)
+                                                                .background(Color(0xFF4CAF50), CircleShape),
+                                                        )
+                                                        Spacer(modifier = Modifier.width(6.dp))
+                                                        Icon(
+                                                            painter = painterResource(R.drawable.group),
+                                                            contentDescription = null,
+                                                            modifier = Modifier.size(16.dp),
+                                                        )
+                                                        Spacer(modifier = Modifier.width(4.dp))
+                                                        Text(
+                                                            text = if (isHost) "Together (Host)" else "Together (Guest)",
+                                                            style = MaterialTheme.typography.labelSmall,
+                                                            fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold,
+                                                        )
+                                                    }
+                                                }
+                                            }
+
                                             IconButton(onClick = {
                                                 navController.navigate("settings")
                                             }) {

@@ -184,6 +184,10 @@ sealed interface ControlAction {
     data object Pause : ControlAction
 
     @Serializable
+    @SerialName("stop")
+    data object Stop : ControlAction
+
+    @Serializable
     @SerialName("seek_to")
     data class SeekTo(
         val positionMs: Long,

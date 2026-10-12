@@ -32,11 +32,18 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import com.pokerlanka.mixora.LocalNavController
+import com.pokerlanka.mixora.together.TogetherRole
+import com.pokerlanka.mixora.together.TogetherSessionState
+import com.pokerlanka.mixora.together.isConnectedToSession
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Immutable
@@ -389,6 +396,10 @@ private fun ThumbnailHeader(
     sleepTimerEnabled: Boolean = false,
     sleepTimerTimeLeft: Long = 0L,
 ) {
+    val playerConnection = LocalPlayerConnection.current
+    val navController = LocalNavController.current
+    val togetherState = playerConnection?.service?.togetherSessionState?.collectAsStateWithLifecycle()?.value
+
     Box(
         modifier = modifier
             .fillMaxWidth()
@@ -415,6 +426,44 @@ private fun ThumbnailHeader(
                     maxLines = 1,
                     modifier = Modifier.basicMarquee()
                 )
+            }
+            if (togetherState?.isConnectedToSession == true) {
+                val isHost = togetherState is TogetherSessionState.Hosting ||
+                    (togetherState is TogetherSessionState.Joined && togetherState.role is TogetherRole.Host)
+                Spacer(modifier = Modifier.height(4.dp))
+                Surface(
+                    onClick = {
+                        navController.navigate("settings/music_together")
+                    },
+                    shape = CircleShape,
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)),
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(6.dp)
+                                .background(Color(0xFF4CAF50), CircleShape)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Icon(
+                            painter = painterResource(R.drawable.group),
+                            contentDescription = null,
+                            tint = textColor,
+                            modifier = Modifier.size(12.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = if (isHost) "Mix Together • Host" else "Mix Together • Guest",
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.SemiBold,
+                            color = textColor
+                        )
+                    }
+                }
             }
         }
 

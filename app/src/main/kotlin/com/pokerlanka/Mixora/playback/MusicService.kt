@@ -316,6 +316,23 @@ class MusicService :
     private var togetherHostingSessionId: String? = null
     private var togetherHostingSettings: com.pokerlanka.mixora.together.TogetherRoomSettings = com.pokerlanka.mixora.together.TogetherRoomSettings()
     private var guestEventsJob: Job? = null
+    private var togetherTickerJob: Job? = null
+
+    private fun updateTogetherTicker() {
+        if (togetherServer != null && ::player.isInitialized && player.isPlaying) {
+            if (togetherTickerJob?.isActive != true) {
+                togetherTickerJob = scope.launch(Dispatchers.Main) {
+                    while (isActive && togetherServer != null && ::player.isInitialized && player.isPlaying) {
+                        delay(1000L)
+                        updateAndBroadcastTogetherRoomState()
+                    }
+                }
+            }
+        } else {
+            togetherTickerJob?.cancel()
+            togetherTickerJob = null
+        }
+    }
 
     fun updateAndBroadcastTogetherRoomState() {
         val server = togetherServer ?: return
@@ -476,6 +493,11 @@ class MusicService :
                         }
                         is com.pokerlanka.mixora.together.ControlAction.SetRepeatMode -> player.repeatMode = action.repeatMode
                         is com.pokerlanka.mixora.together.ControlAction.SetShuffleEnabled -> player.shuffleModeEnabled = action.shuffleEnabled
+                        is com.pokerlanka.mixora.together.ControlAction.Stop -> {
+                            clearAutomix()
+                            player.stop()
+                            player.clearMediaItems()
+                        }
                     }
                     updateAndBroadcastTogetherRoomState()
                 }
@@ -492,6 +514,8 @@ class MusicService :
     ) {
         guestEventsJob?.cancel()
         guestEventsJob = null
+        togetherTickerJob?.cancel()
+        togetherTickerJob = null
         togetherJob?.cancel()
 
         val previousServer = togetherServer
@@ -588,6 +612,8 @@ class MusicService :
     ) {
         guestEventsJob?.cancel()
         guestEventsJob = null
+        togetherTickerJob?.cancel()
+        togetherTickerJob = null
         togetherJob?.cancel()
 
         val serverToStop = togetherServer
@@ -668,6 +694,8 @@ class MusicService :
     fun leaveTogether() {
         guestEventsJob?.cancel()
         guestEventsJob = null
+        togetherTickerJob?.cancel()
+        togetherTickerJob = null
         togetherJob?.cancel()
 
         val serverToStop = togetherServer
@@ -3028,6 +3056,7 @@ class MusicService :
             )
         ) {
             updateAndBroadcastTogetherRoomState()
+            updateTogetherTicker()
         }
     }
 
