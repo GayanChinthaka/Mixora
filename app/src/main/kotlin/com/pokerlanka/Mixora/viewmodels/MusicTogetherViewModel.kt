@@ -235,11 +235,13 @@ class MusicTogetherViewModel
         private var lastSessionId: String? = null
         private var lastRoomState: TogetherRoomState? = null
         private var lastStateWasError = false
+        private val joinCodeInput = MutableStateFlow("")
 
         private data class StateInputs(
             val snapshot: MusicTogetherSnapshot,
             val dialogState: MusicTogetherDialogUiState,
             val welcomeDismissed: Boolean,
+            val joinCode: String,
         )
 
         private val snapshots =
@@ -267,11 +269,13 @@ class MusicTogetherViewModel
                 snapshots,
                 dialog,
                 welcomeDismissedThisSession,
-            ) { snapshot, dialogState, welcomeDismissed ->
+                joinCodeInput,
+            ) { snapshot, dialogState, welcomeDismissed, joinCode ->
                 StateInputs(
                     snapshot = snapshot,
                     dialogState = dialogState,
                     welcomeDismissed = welcomeDismissed,
+                    joinCode = joinCode,
                 )
             }.let { inputs ->
                 combine(inputs, welcomeDontShowAgain, activityLog) { stateInputs, dontShowAgain, log ->
@@ -282,6 +286,7 @@ class MusicTogetherViewModel
                                 welcomeDismissed = stateInputs.welcomeDismissed,
                                 dontShowAgain = dontShowAgain,
                                 log = log,
+                                joinCode = stateInputs.joinCode,
                             ),
                         )
                     screenState
@@ -341,6 +346,15 @@ class MusicTogetherViewModel
             }
         }
 
+        fun setJoinInput(value: String) {
+            val digits = value.filter { it.isDigit() }.take(6)
+            joinCodeInput.value = digits
+        }
+
+        fun clearJoinInput() {
+            joinCodeInput.value = ""
+        }
+
         fun openJoinDialog() {
             val model = successModel() ?: return
             if (model.join.disabled || model.join.joining || model.join.joined || model.join.waitingApproval) return
@@ -351,13 +365,10 @@ class MusicTogetherViewModel
                 )
         }
 
-        fun submitJoinInput(value: String) {
+        fun submitJoinInput(value: String = joinCodeInput.value) {
             val model = successModel() ?: return
-            val trimmed = value.replace("\\s+".toRegex(), "").trim()
-            if (trimmed.isBlank()) return
-            viewModelScope.launch(Dispatchers.IO) {
-                updatePreferences.setLastJoinCode(trimmed)
-            }
+            val trimmed = value.filter { it.isDigit() }.take(6)
+            if (trimmed.length != 6) return
             viewModelScope.launch {
                 sessionActions.joinSession(
                     code = trimmed,
@@ -412,6 +423,7 @@ class MusicTogetherViewModel
         }
 
         fun leaveSession() {
+            joinCodeInput.value = ""
             sessionActions.leaveSession()
         }
 
@@ -506,6 +518,7 @@ class MusicTogetherViewModel
             welcomeDismissed: Boolean,
             dontShowAgain: Boolean,
             log: MusicTogetherActivityLogUiModels,
+            joinCode: String,
         ): MusicTogetherUiModel {
             val state = sessionState
             val roomState = state.roomStateOrNull()
@@ -600,9 +613,9 @@ class MusicTogetherViewModel
 
             val joinUi =
                 MusicTogetherJoinUiModel(
-                    input = preferences.lastJoinCode,
+                    input = joinCode,
                     hintResId = R.string.together_join_code_hint,
-                    canJoin = !disableJoinUi && !isJoining && preferences.lastJoinCode.isNotBlank(),
+                    canJoin = !disableJoinUi && !isJoining && joinCode.length == 6,
                     disabled = disableJoinUi,
                     joined = isJoinedAsAcceptedGuest,
                     waitingApproval = isWaitingApproval,

@@ -20,6 +20,7 @@ import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -46,6 +47,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -86,6 +89,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
@@ -134,6 +140,10 @@ fun MusicTogetherScreen(
 
     LaunchedEffect(playerConnection?.service) {
         viewModel.attachService(playerConnection?.service)
+    }
+
+    LaunchedEffect(Unit) {
+        viewModel.clearJoinInput()
     }
 
     LaunchedEffect(viewModel) {
@@ -304,7 +314,10 @@ private fun MusicTogetherContent(
                             }
                             SegmentedButton(
                                 selected = selectedSetupTab == 1,
-                                onClick = { selectedSetupTab = 1 },
+                                onClick = {
+                                    selectedSetupTab = 1
+                                    viewModel.clearJoinInput()
+                                },
                                 shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2),
                             ) {
                                 Text(text = stringResource(R.string.together_join_section))
@@ -396,7 +409,10 @@ private fun MusicTogetherContent(
                         }
                         SegmentedButton(
                             selected = selectedSetupTab == 1,
-                            onClick = { selectedSetupTab = 1 },
+                            onClick = {
+                                selectedSetupTab = 1
+                                viewModel.clearJoinInput()
+                            },
                             shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2),
                         ) {
                             Text(text = stringResource(R.string.together_join_section))
@@ -781,6 +797,93 @@ private fun HostControlsCard(
 }
 
 @Composable
+private fun SixDigitCodeInput(
+    value: String,
+    onValueChange: (String) -> Unit,
+    onDone: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+) {
+    val focusRequester = remember { FocusRequester() }
+    var isFocused by remember { mutableStateOf(false) }
+
+    BasicTextField(
+        value = value,
+        onValueChange = { input ->
+            val digits = input.filter { it.isDigit() }.take(6)
+            onValueChange(digits)
+        },
+        enabled = enabled,
+        keyboardOptions = KeyboardOptions(
+            keyboardType = KeyboardType.Number,
+            imeAction = if (value.length == 6) ImeAction.Done else ImeAction.Next,
+        ),
+        keyboardActions = KeyboardActions(
+            onDone = { onDone() },
+        ),
+        modifier = modifier
+            .focusRequester(focusRequester)
+            .onFocusChanged { isFocused = it.isFocused },
+        decorationBox = {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                for (index in 0 until 6) {
+                    val char = value.getOrNull(index)
+                    val isCurrent = isFocused && (index == value.length || (index == 5 && value.length == 6))
+                    val isFilled = char != null
+
+                    Box(
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(54.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(
+                                when {
+                                    isCurrent -> MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.45f)
+                                    isFilled -> MaterialTheme.colorScheme.surfaceContainerHighest
+                                    else -> MaterialTheme.colorScheme.surfaceContainerLow
+                                },
+                            )
+                            .border(
+                                width = if (isCurrent) 2.dp else if (isFilled) 1.5.dp else 1.dp,
+                                color = when {
+                                    isCurrent -> MaterialTheme.colorScheme.primary
+                                    isFilled -> MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)
+                                    else -> MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+                                },
+                                shape = RoundedCornerShape(12.dp),
+                            ),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        if (char != null) {
+                            Text(
+                                text = char.toString(),
+                                style = MaterialTheme.typography.titleLarge,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface,
+                            )
+                        } else {
+                            Text(
+                                text = "•",
+                                style = MaterialTheme.typography.titleMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.35f),
+                            )
+                        }
+                    }
+
+                    if (index == 2) {
+                        Spacer(modifier = Modifier.width(4.dp))
+                    }
+                }
+            }
+        },
+    )
+}
+
+@Composable
 private fun JoinControlsCard(
     join: MusicTogetherJoinUiModel,
     viewModel: MusicTogetherViewModel,
@@ -794,29 +897,115 @@ private fun JoinControlsCard(
             modifier = Modifier.padding(Spacing.sm),
             verticalArrangement = Arrangement.spacedBy(Spacing.xs),
         ) {
-            Text(
-                text = stringResource(R.string.together_join_section),
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Column {
+                    Text(
+                        text = stringResource(R.string.together_join_section),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                    )
+                    Text(
+                        text = "Enter 6-digit code from host",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                if (join.input.isNotEmpty()) {
+                    TextButton(
+                        onClick = viewModel::clearJoinInput,
+                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp),
+                    ) {
+                        Icon(
+                            painter = painterResource(R.drawable.close),
+                            contentDescription = "Clear code",
+                            modifier = Modifier.size(16.dp),
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = "Clear",
+                            style = MaterialTheme.typography.labelMedium,
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(6.dp))
+
+            SixDigitCodeInput(
+                value = join.input,
+                onValueChange = viewModel::setJoinInput,
+                onDone = {
+                    if (join.canJoin) viewModel.joinSession()
+                },
+                enabled = !join.disabled && !join.joining,
             )
 
-            ListItem(
-                headlineContent = { Text(text = if (join.input.isBlank()) stringResource(join.hintResId) else join.input) },
-                modifier = Modifier.clickable { viewModel.openJoinDialog() },
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                if (join.input.length == 6) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            painter = painterResource(R.drawable.check),
+                            contentDescription = null,
+                            tint = Color(0xFF4CAF50),
+                            modifier = Modifier.size(16.dp),
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = "6-digit code ready",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = Color(0xFF4CAF50),
+                            fontWeight = FontWeight.SemiBold,
+                        )
+                    }
+                } else {
+                    Text(
+                        text = if (join.input.isEmpty()) "6 digits required" else "${6 - join.input.length} more digit(s) needed",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+
+                Text(
+                    text = "${join.input.length}/6",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = if (join.input.length == 6) Color(0xFF4CAF50) else MaterialTheme.colorScheme.onSurfaceVariant,
+                    fontWeight = if (join.input.length == 6) FontWeight.Bold else FontWeight.Normal,
+                )
+            }
+
+            Spacer(modifier = Modifier.height(4.dp))
 
             Button(
                 onClick = viewModel::joinSession,
                 enabled = join.canJoin,
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(50.dp),
+                shape = RoundedCornerShape(14.dp),
             ) {
                 if (join.joining) {
                     CircularProgressIndicator(
-                        modifier = Modifier.size(18.dp),
+                        modifier = Modifier.size(20.dp),
                         strokeWidth = 2.dp,
                         color = MaterialTheme.colorScheme.onPrimary,
                     )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(text = stringResource(R.string.together_joining))
                 } else {
+                    Icon(
+                        painter = painterResource(R.drawable.group),
+                        contentDescription = null,
+                        modifier = Modifier.size(20.dp),
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
                     Text(text = stringResource(R.string.together_join_session))
                 }
             }
@@ -1053,29 +1242,37 @@ private fun MusicTogetherDialogs(
         }
 
         is MusicTogetherDialogUiState.Join -> {
-            var text by remember { mutableStateOf(dialog.initialValue) }
+            var text by remember { mutableStateOf("") }
             AlertDialog(
                 onDismissRequest = viewModel::dismissDialog,
                 title = { Text(stringResource(R.string.together_join_session)) },
                 text = {
-                    OutlinedTextField(
-                        value = text,
-                        onValueChange = {
-                            val digits = it.filter { char -> char.isDigit() }
-                            if (digits.length <= 6) {
-                                text = digits
-                            }
-                        },
-                        placeholder = { Text(stringResource(dialog.placeholderResId)) },
-                        singleLine = true,
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    )
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text(
+                            text = "Enter the 6-digit room code",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                        SixDigitCodeInput(
+                            value = text,
+                            onValueChange = { text = it },
+                            onDone = {
+                                if (text.length == 6) {
+                                    viewModel.submitJoinInput(text)
+                                    viewModel.dismissDialog()
+                                }
+                            },
+                        )
+                    }
                 },
                 confirmButton = {
-                    TextButton(onClick = {
-                        viewModel.submitJoinInput(text)
-                        viewModel.dismissDialog()
-                    }) {
+                    TextButton(
+                        onClick = {
+                            viewModel.submitJoinInput(text)
+                            viewModel.dismissDialog()
+                        },
+                        enabled = text.length == 6,
+                    ) {
                         Text(stringResource(R.string.together_join_session))
                     }
                 },
