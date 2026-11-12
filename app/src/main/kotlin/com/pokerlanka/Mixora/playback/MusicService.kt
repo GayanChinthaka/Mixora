@@ -57,9 +57,12 @@ import androidx.media3.common.audio.SonicAudioProcessor
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.datasource.DataSource
 import androidx.media3.datasource.DefaultDataSource
+import androidx.media3.datasource.DataSink
+import androidx.media3.datasource.DataSpec
 import androidx.media3.datasource.HttpDataSource
 import androidx.media3.datasource.ResolvingDataSource
 import androidx.media3.datasource.cache.Cache
+import androidx.media3.datasource.cache.CacheDataSink
 import androidx.media3.datasource.cache.CacheDataSource
 import androidx.media3.datasource.cache.CacheDataSource.FLAG_IGNORE_CACHE_ON_ERROR
 import androidx.media3.datasource.okhttp.OkHttpDataSource
@@ -123,6 +126,7 @@ import com.pokerlanka.mixora.constants.EnableSongCacheKey
 import com.pokerlanka.mixora.constants.HideExplicitKey
 import com.pokerlanka.mixora.constants.HideVideoSongsKey
 import com.pokerlanka.mixora.constants.HistoryDuration
+import com.pokerlanka.mixora.constants.IncognitoModeKey
 import com.pokerlanka.mixora.constants.LastFMUseNowPlaying
 import com.pokerlanka.mixora.constants.MediaSessionConstants
 import com.pokerlanka.mixora.constants.MediaSessionConstants.CommandAddToTargetPlaylist
@@ -905,6 +909,8 @@ class MusicService :
     @Volatile
     private var latestMediaNotification: Notification? = null
 
+    private fun isIncognito(): Boolean = dataStore.get(IncognitoModeKey, false)
+
     private var scrobbleManager: ScrobbleManager? = null
 
     val automixItems = MutableStateFlow<List<MediaItem>>(emptyList())
@@ -1376,8 +1382,12 @@ class MusicService :
                 Timber.tag("MusicService").i("Player recreated with AudioTrackPlaybackParams: $useAudioTrackParams")
             }
 
-        dataStore.data
-            .map { it[EnableLastFMScrobblingKey] ?: false }
+        combine(
+            dataStore.data.map { it[EnableLastFMScrobblingKey] ?: false },
+            dataStore.data.map { it[IncognitoModeKey] ?: false },
+        ) { enabled, incognito ->
+            enabled && !incognito
+        }
             .debounce(300)
             .distinctUntilChanged()
             .collect(scope) { enabled ->
@@ -1397,6 +1407,15 @@ class MusicService :
                 } else if (!enabled && scrobbleManager != null) {
                     scrobbleManager?.destroy()
                     scrobbleManager = null
+                }
+            }
+
+        dataStore.data
+            .map { it[IncognitoModeKey] ?: false }
+            .distinctUntilChanged()
+            .collect(scope) { incognito ->
+                if (incognito && togetherSessionState.value !is com.pokerlanka.mixora.together.TogetherSessionState.Idle) {
+                    leaveTogether()
                 }
             }
 
@@ -2029,6 +2048,7 @@ class MusicService :
      * contentLength (FormatEntity not fetched yet).
      */
     private suspend fun markCachedIfFullyDownloaded(mediaId: String) {
+        if (isIncognito()) return
         val song = database.song(mediaId).first() ?: return
         if (song.song.dateDownload != null || song.song.isDownloaded) return
         val contentLength = song.format?.contentLength ?: return
@@ -3728,6 +3748,19 @@ class MusicService :
                                     }.build(),
                             ),
                         ),
+                    )
+                    .setCacheWriteDataSinkFactory(
+                        DataSink.Factory {
+                            if (isIncognito()) {
+                                object : DataSink {
+                                    override fun open(dataSpec: DataSpec) {}
+                                    override fun write(buffer: ByteArray, offset: Int, length: Int) {}
+                                    override fun close() {}
+                                }
+                            } else {
+                                CacheDataSink.Factory().setCache(playerCache).createDataSink()
+                            }
+                        }
                     ),
             ).setCacheWriteDataSinkFactory(null)
             .setFlags(FLAG_IGNORE_CACHE_ON_ERROR)
@@ -3784,7 +3817,7 @@ class MusicService :
             val shouldBypassCache = bypassCacheForQualityChange.contains(mediaId)
 
             if (!shouldBypassCache) {
-                val usePlayerCache = dataStore.get(EnableSongCacheKey, true)
+                val usePlayerCache = dataStore.get(EnableSongCacheKey, true) && !isIncognito()
 
                 val contentLength =
                     runBlocking(Dispatchers.IO) {
@@ -4009,6 +4042,10 @@ class MusicService :
         eventTime: AnalyticsListener.EventTime,
         playbackStats: PlaybackStats,
     ) {
+        if (isIncognito()) {
+            Timber.tag(TAG).d("Skipping onPlaybackStatsReady: incognito mode active")
+            return
+        }
         val mediaItem = eventTime.timeline.getWindow(eventTime.windowIndex, Timeline.Window()).mediaItem
         val historyDurationMs = dataStore[HistoryDuration]?.times(1000f) ?: 30000f
 
@@ -4138,6 +4175,10 @@ class MusicService :
      * never halfway through a file.
      */
     private fun saveQueueToDisk() {
+        if (isIncognito()) {
+            Timber.tag(TAG).d("Skipping queue save: incognito mode active")
+            return
+        }
         val snapshot = buildQueueSnapshot() ?: return
         scope.launch(Dispatchers.IO) {
             queueSaveMutex.withLock { writeQueueSnapshot(snapshot) }
@@ -4146,6 +4187,10 @@ class MusicService :
 
     /** [onDestroy] cannot return before the queue reaches disk, so this one waits. */
     private fun saveQueueToDiskBlocking() {
+        if (isIncognito()) {
+            Timber.tag(TAG).d("Skipping queue save blocking: incognito mode active")
+            return
+        }
         val snapshot = buildQueueSnapshot() ?: return
         runBlocking(Dispatchers.IO) {
             queueSaveMutex.withLock { writeQueueSnapshot(snapshot) }

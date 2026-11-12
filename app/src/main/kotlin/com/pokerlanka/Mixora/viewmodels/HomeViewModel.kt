@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Mixora Project (C) 2026
  * Author : Gayan Chinthaka
  * Company: Pokerlanka
@@ -34,6 +34,7 @@ import com.pokerlanka.mixora.constants.DataSyncIdKey
 import com.pokerlanka.mixora.constants.HideExplicitKey
 import com.pokerlanka.mixora.constants.HideVideoSongsKey
 import com.pokerlanka.mixora.constants.HideYoutubeShortsKey
+import com.pokerlanka.mixora.constants.IncognitoModeKey
 import com.pokerlanka.mixora.constants.InnerTubeCookieKey
 import com.pokerlanka.mixora.constants.QuickPicks
 import com.pokerlanka.mixora.constants.QuickPicksKey
@@ -62,6 +63,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
@@ -763,34 +765,57 @@ class HomeViewModel @Inject constructor(
             syncUtils.tryAutoSync()
         }
 
-        // Listen for cookie changes and reload account data
+        // Listen for cookie and incognito changes and reload account data
+        viewModelScope.launch(Dispatchers.IO) {
+            combine(
+                context.dataStore.data.map { it[InnerTubeCookieKey] }.distinctUntilChanged(),
+                context.dataStore.data.map { it[IncognitoModeKey] ?: false }.distinctUntilChanged(),
+            ) { cookie, isIncognito ->
+                Pair(cookie, isIncognito)
+            }.collect { (cookie, isIncognito) ->
+                if (isProcessingAccountData) return@collect
+
+                lastProcessedCookie = cookie
+                isProcessingAccountData = true
+
+                try {
+                    if (isIncognito) {
+                        YouTube.cookie = null
+                        accountName.value = "Incognito"
+                        accountImageUrl.value = null
+                        accountPlaylists.value = null
+                        savedPodcastShows.value = emptyList()
+                        episodesForLater.value = emptyList()
+                    } else if (cookie != null && cookie.isNotEmpty()) {
+                        YouTube.cookie = cookie
+
+                        YouTube.accountInfo().onSuccess { info ->
+                            accountName.value = info.name
+                            accountImageUrl.value = info.thumbnailUrl
+                        }.onFailure {
+                            reportException(it)
+                        }
+                    } else {
+                        accountName.value = "Guest"
+                        accountImageUrl.value = null
+                        accountPlaylists.value = null
+                        savedPodcastShows.value = emptyList()
+                        episodesForLater.value = emptyList()
+                    }
+                } finally {
+                    isProcessingAccountData = false
+                }
+            }
+        }
+
+        // Reload home feed when incognito mode toggles
         viewModelScope.launch(Dispatchers.IO) {
             context.dataStore.data
-                .map { it[InnerTubeCookieKey] }
-                .collect { cookie ->
-                    if (isProcessingAccountData) return@collect
-
-                    lastProcessedCookie = cookie
-                    isProcessingAccountData = true
-
-                    try {
-                        if (cookie != null && cookie.isNotEmpty()) {
-                            YouTube.cookie = cookie
-
-                            YouTube.accountInfo().onSuccess { info ->
-                                accountName.value = info.name
-                                accountImageUrl.value = info.thumbnailUrl
-                            }.onFailure {
-                                reportException(it)
-                            }
-                        } else {
-                            accountName.value = "Guest"
-                            accountImageUrl.value = null
-                            accountPlaylists.value = null
-                        }
-                    } finally {
-                        isProcessingAccountData = false
-                    }
+                .map { it[IncognitoModeKey] ?: false }
+                .distinctUntilChanged()
+                .drop(1)
+                .collect {
+                    load()
                 }
         }
 
@@ -813,13 +838,21 @@ class HomeViewModel @Inject constructor(
         if (isHomeDataLoaded) return
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                val cookie = context.dataStore.data
-                    .map { it[InnerTubeCookieKey] }
-                    .distinctUntilChanged()
+                val isIncognito = context.dataStore.data
+                    .map { it[IncognitoModeKey] ?: false }
                     .first()
 
-                if (!cookie.isNullOrEmpty()) {
-                    YouTube.cookie = cookie
+                if (isIncognito) {
+                    YouTube.cookie = null
+                } else {
+                    val cookie = context.dataStore.data
+                        .map { it[InnerTubeCookieKey] }
+                        .distinctUntilChanged()
+                        .first()
+
+                    if (!cookie.isNullOrEmpty()) {
+                        YouTube.cookie = cookie
+                    }
                 }
 
                 isHomeDataLoaded = true

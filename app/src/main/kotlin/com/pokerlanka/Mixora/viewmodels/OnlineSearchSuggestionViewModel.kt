@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Mixora Project (C) 2026
  * Author : Gayan Chinthaka
  * Company: Pokerlanka
@@ -21,6 +21,7 @@ import com.pokerlanka.innertube.models.filterVideoSongs
 import com.pokerlanka.innertube.utils.YouTubeUrlParser
 import com.pokerlanka.mixora.constants.HideExplicitKey
 import com.pokerlanka.mixora.constants.HideVideoSongsKey
+import com.pokerlanka.mixora.constants.IncognitoModeKey
 import com.pokerlanka.mixora.db.MusicDatabase
 import com.pokerlanka.mixora.db.entities.SearchHistory
 import com.pokerlanka.mixora.utils.dataStore
@@ -31,6 +32,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -51,11 +53,16 @@ class OnlineSearchSuggestionViewModel
             viewModelScope.launch {
                 query
                     .flatMapLatest { query ->
+                        val isIncognito = context.dataStore.get(IncognitoModeKey, false)
                         if (query.isEmpty()) {
-                            database.searchHistory().map { history ->
-                                SearchSuggestionViewState(
-                                    history = history,
-                                )
+                            if (isIncognito) {
+                                flowOf(SearchSuggestionViewState(history = emptyList()))
+                            } else {
+                                database.searchHistory().map { history ->
+                                    SearchSuggestionViewState(
+                                        history = history,
+                                    )
+                                }
                             }
                         } else {
                             // Check if query is a YouTube URL
@@ -63,35 +70,40 @@ class OnlineSearchSuggestionViewModel
                             if (parsedUrl != null) {
                                 // Fetch content from YouTube URL
                                 val parsedItem = fetchParsedUrlItem(parsedUrl)
-                                database
-                                    .searchHistory(query)
-                                    .map { it.take(3) }
-                                    .map { history ->
+                                if (isIncognito) {
+                                    flowOf(
                                         SearchSuggestionViewState(
-                                            history = history,
+                                            history = emptyList(),
                                             suggestions = emptyList(),
                                             items = parsedItem?.let { listOf(it) } ?: emptyList(),
                                             parsedUrlItem = parsedItem,
                                             isUrlQuery = true,
                                         )
-                                    }
+                                    )
+                                } else {
+                                    database
+                                        .searchHistory(query)
+                                        .map { it.take(3) }
+                                        .map { history ->
+                                            SearchSuggestionViewState(
+                                                history = history,
+                                                suggestions = emptyList(),
+                                                items = parsedItem?.let { listOf(it) } ?: emptyList(),
+                                                parsedUrlItem = parsedItem,
+                                                isUrlQuery = true,
+                                            )
+                                        }
+                                }
                             } else {
                                 val result = YouTube.searchSuggestions(query).getOrNull()
                                 val hideExplicit = context.dataStore.get(HideExplicitKey, false)
                                 val hideVideoSongs = context.dataStore.get(HideVideoSongsKey, false)
 
-                                database
-                                    .searchHistory(query)
-                                    .map { it.take(3) }
-                                    .map { history ->
+                                if (isIncognito) {
+                                    flowOf(
                                         SearchSuggestionViewState(
-                                            history = history,
-                                            suggestions =
-                                                result
-                                                    ?.queries
-                                                    ?.filter { suggestionQuery ->
-                                                        history.none { it.query == suggestionQuery }
-                                                    }.orEmpty(),
+                                            history = emptyList(),
+                                            suggestions = result?.queries.orEmpty(),
                                             items =
                                                 result
                                                     ?.recommendedItems
@@ -100,7 +112,30 @@ class OnlineSearchSuggestionViewModel
                                                     ?.filterVideoSongs(hideVideoSongs)
                                                     .orEmpty(),
                                         )
-                                    }
+                                    )
+                                } else {
+                                    database
+                                        .searchHistory(query)
+                                        .map { it.take(3) }
+                                        .map { history ->
+                                            SearchSuggestionViewState(
+                                                history = history,
+                                                suggestions =
+                                                    result
+                                                        ?.queries
+                                                        ?.filter { suggestionQuery ->
+                                                            history.none { it.query == suggestionQuery }
+                                                        }.orEmpty(),
+                                                items =
+                                                    result
+                                                        ?.recommendedItems
+                                                        ?.distinctBy { it.id }
+                                                        ?.filterExplicit(hideExplicit)
+                                                        ?.filterVideoSongs(hideVideoSongs)
+                                                        .orEmpty(),
+                                            )
+                                        }
+                                }
                             }
                         }
                     }.collect {

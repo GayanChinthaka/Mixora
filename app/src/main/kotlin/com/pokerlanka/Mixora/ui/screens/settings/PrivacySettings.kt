@@ -36,6 +36,7 @@ import androidx.navigation.NavController
 import com.pokerlanka.mixora.LocalDatabase
 import com.pokerlanka.mixora.LocalPlayerAwareWindowInsets
 import com.pokerlanka.mixora.R
+import com.pokerlanka.mixora.constants.IncognitoModeKey
 import com.pokerlanka.mixora.constants.PauseListenHistoryKey
 import com.pokerlanka.mixora.constants.PauseSearchHistoryKey
 import com.pokerlanka.mixora.ui.component.DefaultDialog
@@ -51,6 +52,10 @@ fun PrivacySettings(
     navController: NavController
 ) {
     val database = LocalDatabase.current
+    val (isIncognito, onIncognitoChange) = rememberPreference(
+        key = IncognitoModeKey,
+        defaultValue = false
+    )
     val (pauseListenHistory, onPauseListenHistoryChange) = rememberPreference(
         key = PauseListenHistoryKey,
         defaultValue = false
@@ -147,6 +152,35 @@ fun PrivacySettings(
                 )
             )
         )
+
+        Material3SettingsGroup(
+            title = stringResource(R.string.incognito_mode),
+            items = listOf(
+                Material3SettingsItem(
+                    icon = painterResource(R.drawable.incognito),
+                    title = { Text(stringResource(R.string.incognito_mode)) },
+                    description = { Text(stringResource(R.string.incognito_mode_desc)) },
+                    trailingContent = {
+                        Switch(
+                            checked = isIncognito,
+                            onCheckedChange = onIncognitoChange,
+                            thumbContent = {
+                                Icon(
+                                    painter = painterResource(
+                                        id = if (isIncognito) R.drawable.check else R.drawable.close
+                                    ),
+                                    contentDescription = null,
+                                    modifier = Modifier.size(androidx.compose.material3.SwitchDefaults.IconSize)
+                                )
+                            }
+                        )
+                    },
+                    onClick = { onIncognitoChange(!isIncognito) }
+                )
+            )
+        )
+
+        Spacer(modifier = Modifier.height(27.dp))
 
         Material3SettingsGroup(
             title = stringResource(R.string.listen_history),

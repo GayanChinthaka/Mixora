@@ -66,8 +66,10 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.datastore.preferences.core.edit
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -146,6 +148,7 @@ import com.pokerlanka.mixora.constants.DisableAnimationsKey
 import com.pokerlanka.mixora.constants.DynamicThemeKey
 import com.pokerlanka.mixora.constants.MiniPlayerBottomSpacing
 import com.pokerlanka.mixora.constants.MiniPlayerHeight
+import com.pokerlanka.mixora.constants.IncognitoModeKey
 import com.pokerlanka.mixora.constants.NavigationBarAnimationSpec
 import com.pokerlanka.mixora.constants.NavigationBarHeight
 import com.pokerlanka.mixora.constants.PauseSearchHistoryKey
@@ -585,7 +588,7 @@ class MainActivity : ComponentActivity() {
                             if (searchQuery.isNotEmpty()) {
                                 navController.navigate(SearchRoutes.resultRoute(searchQuery))
 
-                                if (dataStore[PauseSearchHistoryKey] != true) {
+                                if (dataStore[PauseSearchHistoryKey] != true && dataStore[IncognitoModeKey] != true) {
                                     lifecycleScope.launch(Dispatchers.IO) {
                                         runCatching {
                                             database.insert(SearchHistory(query = searchQuery))
@@ -839,14 +842,80 @@ class MainActivity : ComponentActivity() {
                                 exit = fadeOut(animationSpec = tween(durationMillis = 200)),
                             ) {
                                 Row {
+                                    val isIncognito by rememberPreference(IncognitoModeKey, defaultValue = false)
+                                    val isHomeScreen = navBackStackEntry?.destination?.route == Screens.Home.route
+
                                     TopAppBar(
                                         title = {
-                                            Text(
-                                                text = currentTitleRes?.let { stringResource(it) } ?: "",
-                                                style = MaterialTheme.typography.titleLarge,
-                                            )
+                                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                                Text(
+                                                    text = currentTitleRes?.let { stringResource(it) } ?: "",
+                                                    style = MaterialTheme.typography.titleLarge,
+                                                )
+                                                if (isIncognito && isHomeScreen) {
+                                                    Spacer(modifier = Modifier.width(8.dp))
+                                                    Surface(
+                                                        shape = RoundedCornerShape(6.dp),
+                                                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f),
+                                                    ) {
+                                                        Text(
+                                                            text = stringResource(R.string.incognito_mode),
+                                                            style = MaterialTheme.typography.labelSmall,
+                                                            color = MaterialTheme.colorScheme.primary,
+                                                            fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+                                                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                                                        )
+                                                    }
+                                                }
+                                            }
                                         },
                                         actions = {
+                                            if (isHomeScreen) {
+                                                IconButton(
+                                                    onClick = {
+                                                        val newState = !isIncognito
+                                                        coroutineScope.launch {
+                                                            dataStore.edit { it[IncognitoModeKey] = newState }
+                                                            if (!newState) {
+                                                                playerConnection?.player?.pause()
+                                                            }
+                                                            snackbarHostState.showSnackbar(
+                                                                message = if (newState) {
+                                                                    getString(R.string.incognito_turned_on)
+                                                                } else {
+                                                                    getString(R.string.incognito_turned_off)
+                                                                },
+                                                                duration = SnackbarDuration.Short,
+                                                            )
+                                                        }
+                                                    }
+                                                ) {
+                                                    if (isIncognito) {
+                                                        Surface(
+                                                            shape = CircleShape,
+                                                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f),
+                                                            modifier = Modifier.size(36.dp),
+                                                        ) {
+                                                            Box(contentAlignment = Alignment.Center) {
+                                                                Icon(
+                                                                    painter = painterResource(R.drawable.incognito),
+                                                                    contentDescription = stringResource(R.string.incognito_mode),
+                                                                    tint = MaterialTheme.colorScheme.primary,
+                                                                    modifier = Modifier.size(20.dp),
+                                                                )
+                                                            }
+                                                        }
+                                                    } else {
+                                                        Icon(
+                                                            painter = painterResource(R.drawable.incognito),
+                                                            contentDescription = stringResource(R.string.incognito_mode),
+                                                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                            modifier = Modifier.size(24.dp),
+                                                        )
+                                                    }
+                                                }
+                                            }
+
                                             val togetherState = playerConnection?.service?.togetherSessionState?.collectAsStateWithLifecycle()?.value
                                             if (togetherState?.isConnectedToSession == true) {
                                                 val isHost = togetherState is TogetherSessionState.Hosting ||

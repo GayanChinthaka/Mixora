@@ -59,6 +59,7 @@ import com.pokerlanka.mixora.LocalPlayerAwareWindowInsets
 import com.pokerlanka.mixora.R
 import com.pokerlanka.mixora.constants.CONTENT_TYPE_HEADER
 import com.pokerlanka.mixora.constants.CONTENT_TYPE_PLAYLIST
+import com.pokerlanka.mixora.constants.IncognitoModeKey
 import com.pokerlanka.mixora.constants.InnerTubeCookieKey
 import com.pokerlanka.mixora.constants.LibraryViewType
 import com.pokerlanka.mixora.constants.PlaylistSortDescendingKey
@@ -316,14 +317,15 @@ fun LibraryPlaylistsScreen(
         backStackEntry?.savedStateHandle?.getStateFlow("scrollToTop", false)?.collectAsStateWithLifecycle()
 
     val (innerTubeCookie) = rememberPreference(InnerTubeCookieKey, "")
-    val isLoggedIn = remember(innerTubeCookie) {
-        "SAPISID" in parseCookieString(innerTubeCookie)
+    val isIncognito by rememberPreference(IncognitoModeKey, defaultValue = false)
+    val isLoggedIn = remember(innerTubeCookie, isIncognito) {
+        if (isIncognito) false else "SAPISID" in parseCookieString(innerTubeCookie)
     }
 
     val (ytmSync) = rememberPreference(YtmSyncKey, true)
 
     LaunchedEffect(Unit) {
-        if (ytmSync) {
+        if (ytmSync && !isIncognito) {
             withContext(Dispatchers.IO) {
                 viewModel.sync()
             }

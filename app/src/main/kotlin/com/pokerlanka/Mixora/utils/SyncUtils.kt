@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Mixora Project (C) 2026
  * OuterTune Project Copyright (C) 2025
  * Author : Gayan Chinthaka
@@ -17,6 +17,7 @@ import com.pokerlanka.innertube.models.SongItem
 import com.pokerlanka.innertube.utils.completed
 import com.pokerlanka.innertube.utils.parseCookieString
 import com.pokerlanka.lastfm.LastFM
+import com.pokerlanka.mixora.constants.IncognitoModeKey
 import com.pokerlanka.mixora.constants.InnerTubeCookieKey
 import com.pokerlanka.mixora.constants.LastFMUseSendLikes
 import com.pokerlanka.mixora.constants.LastFullSyncKey
@@ -280,6 +281,9 @@ class SyncUtils @Inject constructor(
     }
 
     private suspend fun isLoggedIn(): Boolean {
+        if (context.dataStore.data.map { it[IncognitoModeKey] ?: false }.first()) {
+            return false
+        }
         return try {
             val cookie = context.dataStore.data
                 .map { it[InnerTubeCookieKey] }

@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Mixora Project (C) 2026
  * Author : Gayan Chinthaka
  * Company: Pokerlanka
@@ -89,6 +89,7 @@ import com.pokerlanka.mixora.LocalPlayerConnection
 import com.pokerlanka.mixora.R
 import com.pokerlanka.mixora.constants.AutoRadioQueueKey
 import com.pokerlanka.mixora.constants.HideVideoSongsKey
+import com.pokerlanka.mixora.constants.IncognitoModeKey
 import com.pokerlanka.mixora.constants.MiniPlayerBottomSpacing
 import com.pokerlanka.mixora.constants.MiniPlayerHeight
 import com.pokerlanka.mixora.constants.NavigationBarHeight
@@ -159,6 +160,7 @@ fun OnlineSearchResult(
     }
 
     val pauseSearchHistory by rememberPreference(PauseSearchHistoryKey, defaultValue = false)
+    val isIncognito by rememberPreference(IncognitoModeKey, defaultValue = false)
     val hideVideoSongs by rememberPreference(HideVideoSongsKey, defaultValue = false)
     val autoRadioQueue by rememberPreference(AutoRadioQueueKey, defaultValue = true)
 
@@ -187,7 +189,7 @@ fun OnlineSearchResult(
                             inclusive = true
                         }
 
-                        if (!pauseSearchHistory) {
+                        if (!pauseSearchHistory && !isIncognito) {
                             coroutineScope.launch(Dispatchers.IO) {
                                 database.query {
                                     insert(SearchHistory(query = searchQuery))

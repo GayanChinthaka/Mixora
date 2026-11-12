@@ -21,6 +21,7 @@ import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
@@ -1080,6 +1081,22 @@ fun BottomSheetPlayer(
                 label = "playPauseRoundness",
             )
 
+            val onPlayPauseClick: () -> Unit = {
+                if (isCasting) {
+                    if (castIsPlaying) {
+                        castHandler?.pause()
+                    } else {
+                        castHandler?.play()
+                    }
+                } else if (playbackState == STATE_ENDED) {
+                    playerConnection.player.seekTo(0, 0)
+                    playerConnection.player.playWhenReady = true
+                } else {
+                    playerConnection.togglePlayPause()
+                }
+            }
+            val isBuffering = playbackState == Player.STATE_BUFFERING || (playbackState == Player.STATE_IDLE && effectiveIsPlaying)
+
             Row(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically,
@@ -1088,188 +1105,193 @@ fun BottomSheetPlayer(
                         .fillMaxWidth()
                         .padding(horizontal = PlayerHorizontalPadding),
             ) {
-                AnimatedContent(
-                    targetState = showInlineLyrics,
-                    label = "ThumbnailAnimation",
-                ) { showLyrics ->
-                    if (showLyrics) {
-                        Row {
-                            if (hidePlayerThumbnail) {
+                // Fullscreen lyrics drop the song info so the lyrics get the room.
+                if (isFullScreen) {
+                    Spacer(modifier = Modifier.weight(1f))
+                } else {
+                    AnimatedContent(
+                        targetState = showInlineLyrics,
+                        label = "ThumbnailAnimation",
+                    ) { showLyrics ->
+                        if (showLyrics) {
+                            Row {
+                                if (hidePlayerThumbnail) {
+                                    Box(
+                                        modifier =
+                                            Modifier
+                                                .size(56.dp)
+                                                .clip(RoundedCornerShape(ThumbnailCornerRadius))
+                                                .background(MaterialTheme.colorScheme.surfaceVariant),
+                                        contentAlignment = Alignment.Center,
+                                    ) {
+                                        Icon(
+                                            painter = painterResource(R.drawable.small_icon),
+                                            contentDescription = null,
+                                            modifier =
+                                                Modifier
+                                                    .size(32.dp)
+                                        )
+                                    }
+                                } else {
+                                    AsyncImage(
+                                        model = mediaMetadata.thumbnailUrl,
+                                        contentDescription = null,
+                                        contentScale = if (cropAlbumArt) ContentScale.Crop else ContentScale.Fit,
+                                        modifier =
+                                            Modifier
+                                                .size(56.dp)
+                                                .clip(RoundedCornerShape(ThumbnailCornerRadius)),
+                                    )
+                                }
+                                Spacer(modifier = Modifier.width(12.dp))
+                            }
+                        } else {
+                            Spacer(modifier = Modifier.width(0.dp))
+                        }
+                    }
+                    Column(
+                        modifier = Modifier.weight(1f),
+                    ) {
+                        AnimatedContent(
+                            targetState = mediaMetadata.title,
+                            transitionSpec = { fadeIn() togetherWith fadeOut() },
+                            label = "",
+                        ) { title ->
+                            Text(
+                                text = title,
+                                style = MaterialTheme.typography.titleLarge,
+                                fontWeight = FontWeight.Bold,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                                color = TextBackgroundColor,
+                                modifier =
+                                    Modifier
+                                        .basicMarquee(iterations = 1, initialDelayMillis = 3000, velocity = 30.dp)
+                                        .combinedClickable(
+                                            enabled = true,
+                                            indication = null,
+                                            interactionSource = remember { MutableInteractionSource() },
+                                            onClick = {
+                                                val albumId = mediaMetadata.album?.id
+                                                    ?: currentSong?.album?.id
+                                                    ?: currentSong?.song?.albumId
+                                                if (albumId != null) {
+                                                    navController.navigate("album/$albumId")
+                                                    state.collapseSoft()
+                                                }
+                                            },
+                                            onLongClick = {
+                                                val clip = ClipData.newPlainText(copiedTitleStr, title)
+                                                clipboardManager.setPrimaryClip(clip)
+                                                Toast
+                                                    .makeText(context, copiedTitleStr, Toast.LENGTH_SHORT)
+                                                    .show()
+                                            },
+                                        ),
+                            )
+                        }
+
+                        Row(
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            if (mediaMetadata.explicit) MIcon.Explicit()
+
+                            if (mediaMetadata.artists.any { it.name.isNotBlank() }) {
+                                val annotatedString =
+                                    buildAnnotatedString {
+                                        mediaMetadata.artists.forEachIndexed { index, artist ->
+                                            val tag = "artist_${artist.id.orEmpty()}"
+                                            pushStringAnnotation(tag = tag, annotation = artist.id.orEmpty())
+                                            withStyle(SpanStyle(color = TextBackgroundColor, fontSize = 16.sp)) {
+                                                append(artist.name)
+                                            }
+                                            pop()
+                                            if (index != mediaMetadata.artists.lastIndex) append(", ")
+                                        }
+                                    }
+
                                 Box(
                                     modifier =
                                         Modifier
-                                            .size(56.dp)
-                                            .clip(RoundedCornerShape(ThumbnailCornerRadius))
-                                            .background(MaterialTheme.colorScheme.surfaceVariant),
-                                    contentAlignment = Alignment.Center,
+                                            .fillMaxWidth()
+                                            .basicMarquee(iterations = 1, initialDelayMillis = 3000, velocity = 30.dp)
+                                            .padding(end = 12.dp),
                                 ) {
-                                    Icon(
-                                        painter = painterResource(R.drawable.small_icon),
-                                        contentDescription = null,
+                                    var layoutResult by remember { mutableStateOf<TextLayoutResult?>(null) }
+                                    var clickOffset by remember { mutableStateOf<Offset?>(null) }
+                                    Text(
+                                        text = annotatedString,
+                                        style = MaterialTheme.typography.titleMedium.copy(color = TextBackgroundColor),
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis,
+                                        onTextLayout = { layoutResult = it },
                                         modifier =
                                             Modifier
-                                                .size(32.dp)
-                                    )
-                                }
-                            } else {
-                                AsyncImage(
-                                    model = mediaMetadata.thumbnailUrl,
-                                    contentDescription = null,
-                                    contentScale = if (cropAlbumArt) ContentScale.Crop else ContentScale.Fit,
-                                    modifier =
-                                        Modifier
-                                            .size(56.dp)
-                                            .clip(RoundedCornerShape(ThumbnailCornerRadius)),
-                                )
-                            }
-                            Spacer(modifier = Modifier.width(12.dp))
-                        }
-                    } else {
-                        Spacer(modifier = Modifier.width(0.dp))
-                    }
-                }
-                Column(
-                    modifier = Modifier.weight(1f),
-                ) {
-                    AnimatedContent(
-                        targetState = mediaMetadata.title,
-                        transitionSpec = { fadeIn() togetherWith fadeOut() },
-                        label = "",
-                    ) { title ->
-                        Text(
-                            text = title,
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                            color = TextBackgroundColor,
-                            modifier =
-                                Modifier
-                                    .basicMarquee(iterations = 1, initialDelayMillis = 3000, velocity = 30.dp)
-                                    .combinedClickable(
-                                        enabled = true,
-                                        indication = null,
-                                        interactionSource = remember { MutableInteractionSource() },
-                                        onClick = {
-                                            val albumId = mediaMetadata.album?.id
-                                                ?: currentSong?.album?.id
-                                                ?: currentSong?.song?.albumId
-                                            if (albumId != null) {
-                                                navController.navigate("album/$albumId")
-                                                state.collapseSoft()
-                                            }
-                                        },
-                                        onLongClick = {
-                                            val clip = ClipData.newPlainText(copiedTitleStr, title)
-                                            clipboardManager.setPrimaryClip(clip)
-                                            Toast
-                                                .makeText(context, copiedTitleStr, Toast.LENGTH_SHORT)
-                                                .show()
-                                        },
-                                    ),
-                        )
-                    }
-
-                    Row(
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        if (mediaMetadata.explicit) MIcon.Explicit()
-
-                        if (mediaMetadata.artists.any { it.name.isNotBlank() }) {
-                            val annotatedString =
-                                buildAnnotatedString {
-                                    mediaMetadata.artists.forEachIndexed { index, artist ->
-                                        val tag = "artist_${artist.id.orEmpty()}"
-                                        pushStringAnnotation(tag = tag, annotation = artist.id.orEmpty())
-                                        withStyle(SpanStyle(color = TextBackgroundColor, fontSize = 16.sp)) {
-                                            append(artist.name)
-                                        }
-                                        pop()
-                                        if (index != mediaMetadata.artists.lastIndex) append(", ")
-                                    }
-                                }
-
-                            Box(
-                                modifier =
-                                    Modifier
-                                        .fillMaxWidth()
-                                        .basicMarquee(iterations = 1, initialDelayMillis = 3000, velocity = 30.dp)
-                                        .padding(end = 12.dp),
-                            ) {
-                                var layoutResult by remember { mutableStateOf<TextLayoutResult?>(null) }
-                                var clickOffset by remember { mutableStateOf<Offset?>(null) }
-                                Text(
-                                    text = annotatedString,
-                                    style = MaterialTheme.typography.titleMedium.copy(color = TextBackgroundColor),
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis,
-                                    onTextLayout = { layoutResult = it },
-                                    modifier =
-                                        Modifier
-                                            .pointerInput(Unit) {
-                                                awaitPointerEventScope {
-                                                    while (true) {
-                                                        val event = awaitPointerEvent()
-                                                        val tapPosition = event.changes.firstOrNull()?.position
-                                                        if (tapPosition != null) {
-                                                            clickOffset = tapPosition
+                                                .pointerInput(Unit) {
+                                                    awaitPointerEventScope {
+                                                        while (true) {
+                                                            val event = awaitPointerEvent()
+                                                            val tapPosition = event.changes.firstOrNull()?.position
+                                                            if (tapPosition != null) {
+                                                                clickOffset = tapPosition
+                                                            }
                                                         }
                                                     }
-                                                }
-                                            }.combinedClickable(
-                                                enabled = true,
-                                                indication = null,
-                                                interactionSource = remember { MutableInteractionSource() },
-                                                onClick = {
-                                                    val tapPosition = clickOffset
-                                                    val layout = layoutResult
-                                                    if (tapPosition != null && layout != null) {
-                                                        val offset = layout.getOffsetForPosition(tapPosition)
-                                                        annotatedString
-                                                            .getStringAnnotations(offset, offset)
-                                                            .firstOrNull()
-                                                            ?.let { ann ->
-                                                                val artistId = ann.item
-                                                                if (artistId.isNotBlank()) {
-                                                                    navController.navigate("artist/$artistId")
-                                                                    state.collapseSoft()
+                                                }.combinedClickable(
+                                                    enabled = true,
+                                                    indication = null,
+                                                    interactionSource = remember { MutableInteractionSource() },
+                                                    onClick = {
+                                                        val tapPosition = clickOffset
+                                                        val layout = layoutResult
+                                                        if (tapPosition != null && layout != null) {
+                                                            val offset = layout.getOffsetForPosition(tapPosition)
+                                                            annotatedString
+                                                                .getStringAnnotations(offset, offset)
+                                                                .firstOrNull()
+                                                                ?.let { ann ->
+                                                                    val artistId = ann.item
+                                                                    if (artistId.isNotBlank()) {
+                                                                        navController.navigate("artist/$artistId")
+                                                                        state.collapseSoft()
+                                                                    }
                                                                 }
-                                                            }
-                                                    }
-                                                },
-                                                onLongClick = {
-                                                    val clip =
-                                                        ClipData.newPlainText(
-                                                            copiedArtistStr,
-                                                            annotatedString,
-                                                        )
-                                                    clipboardManager.setPrimaryClip(clip)
-                                                    Toast
-                                                        .makeText(
-                                                            context,
-                                                            copiedArtistStr,
-                                                            Toast.LENGTH_SHORT,
-                                                        ).show()
-                                                },
-                                            ),
-                                )
+                                                        }
+                                                    },
+                                                    onLongClick = {
+                                                        val clip =
+                                                            ClipData.newPlainText(
+                                                                copiedArtistStr,
+                                                                annotatedString,
+                                                            )
+                                                        clipboardManager.setPrimaryClip(clip)
+                                                        Toast
+                                                            .makeText(
+                                                                context,
+                                                                copiedArtistStr,
+                                                                Toast.LENGTH_SHORT,
+                                                            ).show()
+                                                    },
+                                                ),
+                                    )
+                                }
                             }
                         }
-                    }
 
-                    if (mediaDate != null) {
-                        Spacer(modifier = Modifier.height(2.dp))
-                        Text(
-                            text = mediaDate.dateText,
-                            style = MaterialTheme.typography.bodySmall.copy(
-                                color = TextBackgroundColor.copy(alpha = 0.7f),
-                                fontSize = 12.sp,
-                            ),
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                            modifier = Modifier.basicMarquee(iterations = 1, initialDelayMillis = 3000, velocity = 30.dp),
-                        )
+                        if (mediaDate != null) {
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text(
+                                text = mediaDate.dateText,
+                                style = MaterialTheme.typography.bodySmall.copy(
+                                    color = TextBackgroundColor.copy(alpha = 0.7f),
+                                    fontSize = 12.sp,
+                                ),
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                                modifier = Modifier.basicMarquee(iterations = 1, initialDelayMillis = 3000, velocity = 30.dp),
+                            )
+                        }
                     }
                 }
 
@@ -1298,6 +1320,38 @@ fun BottomSheetPlayer(
                         horizontalArrangement = Arrangement.spacedBy(6.dp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
+                        // Fullscreen lyrics hide the main controls, so play/pause moves up here.
+                        AnimatedVisibility(visible = isFullScreen) {
+                            FilledIconButton(
+                                onClick = onPlayPauseClick,
+                                shape = CircleShape,
+                                colors =
+                                    IconButtonDefaults.filledIconButtonColors(
+                                        containerColor = textButtonColor,
+                                        contentColor = iconButtonColor,
+                                    ),
+                                modifier = Modifier.size(42.dp),
+                            ) {
+                                if (isBuffering) {
+                                    CircularProgressIndicator(
+                                        modifier = Modifier.size(20.dp),
+                                        color = iconButtonColor,
+                                        strokeWidth = 2.dp,
+                                    )
+                                } else {
+                                    Icon(
+                                        painter =
+                                            painterResource(
+                                                if (effectiveIsPlaying && playbackState != STATE_ENDED) R.drawable.pause else R.drawable.play,
+                                            ),
+                                        contentDescription =
+                                            if (effectiveIsPlaying) stringResource(R.string.pause) else stringResource(R.string.play),
+                                        modifier = Modifier.size(24.dp),
+                                    )
+                                }
+                            }
+                        }
+
                         AnimatedContent(targetState = showInlineLyrics, label = "ShareButton") { showLyrics ->
                             if (showLyrics) {
                                 FilledIconButton(
@@ -1526,79 +1580,88 @@ fun BottomSheetPlayer(
                 }
             }
 
-            Spacer(Modifier.height(24.dp))
-
-            val sliderColors =
-                PlayerSliderColors.getSliderColors(
-                    textButtonColor,
-                    if (isLyricsThumbnailBg) PlayerBackgroundStyle.BLUR else playerBackground,
-                    useDarkTheme,
-                )
-            val sliderValue = (sliderPosition ?: effectivePosition).toFloat()
-            val sliderValueRange = 0f..(if (duration == C.TIME_UNSET) 0f else duration.toFloat())
-            val onSliderValueChange: (Float) -> Unit = {
-                sliderPosition = it.toLong()
-            }
-            val onSliderValueChangeFinished: () -> Unit = {
-                sliderPosition?.let {
-                    if (isCasting) {
-                        castHandler?.seekTo(it)
-                        lastManualSeekTime = System.currentTimeMillis()
-                    } else if (playerConnection.isTogetherGuest) {
-                        playerConnection.seekTo(it)
-                    } else {
-                        playerConnection.player.seekTo(it)
-                    }
-                    position = it
-                }
-                sliderPosition = null
-            }
-
-            Slider(
-                value = sliderValue,
-                valueRange = sliderValueRange,
-                onValueChange = onSliderValueChange,
-                onValueChangeFinished = onSliderValueChangeFinished,
-                thumb = { Spacer(modifier = Modifier.size(0.dp)) },
-                track = { sliderState ->
-                    PlayerSliderTrack(
-                        sliderState = sliderState,
-                        colors = sliderColors,
-                        style = sliderStyle,
-                        trackHeight = 3.dp,
-                    )
-                },
-                modifier = Modifier.padding(horizontal = PlayerHorizontalPadding),
-            )
-
-            Spacer(Modifier.height(4.dp))
-
-            Row(
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-                modifier =
-                    Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = PlayerHorizontalPadding + 4.dp),
+            // Fullscreen lyrics keep only the top button row: no seek bar or timestamps.
+            AnimatedVisibility(
+                visible = !isFullScreen,
+                enter = expandVertically(expandFrom = Alignment.Top) + fadeIn(),
+                exit = shrinkVertically(shrinkTowards = Alignment.Top) + fadeOut(),
             ) {
-                Text(
-                    text = makeTimeString(sliderPosition ?: effectivePosition),
-                    style = MaterialTheme.typography.labelMedium,
-                    color = TextBackgroundColor,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    Spacer(Modifier.height(24.dp))
 
-                Text(
-                    text = if (duration != C.TIME_UNSET) makeTimeString(duration) else "",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = TextBackgroundColor,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
+                    val sliderColors =
+                        PlayerSliderColors.getSliderColors(
+                            textButtonColor,
+                            if (isLyricsThumbnailBg) PlayerBackgroundStyle.BLUR else playerBackground,
+                            useDarkTheme,
+                        )
+                    val sliderValue = (sliderPosition ?: effectivePosition).toFloat()
+                    val sliderValueRange = 0f..(if (duration == C.TIME_UNSET) 0f else duration.toFloat())
+                    val onSliderValueChange: (Float) -> Unit = {
+                        sliderPosition = it.toLong()
+                    }
+                    val onSliderValueChangeFinished: () -> Unit = {
+                        sliderPosition?.let {
+                            if (isCasting) {
+                                castHandler?.seekTo(it)
+                                lastManualSeekTime = System.currentTimeMillis()
+                            } else if (playerConnection.isTogetherGuest) {
+                                playerConnection.seekTo(it)
+                            } else {
+                                playerConnection.player.seekTo(it)
+                            }
+                            position = it
+                        }
+                        sliderPosition = null
+                    }
+
+                    Slider(
+                        value = sliderValue,
+                        valueRange = sliderValueRange,
+                        onValueChange = onSliderValueChange,
+                        onValueChangeFinished = onSliderValueChangeFinished,
+                        thumb = { Spacer(modifier = Modifier.size(0.dp)) },
+                        track = { sliderState ->
+                            PlayerSliderTrack(
+                                sliderState = sliderState,
+                                colors = sliderColors,
+                                style = sliderStyle,
+                                trackHeight = 3.dp,
+                            )
+                        },
+                        modifier = Modifier.padding(horizontal = PlayerHorizontalPadding),
+                    )
+
+                    Spacer(Modifier.height(4.dp))
+
+                    Row(
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = PlayerHorizontalPadding + 4.dp),
+                    ) {
+                        Text(
+                            text = makeTimeString(sliderPosition ?: effectivePosition),
+                            style = MaterialTheme.typography.labelMedium,
+                            color = TextBackgroundColor,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+
+                        Text(
+                            text = if (duration != C.TIME_UNSET) makeTimeString(duration) else "",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = TextBackgroundColor,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                    }
+
+                    Spacer(Modifier.height(24.dp))
+                }
             }
-
-            Spacer(Modifier.height(24.dp))
 
             AnimatedVisibility(
                 visible = !isFullScreen,
@@ -1657,20 +1720,7 @@ fun BottomSheetPlayer(
 
                         // 3. Play/Pause Button (Larger)
                         FilledIconButton(
-                            onClick = {
-                                if (isCasting) {
-                                    if (castIsPlaying) {
-                                        castHandler?.pause()
-                                    } else {
-                                        castHandler?.play()
-                                    }
-                                } else if (playbackState == STATE_ENDED) {
-                                    playerConnection.player.seekTo(0, 0)
-                                    playerConnection.player.playWhenReady = true
-                                } else {
-                                    playerConnection.togglePlayPause()
-                                }
-                            },
+                            onClick = onPlayPauseClick,
                             shape = CircleShape,
                             colors =
                                 IconButtonDefaults.filledIconButtonColors(
@@ -1682,7 +1732,7 @@ fun BottomSheetPlayer(
                                     .size(68.dp)
                                     .focusRequester(focusRequester),
                         ) {
-                            if (playbackState == Player.STATE_BUFFERING || (playbackState == Player.STATE_IDLE && effectiveIsPlaying)) {
+                            if (isBuffering) {
                                 CircularProgressIndicator(
                                     modifier = Modifier.size(32.dp),
                                     color = iconButtonColor,
@@ -1840,16 +1890,12 @@ fun BottomSheetPlayer(
             }
 
             else -> {
-                val bottomPadding by animateDpAsState(
-                    targetValue = if (isFullScreen) 0.dp else queueSheetState.collapsedBound,
-                    label = "bottomPadding",
-                )
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     modifier =
                         Modifier
                             .windowInsetsPadding(WindowInsets.systemBars.only(WindowInsetsSides.Horizontal))
-                            .padding(bottom = bottomPadding)
+                            .padding(bottom = queueSheetState.collapsedBound)
                             .animateContentSize(),
                 ) {
                     Box(
@@ -1899,35 +1945,34 @@ fun BottomSheetPlayer(
             }
         }
 
-        AnimatedVisibility(
-            visible = !isFullScreen,
-            enter = slideInVertically(initialOffsetY = { it }) + fadeIn(),
-            exit = shrinkVertically(shrinkTowards = Alignment.Top) + slideOutVertically(targetOffsetY = { it }) + fadeOut(),
-        ) {
-            Queue(
-                state = queueSheetState,
-                playerBottomSheetState = state,
-                background =
-                    if (useBlackBackground) {
-                        Color.Black
-                    } else {
-                        MaterialTheme.colorScheme.surfaceContainer
-                    },
-                onBackgroundColor = onBackgroundColor,
-                TextBackgroundColor = TextBackgroundColor,
-                textButtonColor = textButtonColor,
-                iconButtonColor = iconButtonColor,
-                pureBlack = pureBlack,
-                showInlineLyrics = showInlineLyrics,
-                playerBackground = if (isLyricsThumbnailBg) PlayerBackgroundStyle.BLUR else playerBackground,
-                onToggleLyrics = {
-                    showInlineLyrics = !showInlineLyrics
-                    if (!showInlineLyrics) {
-                        isFullScreen = false
-                    }
+        Queue(
+            state = queueSheetState,
+            playerBottomSheetState = state,
+            background =
+                if (useBlackBackground) {
+                    Color.Black
+                } else {
+                    MaterialTheme.colorScheme.surfaceContainer
                 },
-            )
-        }
+            onBackgroundColor = onBackgroundColor,
+            TextBackgroundColor = TextBackgroundColor,
+            textButtonColor = textButtonColor,
+            iconButtonColor = iconButtonColor,
+            pureBlack = pureBlack,
+            showInlineLyrics = showInlineLyrics,
+            playerBackground = if (isLyricsThumbnailBg) PlayerBackgroundStyle.BLUR else playerBackground,
+            onToggleLyrics = {
+                showInlineLyrics = !showInlineLyrics
+                if (!showInlineLyrics) {
+                    isFullScreen = false
+                }
+            },
+            isLyricsFullScreen = isFullScreen,
+            onShowPlayer = {
+                isFullScreen = false
+                showInlineLyrics = false
+            },
+        )
     }
 }
 

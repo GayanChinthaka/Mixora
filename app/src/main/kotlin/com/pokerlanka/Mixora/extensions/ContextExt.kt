@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Mixora Project (C) 2026
  * Author : Gayan Chinthaka
  * Company: Pokerlanka
@@ -10,6 +10,7 @@ import android.content.Context
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import com.pokerlanka.innertube.utils.parseCookieString
+import com.pokerlanka.mixora.constants.IncognitoModeKey
 import com.pokerlanka.mixora.constants.InnerTubeCookieKey
 import com.pokerlanka.mixora.constants.YtmSyncKey
 import com.pokerlanka.mixora.utils.dataStore
@@ -24,6 +25,7 @@ fun Context.isSyncEnabled(): Boolean {
 
 fun Context.isUserLoggedIn(): Boolean {
     return runBlocking {
+        if (dataStore[IncognitoModeKey] == true) return@runBlocking false
         val cookie = dataStore[InnerTubeCookieKey] ?: ""
         "SAPISID" in parseCookieString(cookie) && isInternetConnected()
     }

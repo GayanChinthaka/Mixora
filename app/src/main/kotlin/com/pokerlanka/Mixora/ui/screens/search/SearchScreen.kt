@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Mixora Project (C) 2026
  * Author : Gayan Chinthaka
  * Company: Pokerlanka
@@ -64,6 +64,7 @@ import com.pokerlanka.mixora.LocalIsPlayerExpanded
 import com.pokerlanka.mixora.LocalPlayerAwareWindowInsets
 import com.pokerlanka.mixora.LocalPlayerConnection
 import com.pokerlanka.mixora.R
+import com.pokerlanka.mixora.constants.IncognitoModeKey
 import com.pokerlanka.mixora.constants.PauseSearchHistoryKey
 import com.pokerlanka.mixora.constants.SearchSource
 import com.pokerlanka.mixora.constants.SearchSourceKey
@@ -129,6 +130,7 @@ fun SearchScreen(
         mutableStateOf(TextFieldValue())
     }
     val pauseSearchHistory by rememberPreference(PauseSearchHistoryKey, defaultValue = false)
+    val isIncognito by rememberPreference(IncognitoModeKey, defaultValue = false)
 
     fun handleSearch(searchQuery: String) {
         if (searchQuery.isEmpty()) {
@@ -163,7 +165,7 @@ fun SearchScreen(
             }
         }
 
-        if (!pauseSearchHistory) {
+        if (!pauseSearchHistory && !isIncognito) {
             coroutineScope.launch(Dispatchers.IO) {
                 database.query {
                     insert(SearchHistory(query = searchQuery))

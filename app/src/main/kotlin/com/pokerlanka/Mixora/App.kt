@@ -44,7 +44,9 @@ import dagger.hilt.android.HiltAndroidApp
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
@@ -209,6 +211,9 @@ class App :
 
         YouTube.useLoginForBrowse = settings[UseLoginForBrowse] ?: true
 
+        // Ensure incognito mode resets on fresh process start (ephemeral session)
+        safeDataStoreEdit { it[IncognitoModeKey] = false }
+
         val channel =
             NotificationChannel(
                 "updates",
@@ -256,28 +261,53 @@ class App :
         }
 
         applicationScope.launch(Dispatchers.IO) {
-            dataStore.data
-                .map { it[InnerTubeCookieKey] }
-                .distinctUntilChanged()
-                .collect { cookie ->
-                    try {
+            combine(
+                dataStore.data.map { it[InnerTubeCookieKey] }.distinctUntilChanged(),
+                dataStore.data.map { it[IncognitoModeKey] ?: false }.distinctUntilChanged(),
+            ) { cookie, isIncognito ->
+                Pair(cookie, isIncognito)
+            }.collect { (cookie, isIncognito) ->
+                try {
+                    if (isIncognito) {
+                        YouTube.cookie = null
+                        YouTube.useLoginForBrowse = false
+                    } else {
                         YouTube.cookie = cookie
-                    } catch (e: Exception) {
-                        Timber.e(e, "Could not parse cookie. Clearing existing cookie.")
+                        YouTube.useLoginForBrowse = dataStore.data.map { it[UseLoginForBrowse] ?: true }.first()
+                    }
+                } catch (e: Exception) {
+                    Timber.e(e, "Could not parse or update cookie.")
+                    if (!isIncognito) {
                         forgetAccount(this@App)
                     }
                 }
+            }
+        }
+
+        applicationScope.launch(Dispatchers.IO) {
+            combine(
+                dataStore.data.map { it[LastFMSessionKey] }.distinctUntilChanged(),
+                dataStore.data.map { it[IncognitoModeKey] ?: false }.distinctUntilChanged(),
+            ) { session, isIncognito ->
+                Pair(session, isIncognito)
+            }.collect { (session, isIncognito) ->
+                try {
+                    LastFM.sessionKey = if (isIncognito) null else session
+                } catch (e: Exception) {
+                    Timber.e("Error while loading last.fm session key. %s", e.message)
+                }
+            }
         }
 
         applicationScope.launch(Dispatchers.IO) {
             dataStore.data
-                .map { it[LastFMSessionKey] }
+                .map { it[IncognitoModeKey] ?: false }
                 .distinctUntilChanged()
-                .collect { session ->
-                    try {
-                        LastFM.sessionKey = session
-                    } catch (e: Exception) {
-                        Timber.e("Error while loading last.fm session key. %s", e.message)
+                .drop(1)
+                .collect {
+                    withContext(Dispatchers.Main) {
+                        @OptIn(coil3.annotation.DelicateCoilApi::class)
+                        SingletonImageLoader.reset()
                     }
                 }
         }
@@ -361,6 +391,9 @@ class App :
         val cacheSize = cachedCoilCacheSize ?: runBlocking {
             dataStore.data.map { it[MaxImageCacheSizeKey] ?: 512 }.first()
         }
+        val isIncognito = runBlocking {
+            dataStore.data.map { it[IncognitoModeKey] ?: false }.first()
+        }
         return ImageLoader
             .Builder(this)
             .components {
@@ -378,7 +411,7 @@ class App :
                         .maxSizePercent(context, 0.25)
                         .build()
                 }
-                if (cacheSize == 0) {
+                if (cacheSize == 0 || isIncognito) {
                     diskCachePolicy(CachePolicy.DISABLED)
                 } else {
                     diskCache(

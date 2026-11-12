@@ -463,4 +463,14 @@
     <string name="search_discovery_songs">Songs you might like</string>
     <string name="search_discovery_artists">Artists you might like</string>
     <string name="search_discovery_albums">Top albums</string>
+
+    <!-- Incognito mode -->
+    <string name="incognito_mode">Incognito mode</string>
+    <string name="incognito_mode_desc">History, cache, and account sync are disabled</string>
+    <string name="incognito_mode_active">Incognito mode is on</string>
+    <string name="incognito_mode_banner_desc">Nothing you listen to or search will be saved in this session</string>
+    <string name="exit_incognito">Exit</string>
+    <string name="incognito_turned_on">Incognito mode turned on</string>
+    <string name="incognito_turned_off">Incognito mode turned off</string>
+    <string name="incognito_history_paused">History is paused while in Incognito mode</string>
 </resources>
