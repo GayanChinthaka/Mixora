@@ -1967,7 +1967,6 @@ fun BottomSheetPlayer(
                     isFullScreen = false
                 }
             },
-            isLyricsFullScreen = isFullScreen,
             onShowPlayer = {
                 isFullScreen = false
                 showInlineLyrics = false

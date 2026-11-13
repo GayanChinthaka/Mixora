@@ -153,7 +153,6 @@ fun Queue(
     showInlineLyrics: Boolean,
     playerBackground: PlayerBackgroundStyle = PlayerBackgroundStyle.DEFAULT,
     onToggleLyrics: () -> Unit = {},
-    isLyricsFullScreen: Boolean = false,
     onShowPlayer: () -> Unit = {},
 ) {
     val navController = LocalNavController.current
@@ -247,7 +246,7 @@ fun Queue(
         background = {
             Box(Modifier.fillMaxSize().background(Color.Unspecified))
         },
-        isExpandable = !isLyricsFullScreen,
+        isExpandable = !showInlineLyrics,
         collapsedContent = {
             Row(
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -265,12 +264,12 @@ fun Queue(
                 val buttonHeight = 44.dp
                 val iconSize = 22.dp
 
-                // 1. List / Queue Button (50% width). Fullscreen lyrics hide the player
-                // controls, so this tab leads back to the player instead of the queue.
+                // 1. List / Queue Button (50% width). On the lyrics screen this tab leads
+                // back to the player instead of opening the queue.
                 PlayerQueueButton(
-                    icon = if (isLyricsFullScreen) R.drawable.music_note else R.drawable.queue_music,
-                    text = stringResource(if (isLyricsFullScreen) R.string.player else R.string.queue),
-                    onClick = { if (isLyricsFullScreen) onShowPlayer() else state.expandSoft() },
+                    icon = if (showInlineLyrics) R.drawable.music_note else R.drawable.queue_music,
+                    text = stringResource(if (showInlineLyrics) R.string.player else R.string.queue),
+                    onClick = { if (showInlineLyrics) onShowPlayer() else state.expandSoft() },
                     isActive = false,
                     shape = CircleShape,
                     modifier =
